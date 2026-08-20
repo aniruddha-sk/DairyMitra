@@ -8,79 +8,145 @@
 
 <div class="section">
 
-<div class="action-bar mb-4">
-<a href="{{ url_for('add_staff') }}" class="btn btn-primary">
-<i class="fa fa-plus"></i> Add Staff
-</a>
-</div>
+    <div class="action-bar mb-4">
 
-<div class="table-wrap">
-<table class="table">
+        <a href="{{ url_for('add_staff') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Add Staff
+        </a>
 
-<thead>
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Email</th>
-<th>Vehicle</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-</thead>
+    </div>
 
-<tbody>
 
-{% for s in staff %}
+    <div class="table-wrap">
 
-<tr>
+        <table class="table">
 
-<td>{{ s.id }}</td>
-<td>{{ s.name }}</td>
-<td>{{ s.email }}</td>
-<td>{{ s.vehicle_number }}</td>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Vehicle</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
 
-<td>
-{% if s.is_active %}
-<span class="badge bg-success">Active</span>
-{% else %}
-<span class="badge bg-danger">Disabled</span>
-{% endif %}
-</td>
 
-<td class="action-buttons">
+            <tbody>
 
-<a href="{{ url_for('edit_staff', staff_id=s.id) }}" class="btn btn-warning btn-sm">
-<i class="fa fa-edit"></i>
-</a>
+                {% for s in staff %}
 
-<a href="{{ url_for('reset_staff_password', staff_id=s.id) }}" class="btn btn-info btn-sm">
-<i class="fa fa-key"></i>
-</a>
+                <tr>
 
-{% if s.is_active %}
+                    <td>{{ s.id }}</td>
 
-<a href="{{ url_for('disable_staff', staff_id=s.id) }}" class="btn btn-danger btn-sm">
-<i class="fa fa-ban"></i>
-</a>
+                    <td>{{ s.name }}</td>
 
-{% else %}
+                    <td>{{ s.email }}</td>
 
-<a href="{{ url_for('enable_staff', staff_id=s.id) }}" class="btn btn-success btn-sm">
-<i class="fa fa-check"></i>
-</a>
+                    <td>{{ s.vehicle_number }}</td>
 
-{% endif %}
 
-</td>
+                    <td>
 
-</tr>
+                        {% if s.is_active %}
 
-{% endfor %}
+                        <span class="badge bg-success">
+                            Active
+                        </span>
 
-</tbody>
+                        {% else %}
 
-</table>
-</div>
+                        <span class="badge bg-danger">
+                            Disabled
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td class="action-buttons">
+
+                        <!-- EDIT -->
+                        <a href="{{ url_for('edit_staff', staff_id=s.id) }}"
+                           class="btn btn-warning btn-sm"
+                           title="Edit">
+
+                            <i class="fa fa-edit"></i>
+
+                        </a>
+
+
+                        <!-- RESET PASSWORD -->
+                        <a href="{{ url_for('reset_staff_password', staff_id=s.id) }}"
+                           class="btn btn-info btn-sm"
+                           title="Reset Password">
+
+                            <i class="fa fa-key"></i>
+
+                        </a>
+
+
+                        <!-- ENABLE / DISABLE -->
+                        {% if s.is_active %}
+
+                        <a href="{{ url_for('disable_staff', staff_id=s.id) }}"
+                           class="btn btn-danger btn-sm"
+                           title="Disable">
+
+                            <i class="fa fa-ban"></i>
+
+                        </a>
+
+                        {% else %}
+
+                        <a href="{{ url_for('enable_staff', staff_id=s.id) }}"
+                           class="btn btn-success btn-sm"
+                           title="Enable">
+
+                            <i class="fa fa-check"></i>
+
+                        </a>
+
+                        {% endif %}
+
+
+                        <!-- DELETE -->
+                        <a href="{{ url_for('delete_staff', staff_id=s.id) }}"
+                           class="btn btn-danger btn-sm"
+                           title="Delete"
+                           onclick="return confirm('हा staff कायमचा delete करायचा आहे का? Delete केल्यानंतर या account चा access बंद होईल.');">
+
+                            <i class="fa fa-trash"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+
+                {% if not staff %}
+
+                <tr>
+
+                    <td colspan="6" style="text-align:center;">
+                        No staff found.
+                    </td>
+
+                </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 

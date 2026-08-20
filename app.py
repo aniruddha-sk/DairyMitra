@@ -1303,6 +1303,79 @@ def enable_staff(staff_id):
     flash("Staff enabled successfully.", "success")
     return redirect(url_for("staff_list"))
 
+
+@app.route('/delete_staff/<int:staff_id>')
+def delete_staff(staff_id):
+
+    # ==========================================================
+    # LOGIN CHECK
+    # ==========================================================
+
+    if "id" not in session:
+        flash("Please login first.", "danger")
+        return redirect(url_for("login"))
+
+
+    # ==========================================================
+    # ONLY OWNER CAN DELETE STAFF
+    # ==========================================================
+
+    if session.get("role") != "owner":
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("dashboard"))
+
+
+    cursor = SafeCursor(mysql.connection.cursor())
+
+
+    # ==========================================================
+    # VERIFY STAFF BELONGS TO CURRENT OWNER
+    # ==========================================================
+
+    cursor.execute("""
+        SELECT id, name
+        FROM staff
+        WHERE id=%s
+        AND owner_id=%s
+    """, (staff_id, session["id"]))
+
+    staff = cursor.fetchone()
+
+
+    if not staff:
+
+        cursor.close()
+
+        flash("Staff not found.", "danger")
+
+        return redirect(url_for("staff_list"))
+
+
+    # ==========================================================
+    # DELETE STAFF
+    # ==========================================================
+
+    cursor.execute("""
+        DELETE FROM staff
+        WHERE id=%s
+        AND owner_id=%s
+    """, (staff_id, session["id"]))
+
+
+    mysql.connection.commit()
+
+    cursor.close()
+
+
+    # ==========================================================
+    # SUCCESS
+    # ==========================================================
+
+    flash("Staff deleted successfully. Staff account access has been removed.", "success")
+
+    return redirect(url_for("staff_list"))
+
+
 @app.route("/vehicle_milk_report")
 def vehicle_milk_report():
 
@@ -1521,21 +1594,55 @@ def get_vendor_rate(cursor, vendor_id, animal, entry_date, user_id=None):
 
     return float(default_row['rate']) if default_row else 0
 
-@app.route('/vendor_rate', methods=['GET','POST'])
+@app.route('/vendor_rate', methods=['GET', 'POST'])
 def vendor_rate():
 
     cursor = SafeCursor(mysql.connection.cursor())
 
+    # ==========================================================
+    # GET ALL VENDORS
+    # ==========================================================
+
     cursor.execute("""
-        SELECT vendor_id,name
+        SELECT vendor_id, name
         FROM vendors
         WHERE user_id=%s
         ORDER BY vendor_id ASC
-    """,(session['id'],))
+    """, (session['id'],))
 
     vendors = cursor.fetchall()
 
-    if request.method=='POST':
+    # ==========================================================
+    # POST REQUEST
+    # ==========================================================
+
+    if request.method == 'POST':
+
+        action = request.form.get("action")
+
+        # ======================================================
+        # DELETE VENDOR SPECIAL RATE
+        # ======================================================
+
+        if action == "delete":
+
+            rate_id = request.form.get("rate_id")
+
+            cursor.execute("""
+                DELETE FROM vendor_milk_rates
+                WHERE id=%s
+                AND user_id=%s
+            """, (rate_id, session['id']))
+
+            mysql.connection.commit()
+
+            flash("Vendor special rate deleted successfully", "success")
+
+            return redirect(url_for("vendor_rate"))
+
+        # ======================================================
+        # ADD VENDOR SPECIAL RATE
+        # ======================================================
 
         vendor_id = request.form.get("vendor_id")
         cow_rate = request.form.get("cow_rate")
@@ -1544,27 +1651,49 @@ def vendor_rate():
 
         cursor.execute("""
             INSERT INTO vendor_milk_rates
-            (vendor_id,user_id,cow_rate,buffalo_rate,date_from)
-            VALUES(%s,%s,%s,%s,%s)
-        """,(vendor_id,session['id'],cow_rate,buffalo_rate,date_from))
+            (
+                vendor_id,
+                user_id,
+                cow_rate,
+                buffalo_rate,
+                date_from
+            )
+            VALUES(%s, %s, %s, %s, %s)
+        """, (
+            vendor_id,
+            session['id'],
+            cow_rate,
+            buffalo_rate,
+            date_from
+        ))
 
         mysql.connection.commit()
 
-        flash("Vendor special rate saved","success")
+        flash("Vendor special rate saved", "success")
 
         return redirect(url_for("vendor_rate"))
 
+    # ==========================================================
+    # GET ALL VENDOR SPECIAL RATES
+    # ==========================================================
+
     cursor.execute("""
-        SELECT v.name,r.*
+        SELECT
+            v.name,
+            r.*
         FROM vendor_milk_rates r
         JOIN vendors v
-        ON v.vendor_id=r.vendor_id
-        AND v.user_id=r.user_id
+            ON v.vendor_id = r.vendor_id
+            AND v.user_id = r.user_id
         WHERE r.user_id=%s
         ORDER BY r.date_from DESC
-    """,(session['id'],))
+    """, (session['id'],))
 
     rates = cursor.fetchall()
+
+    # ==========================================================
+    # RENDER PAGE
+    # ==========================================================
 
     return render_template(
         "rates/vendor_rate.html",

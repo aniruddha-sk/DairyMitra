@@ -2,111 +2,192 @@
 
 {% block content %}
 
-<div class="section">
-
-<h2 class="page-title">Vendor Special Milk Rate</h2>
-
-<form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-<div>
-<label class="form-label">Vendor</label>
-
-<select name="vendor_id" class="form-select" required>
-
-{% for v in vendors %}
-
-<option value="{{v.vendor_id}}">
-{{v.vendor_id}} - {{v.name}}
-</option>
-
-{% endfor %}
-
-</select>
-</div>
-
-
-<div>
-<label class="form-label">Cow Rate</label>
-
-<input
-type="number"
-step="0.01"
-name="cow_rate"
-class="form-input">
-</div>
-
-
-<div>
-<label class="form-label">Buffalo Rate</label>
-
-<input
-type="number"
-step="0.01"
-name="buffalo_rate"
-class="form-input">
-</div>
-
-
-<div>
-<label class="form-label">Effective Date</label>
-
-<input
-type="date"
-name="date"
-class="form-input"
-required>
-</div>
-
-
-<div>
-<button type="submit" class="btn btn-primary w-full">
-Save
-</button>
-</div>
-
-</form>
-
-</div>
-
+<!-- ==========================================================
+     ADD VENDOR SPECIAL RATE
+     ========================================================== -->
 
 <div class="section">
 
-<div class="table-wrap">
+    <h2 class="page-title">Vendor Special Milk Rate</h2>
 
-<table class="table">
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-<thead>
-<tr>
-<th>Vendor</th>
-<th>Cow Rate</th>
-<th>Buffalo Rate</th>
-<th>Date From</th>
-</tr>
-</thead>
+        <!-- Vendor -->
+        <div>
+            <label class="form-label">Vendor</label>
 
-<tbody>
+            <select name="vendor_id"
+                    class="form-select"
+                    required>
 
-{% for r in rates %}
+                {% for v in vendors %}
 
-<tr>
+                <option value="{{ v.vendor_id }}">
+                    {{ v.vendor_id }} - {{ v.name }}
+                </option>
 
-<td>{{r.name}}</td>
+                {% endfor %}
 
-<td>{{r.cow_rate}}</td>
+            </select>
+        </div>
 
-<td>{{r.buffalo_rate}}</td>
 
-<td>{{r.date_from}}</td>
+        <!-- Cow Rate -->
+        <div>
+            <label class="form-label">Cow Rate</label>
 
-</tr>
+            <input
+                type="number"
+                step="0.01"
+                name="cow_rate"
+                class="form-input"
+                placeholder="Enter cow rate">
+        </div>
 
-{% endfor %}
 
-</tbody>
+        <!-- Buffalo Rate -->
+        <div>
+            <label class="form-label">Buffalo Rate</label>
 
-</table>
+            <input
+                type="number"
+                step="0.01"
+                name="buffalo_rate"
+                class="form-input"
+                placeholder="Enter buffalo rate">
+        </div>
+
+
+        <!-- Effective Date -->
+        <div>
+            <label class="form-label">Effective Date</label>
+
+            <input
+                type="date"
+                name="date"
+                class="form-input"
+                required>
+        </div>
+
+
+        <!-- Save Button -->
+        <div>
+            <button
+                type="submit"
+                class="btn btn-primary w-full">
+
+                Save
+
+            </button>
+        </div>
+
+    </form>
 
 </div>
+
+
+<!-- ==========================================================
+     VENDOR SPECIAL RATES LIST
+     ========================================================== -->
+
+<div class="section">
+
+    <div class="table-wrap">
+
+        <table class="table">
+
+            <thead>
+
+                <tr>
+                    <th>Vendor</th>
+                    <th>Cow Rate</th>
+                    <th>Buffalo Rate</th>
+                    <th>Date From</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for r in rates %}
+
+                <tr>
+
+                    <!-- Vendor -->
+                    <td>
+                        {{ r.name }}
+                    </td>
+
+
+                    <!-- Cow Rate -->
+                    <td>
+                        {{ r.cow_rate }}
+                    </td>
+
+
+                    <!-- Buffalo Rate -->
+                    <td>
+                        {{ r.buffalo_rate }}
+                    </td>
+
+
+                    <!-- Date -->
+                    <td>
+                        {{ r.date_from }}
+                    </td>
+
+
+                    <!-- Delete -->
+                    <td>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('vendor_rate') }}"
+                            onsubmit="return confirm('हा vendor special rate delete करायचा आहे का?');">
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="delete">
+
+                            <input
+                                type="hidden"
+                                name="rate_id"
+                                value="{{ r.id }}">
+
+                            <button
+                                type="submit"
+                                class="btn btn-danger">
+
+                                Delete
+
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="5" style="text-align:center;">
+                        No vendor special rates found.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </div>
 
