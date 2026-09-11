@@ -401,8 +401,7 @@ def ensure_user_id_int():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
-    # ✅ Bug 5 fix: only auto-redirect owner/staff sessions to dashboard.
-    # A logged-in customer must NOT be bounced to the owner dashboard.
+    # Auto-redirect already logged-in owner/staff
     if session.get('loggedin') and session.get('role') in ('owner', 'staff'):
         return redirect(url_for('dashboard'))
 
@@ -413,9 +412,9 @@ def login():
 
         cursor = SafeCursor(mysql.connection.cursor())
 
-        # -----------------------------
+        # ==========================================================
         # OWNER LOGIN
-        # -----------------------------
+        # ==========================================================
         cursor.execute(
             'SELECT * FROM users WHERE email = %s',
             (email,)
@@ -423,7 +422,10 @@ def login():
 
         account = cursor.fetchone()
 
-        if account and account.get("is_verified") and check_password_hash(account['password'], password):
+        if account and account.get("is_verified") and check_password_hash(
+            account['password'],
+            password
+        ):
 
             session.clear()
             session.permanent = True
@@ -434,42 +436,158 @@ def login():
             session['email'] = account['email']
             session['dairy_name'] = account.get('dairy_name')
 
+            cursor.close()
+
             flash('Logged in successfully!', 'success')
 
             return redirect(url_for('dashboard'))
 
-        # -----------------------------
+        # ==========================================================
         # STAFF LOGIN
-        # -----------------------------
+        # ==========================================================
         cursor.execute(
-            "SELECT * FROM staff WHERE email=%s AND is_active=1",
+            """
+            SELECT *
+            FROM staff
+            WHERE email=%s
+            AND is_active=1
+            """,
             (email,)
         )
 
         staff = cursor.fetchone()
 
-        if staff and check_password_hash(staff['password'], password):
+        # ----------------------------------------------------------
+        # STAFF PASSWORD CHECK
+        # ----------------------------------------------------------
+        if staff and check_password_hash(
+            staff['password'],
+            password
+        ):
 
+            # ------------------------------------------------------
+            # FIND OWNER EMAIL
+            # ------------------------------------------------------
+            cursor.execute(
+                """
+                SELECT id, email, dairy_name
+                FROM users
+                WHERE id=%s
+                """,
+                (staff['owner_id'],)
+            )
+
+            owner = cursor.fetchone()
+
+            if not owner:
+                cursor.close()
+
+                flash(
+                    'Owner account not found.',
+                    'danger'
+                )
+
+                return redirect(url_for('login'))
+
+            # ------------------------------------------------------
+            # GENERATE STAFF LOGIN OTP
+            # ------------------------------------------------------
+            otp = generate_otp()
+
+            # ------------------------------------------------------
+            # CREATE TEMPORARY LOGIN SESSION
+            #
+            # IMPORTANT:
+            # loggedin=True is NOT set here.
+            #
+            # Staff gets actual login session ONLY after
+            # OTP verification.
+            # ------------------------------------------------------
             session.clear()
             session.permanent = True
 
-            session['loggedin'] = True
-            session['role'] = "staff"
+            session['staff_login_pending'] = True
 
-            session['staff_id'] = staff['id']
-            session['owner_id'] = staff['owner_id']
-            session['vehicle'] = staff['vehicle_number']
+            session['pending_staff_id'] = int(staff['id'])
+            session['pending_owner_id'] = int(staff['owner_id'])
 
-            # Owner ID is used throughout the app
-            session['id'] = staff['owner_id']
+            session['pending_staff_email'] = staff['email']
+            session['pending_vehicle'] = staff.get('vehicle_number')
 
-            flash('Staff login successful', 'success')
+            session['staff_login_otp'] = otp
 
-            return redirect(url_for('dashboard'))
+            session['staff_login_otp_expiry'] = (
+                datetime.now(timezone.utc)
+                + timedelta(minutes=OTP_EXPIRY_MINUTES)
+            ).isoformat()
 
-        flash('Invalid credentials!', 'danger')
+            # ------------------------------------------------------
+            # SEND OTP TO OWNER EMAIL
+            # ------------------------------------------------------
+            email_sent = send_email(
+                owner['email'],
+                'DairyMitra - Staff Login OTP',
+                f"""
+DairyMitra Staff Login Verification
+
+A staff member is trying to login to your DairyMitra account.
+
+Staff Email:
+{staff['email']}
+
+Vehicle Number:
+{staff.get('vehicle_number') or 'Not available'}
+
+Your Staff Login OTP is:
+
+{otp}
+
+This OTP will expire in {OTP_EXPIRY_MINUTES} minutes.
+
+Do not share this OTP with anyone.
+
+If you did not authorize this login, please ignore this email.
+"""
+            )
+
+            cursor.close()
+
+            # ------------------------------------------------------
+            # EMAIL FAILED
+            # ------------------------------------------------------
+            if not email_sent:
+
+                session.clear()
+
+                flash(
+                    'Unable to send OTP to owner email. Please try again.',
+                    'danger'
+                )
+
+                return redirect(url_for('login'))
+
+            # ------------------------------------------------------
+            # OTP SENT SUCCESSFULLY
+            # ------------------------------------------------------
+            flash(
+                'OTP has been sent to the owner email. Please enter the OTP.',
+                'info'
+            )
+
+            return redirect(url_for('verify_staff_otp'))
+
+        # ----------------------------------------------------------
+        # INVALID LOGIN
+        # ----------------------------------------------------------
+        cursor.close()
+
+        flash(
+            'Invalid credentials!',
+            'danger'
+        )
 
     return render_template('auth/login.html')
+
 
 
 @app.route('/logout')
@@ -688,6 +806,275 @@ def reset_password():
         return redirect(url_for('login'))
     return render_template('auth/reset_password.html')
 
+@app.route('/verify-staff-otp', methods=['GET', 'POST'])
+def verify_staff_otp():
+
+    # ==========================================================
+    # CHECK PENDING STAFF LOGIN
+    # ==========================================================
+    if not session.get('staff_login_pending'):
+
+        flash(
+            'Session expired. Please login again.',
+            'warning'
+        )
+
+        return redirect(url_for('login'))
+
+    # ==========================================================
+    # OTP SUBMISSION
+    # ==========================================================
+    if request.method == 'POST':
+
+        otp_entered = request.form.get('otp', '').strip()
+
+        stored_otp = session.get('staff_login_otp')
+
+        expiry_string = session.get(
+            'staff_login_otp_expiry'
+        )
+
+        # ------------------------------------------------------
+        # CHECK OTP SESSION DATA
+        # ------------------------------------------------------
+        if not stored_otp or not expiry_string:
+
+            session.clear()
+
+            flash(
+                'OTP session expired. Please login again.',
+                'warning'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # CONVERT EXPIRY TIME
+        # ------------------------------------------------------
+        try:
+
+            otp_expiry = datetime.fromisoformat(
+                expiry_string
+            )
+
+            if otp_expiry.tzinfo is None:
+
+                otp_expiry = otp_expiry.replace(
+                    tzinfo=timezone.utc
+                )
+
+        except Exception:
+
+            session.clear()
+
+            flash(
+                'Invalid OTP session. Please login again.',
+                'warning'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # CURRENT UTC TIME
+        # ------------------------------------------------------
+        now_utc = datetime.now(timezone.utc)
+
+        # ------------------------------------------------------
+        # OTP EXPIRED
+        # ------------------------------------------------------
+        if now_utc >= otp_expiry:
+
+            session.clear()
+
+            flash(
+                'OTP has expired. Please login again.',
+                'danger'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # OTP INCORRECT
+        # ------------------------------------------------------
+        if otp_entered != stored_otp:
+
+            flash(
+                'Invalid OTP. Please try again.',
+                'danger'
+            )
+
+            return render_template(
+                'auth/verify_staff_otp.html'
+            )
+
+        # ======================================================
+        # OTP CORRECT
+        # ======================================================
+
+        staff_id = session.get(
+            'pending_staff_id'
+        )
+
+        owner_id = session.get(
+            'pending_owner_id'
+        )
+
+        # ------------------------------------------------------
+        # BASIC SESSION DATA CHECK
+        # ------------------------------------------------------
+        if not staff_id or not owner_id:
+
+            session.clear()
+
+            flash(
+                'Invalid login session. Please login again.',
+                'danger'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # CHECK STAFF FROM DATABASE AGAIN
+        # ------------------------------------------------------
+        cursor = SafeCursor(
+            mysql.connection.cursor()
+        )
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                owner_id,
+                email,
+                vehicle_number,
+                is_active
+            FROM staff
+            WHERE id=%s
+            """,
+            (staff_id,)
+        )
+
+        staff = cursor.fetchone()
+
+        cursor.close()
+
+        # ------------------------------------------------------
+        # STAFF NOT FOUND
+        # ------------------------------------------------------
+        if not staff:
+
+            session.clear()
+
+            flash(
+                'Staff account not found.',
+                'danger'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # STAFF DISABLED
+        # ------------------------------------------------------
+        if int(staff['is_active']) != 1:
+
+            session.clear()
+
+            flash(
+                'Your account has been disabled by owner.',
+                'danger'
+            )
+
+            return redirect(url_for('login'))
+
+        # ------------------------------------------------------
+        # OWNER CHECK
+        # ------------------------------------------------------
+        if int(staff['owner_id']) != int(owner_id):
+
+            session.clear()
+
+            flash(
+                'Invalid staff login session.',
+                'danger'
+            )
+
+            return redirect(url_for('login'))
+
+        # ======================================================
+        # OTP VERIFIED
+        #
+        # NOW CREATE REAL LOGIN SESSION
+        # ======================================================
+
+        session.clear()
+
+        session.permanent = True
+
+        # ------------------------------------------------------
+        # LOGIN STATUS
+        # ------------------------------------------------------
+        session['loggedin'] = True
+
+        # ------------------------------------------------------
+        # ROLE
+        # ------------------------------------------------------
+        session['role'] = 'staff'
+
+        # ------------------------------------------------------
+        # STAFF INFORMATION
+        # ------------------------------------------------------
+        session['staff_id'] = int(
+            staff['id']
+        )
+
+        session['owner_id'] = int(
+            staff['owner_id']
+        )
+
+        session['vehicle'] = (
+            staff['vehicle_number']
+        )
+
+        # ------------------------------------------------------
+        # IMPORTANT:
+        # Existing application uses owner ID as session['id']
+        # ------------------------------------------------------
+        session['id'] = int(
+            staff['owner_id']
+        )
+
+        # ------------------------------------------------------
+        # OPTIONAL STAFF EMAIL
+        # ------------------------------------------------------
+        session['email'] = staff['email']
+
+        # ------------------------------------------------------
+        # AUDIT LOG
+        # ------------------------------------------------------
+        audit_log(
+            staff['id'],
+            'staff_login',
+            f'OTP verified successfully for owner_id={staff["owner_id"]}'
+        )
+
+        # ------------------------------------------------------
+        # LOGIN SUCCESS
+        # ------------------------------------------------------
+        flash(
+            'Staff login successful!',
+            'success'
+        )
+
+        return redirect(
+            url_for('dashboard')
+        )
+
+    # ==========================================================
+    # GET REQUEST
+    # ==========================================================
+    return render_template(
+        'auth/verify_staff_otp.html'
+    )
 
 @app.before_request
 def require_login():
@@ -704,19 +1091,19 @@ def require_login():
     """
 
     allowed = {
-        'login',
-        'customer_login',
-        'signup',
-        'verify_account',
-        'forgot_password',
-        'verify_reset_otp',
-        'reset_password',
-        'static',
-        'healthcheck',
-        'favicon',
-
-        'service_worker',
-        'manifest',
+    'login',
+    'customer_login',
+    'signup',
+    'verify_account',
+    'forgot_password',
+    'verify_reset_otp',
+    'verify_staff_otp',
+    'reset_password',
+    'static',
+    'healthcheck',
+    'favicon',
+    'service_worker',
+    'manifest',
     }
 
     # ✅ Bug 2 fix: detect whether this request belongs to the customer area
