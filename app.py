@@ -1078,92 +1078,209 @@ def verify_staff_otp():
 
 @app.before_request
 def require_login():
+
     print("=" * 60)
     print("PATH :", request.path)
     print("COOKIE:", request.cookies)
     print("SESSION:", dict(session))
     print("=" * 60)
+
     """
     Basic protection
     + Auto logout disabled staff
-    + Role-aware redirect: customer routes -> /customer/login,
-      owner/staff routes -> /login
+    + Role-aware redirect
+    + Shared routes support for customer/owner/staff
     """
 
+    # ==========================================================
+    # PUBLIC ROUTES
+    # ==========================================================
+
     allowed = {
-    'login',
-    'customer_login',
-    'signup',
-    'verify_account',
-    'forgot_password',
-    'verify_reset_otp',
-    'verify_staff_otp',
-    'reset_password',
-    'static',
-    'healthcheck',
-    'favicon',
-    'service_worker',
-    'manifest',
+        'login',
+        'customer_login',
+        'signup',
+        'verify_account',
+        'forgot_password',
+        'verify_reset_otp',
+        'verify_staff_otp',
+        'reset_password',
+        'static',
+        'healthcheck',
+        'favicon',
+        'service_worker',
+        'manifest',
     }
 
-    # ✅ Bug 2 fix: detect whether this request belongs to the customer area
+    # ==========================================================
+    # CURRENT ENDPOINT
+    # ==========================================================
+
     endpoint = request.endpoint or ""
+
+    # ==========================================================
+    # CUSTOMER AREA
+    # ==========================================================
 
     is_customer_route = (
         endpoint.startswith("customer_")
         or request.path.startswith("/customer")
     )
 
-    # -----------------------------
+    # ==========================================================
+    # SHARED ROUTES
+    #
+    # These routes can be accessed by both:
+    # Customer + Owner + Staff
+    #
+    # IMPORTANT:
+    # /receipt/<vendor_id> is a shared route.
+    # ==========================================================
+
+    is_shared_route = (
+        request.path.startswith("/receipt/")
+    )
+
+    # ==========================================================
     # LOGIN CHECK
-    # -----------------------------
+    # ==========================================================
+
     if request.endpoint and request.endpoint not in allowed:
 
+        # ------------------------------------------------------
+        # USER NOT LOGGED IN
+        # ------------------------------------------------------
+
         if 'loggedin' not in session:
+
             if is_customer_route:
-                return redirect(url_for('customer_login'))
-            return redirect(url_for('login'))
+                return redirect(
+                    url_for('customer_login')
+                )
 
-        # logged in, but wrong role for this area
-        if is_customer_route and session.get('role') != 'customer':
-            return redirect(url_for('login'))
+            return redirect(
+                url_for('login')
+            )
 
-        if not is_customer_route and session.get('role') == 'customer':
-            return redirect(url_for('customer_login'))
+        # ------------------------------------------------------
+        # CUSTOMER AREA
+        # ------------------------------------------------------
 
-    # -----------------------------
+        if is_customer_route:
+
+            # Customer is allowed
+            if session.get('role') == 'customer':
+                pass
+
+            # Owner/Staff trying to access customer-only route
+            else:
+                return redirect(
+                    url_for('login')
+                )
+
+        # ------------------------------------------------------
+        # SHARED ROUTES
+        # ------------------------------------------------------
+        #
+        # Customer + Owner + Staff are allowed.
+        #
+        elif is_shared_route:
+
+            if session.get('role') in (
+                'customer',
+                'owner',
+                'staff'
+            ):
+                pass
+
+            else:
+                session.clear()
+
+                flash(
+                    "Invalid session. Please login again.",
+                    "warning"
+                )
+
+                return redirect(
+                    url_for('login')
+                )
+
+        # ------------------------------------------------------
+        # OWNER / STAFF AREA
+        # ------------------------------------------------------
+
+        else:
+
+            # Customer is NOT allowed in owner/staff-only routes
+            if session.get('role') == 'customer':
+
+                return redirect(
+                    url_for('customer_login')
+                )
+
+    # ==========================================================
     # NORMALIZE SESSION ID
-    # -----------------------------
+    # ==========================================================
+
     if 'id' in session:
+
         uid = session['id']
 
         if isinstance(uid, bytes):
             uid = uid.decode()
 
         try:
-            session['id'] = int(uid)
-        except Exception:
-            session.clear()
-            flash("Session expired. Please login again.", "danger")
-            if is_customer_route:
-                return redirect(url_for('customer_login'))
-            return redirect(url_for('login'))
 
-    # -----------------------------
+            session['id'] = int(uid)
+
+        except Exception:
+
+            session.clear()
+
+            flash(
+                "Session expired. Please login again.",
+                "danger"
+            )
+
+            if is_customer_route:
+                return redirect(
+                    url_for('customer_login')
+                )
+
+            return redirect(
+                url_for('login')
+            )
+
+    # ==========================================================
     # AUTO LOGOUT DISABLED STAFF
-    # -----------------------------
+    # ==========================================================
+
     if session.get("role") == "staff":
 
         staff_id = session.get("staff_id")
 
-        # session broken
+        # ------------------------------------------------------
+        # SESSION BROKEN
+        # ------------------------------------------------------
+
         if not staff_id:
+
             session.clear()
-            flash("Session invalid. Please login again.", "danger")
-            return redirect(url_for("login"))
+
+            flash(
+                "Session invalid. Please login again.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("login")
+            )
 
         try:
-            cursor = SafeCursor(mysql.connection.cursor())
+
+            cursor = SafeCursor(
+                mysql.connection.cursor()
+            )
 
             cursor.execute("""
                 SELECT id, is_active
@@ -1172,24 +1289,55 @@ def require_login():
             """, (staff_id,))
 
             staff = cursor.fetchone()
+
             cursor.close()
 
-            # staff deleted
-            if not staff:
-                session.clear()
-                flash("Account not found.", "danger")
-                return redirect(url_for("login"))
+            # --------------------------------------------------
+            # STAFF DELETED
+            # --------------------------------------------------
 
-            # staff disabled by owner
-            if int(staff["is_active"]) == 0:
+            if not staff:
+
                 session.clear()
-                flash("Your account has been disabled by owner.", "danger")
-                return redirect(url_for("login"))
+
+                flash(
+                    "Account not found.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("login")
+                )
+
+            # --------------------------------------------------
+            # STAFF DISABLED BY OWNER
+            # --------------------------------------------------
+
+            if int(staff["is_active"]) == 0:
+
+                session.clear()
+
+                flash(
+                    "Your account has been disabled by owner.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("login")
+                )
 
         except Exception:
+
             session.clear()
-            flash("Session check failed. Please login again.", "danger")
-            return redirect(url_for("login"))
+
+            flash(
+                "Session check failed. Please login again.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("login")
+            )
 # ------------------------------
 # Dashboard
 # ------------------------------
