@@ -4,202 +4,484 @@
 
 {% block content %}
 
-<h2 class="receipt-page-title no-print">पावती मिळवा</h2>
+<h2 class="receipt-page-title no-print">
+    पावती मिळवा
+</h2>
+
 
 <!-- ================= DATE FORM ================= -->
+
 <form method="post" class="receipt-form no-print">
-<label for="from_date">पासून तारीख निवडा</label>
-<input
-  type="date"
-  name="from_date"
-  id="from_date"
-  required
->
 
-<label for="to_date">पर्यंत तारीख निवडा</label>
-<input
-  type="date"
-  name="to_date"
-  id="to_date"
-  required
->
+    <label for="from_date">
+        पासून तारीख निवडा
+    </label>
 
-<button type="submit" class="btn btn-primary">
-  पावती मिळवा
-</button>
+    <input
+        type="date"
+        name="from_date"
+        id="from_date"
+        required
+    >
+
+    <label for="to_date">
+        पर्यंत तारीख निवडा
+    </label>
+
+    <input
+        type="date"
+        name="to_date"
+        id="to_date"
+        required
+    >
+
+    <button
+        type="submit"
+        class="btn btn-primary"
+    >
+        पावती मिळवा
+    </button>
 
 </form>
 
+
 <!-- ================= PRINT BUTTON ================= -->
+
 {% if receipts %}
+
 <div class="no-print text-center">
-  <button class="print-btn" id="printBtn">
-    🖨️ सर्व रिसीट्स प्रिंट करा
-  </button>
+
+    <button
+        class="print-btn"
+        id="printBtn"
+        type="button"
+    >
+        🖨️ सर्व रिसीट्स प्रिंट करा
+    </button>
+
 </div>
+
 {% endif %}
 
+
 <!-- ================= RECEIPTS ================= -->
+
 <div class="receipt-wrapper">
 
 {% if receipts %}
-  {% for rec in receipts %}
-  <div class="receipt-box">
 
-    <h3>{{ session.get('dairy_name', 'Your Dairy Name') }}</h3>
+    {% for rec in receipts %}
 
-    <p><strong>नाव :</strong> {{ rec.name }}</p>
-    <p>
-      <strong>प्रकार :</strong>
-      {% if rec.milk_type == 'cow' %}
-        गाय
-      {% elif rec.milk_type == 'buffalo' %}
-        म्हैस
-      {% elif rec.milk_type == 'both' %}
-        गाय व म्हैस
-      {% else %}
-        -
-      {% endif %}
-    </p>
-    <p><strong>गाव :</strong> {{ rec.address }}</p>
+    <div class="receipt-box">
 
-         <p>
-      <strong>कालावधी :</strong>
-      {{ from_date.split('-')[2] }}/{{ from_date.split('-')[1] }}/{{ from_date.split('-')[0] }}
-      ते
-      {{ to_date.split('-')[2] }}/{{ to_date.split('-')[1] }}/{{ to_date.split('-')[0] }}
-    </p>
-    <!-- ================= MILK TABLE ================= -->
-    <table class="milk-table">
-      <thead>
-        <tr>
-          <th>तारीख</th>
-          <th colspan="2">गाय</th>
-          <th colspan="2">म्हैस</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th>सकाळ</th>
-          <th>संध्याकाळ</th>
-          <th>सकाळ</th>
-          <th>संध्याकाळ</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in rec.data %}
-        <tr>
-          <td>{{ row.day }}</td>
-          <td>{{ row.cow_morning }}</td>
-          <td>{{ row.cow_evening }}</td>
-          <td>{{ row.buffalo_morning }}</td>
-          <td>{{ row.buffalo_evening }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        <tr>
-          <th>एकूण</th>
-          <th>{{ rec.total_cow_morning|round(1) }}</th>
-          <th>{{ rec.total_cow_evening|round(1) }}</th>
-          <th>{{ rec.total_buffalo_morning|round(1) }}</th>
-          <th>{{ rec.total_buffalo_evening|round(1) }}</th>
-        </tr>
-      </tfoot>
-    </table>
+        <!-- ================= DAIRY NAME ================= -->
 
-    <!-- ================= RATE TABLE ================= -->
-    <table class="rate-table">
-      <tr>
-        <td rowspan="2"><strong>दुधाचा दर</strong></td>
-        <td>गाय</td>
-        <td>₹{{ rec.cow_rate }}</td>
-      </tr>
-      <tr>
-        <td>म्हैस</td>
-        <td>₹{{ rec.buffalo_rate }}</td>
-      </tr>
-    </table>
+        <h3>
+            {{ session.get('dairy_name', 'Your Dairy Name') }}
+        </h3>
 
-    <!-- ================= SUMMARY ================= -->
-    <table class="summary-table">
-      <tr>
-        <td>एकूण गायीचे दूध</td>
-        <td>{{ rec.total_cow|round(1) }} लि</td>
-      </tr>
-      <tr>
-        <td>गायीच्या दूधाची रक्कम</td>
-        <td>₹{{ rec.cow_cost|int }}</td>
-      </tr>
-      <tr>
-        <td>एकूण म्हशीचे दूध</td>
-        <td>{{ rec.total_buffalo|round(1) }} लि</td>
-      </tr>
-      <tr>
-        <td>म्हशीच्या दूधाची रक्कम</td>
-        <td>₹{{ rec.buffalo_cost|int }}</td>
-      </tr>
 
-      {% if rec.food_sack_details %}
-        {% for sack in rec.food_sack_details %}
-        <tr>
-          {% if loop.first %}
-          <td rowspan="{{ rec.food_sack_details|length }}">
-            <strong>खाद्य माहिती</strong>
-          </td>
-          {% endif %}
-          <td>
-            {{ sack.name }} (₹{{ sack.rate|int }}/गोणी)
-            × {{ sack.qty }} = ₹{{ sack.total|int }}
-          </td>
-        </tr>
-        {% endfor %}
-      {% endif %}
+        <!-- ================= VENDOR DETAILS ================= -->
 
-      <tr>
-        <td> ॲडव्हान्स वजा </td>
-        <td>₹{{ rec.advance|int }}</td>
-      </tr>
+        <p>
+            <strong>नाव :</strong>
+            {{ rec.name }}
+        </p>
 
-      <tr>
-        <th>अंतिम देय रक्कम</th>
-        <th>₹{{ rec.final_payable|int }}</th>
-      </tr>
-                  <tr>
-        <td>बाकी रक्कम</td>
-        <td></td>
-      </tr>
-    </table>
 
-  </div>
-  {% endfor %}
+        <p>
+
+            <strong>प्रकार :</strong>
+
+            {% if rec.milk_type == 'cow' %}
+
+                गाय
+
+            {% elif rec.milk_type == 'buffalo' %}
+
+                म्हैस
+
+            {% elif rec.milk_type == 'both' %}
+
+                गाय व म्हैस
+
+            {% else %}
+
+                -
+
+            {% endif %}
+
+        </p>
+
+
+        <p>
+            <strong>गाव :</strong>
+            {{ rec.address }}
+        </p>
+
+
+        <!-- ================= DATE RANGE ================= -->
+
+        <p>
+
+            <strong>कालावधी :</strong>
+
+            {{ from_date.split('-')[2] }}/{{ from_date.split('-')[1] }}/{{ from_date.split('-')[0] }}
+
+            ते
+
+            {{ to_date.split('-')[2] }}/{{ to_date.split('-')[1] }}/{{ to_date.split('-')[0] }}
+
+        </p>
+
+
+        <!-- ================= MILK TABLE ================= -->
+
+        <table class="milk-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        तारीख
+                    </th>
+
+                    <th colspan="2">
+                        गाय
+                    </th>
+
+                    <th colspan="2">
+                        म्हैस
+                    </th>
+
+                </tr>
+
+
+                <tr>
+
+                    <th></th>
+
+                    <th>
+                        सकाळ
+                    </th>
+
+                    <th>
+                        संध्याकाळ
+                    </th>
+
+                    <th>
+                        सकाळ
+                    </th>
+
+                    <th>
+                        संध्याकाळ
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for row in rec.data %}
+
+                <tr>
+
+                    <td>
+                        {{ row.day }}
+                    </td>
+
+                    <td>
+                        {{ row.cow_morning }}
+                    </td>
+
+                    <td>
+                        {{ row.cow_evening }}
+                    </td>
+
+                    <td>
+                        {{ row.buffalo_morning }}
+                    </td>
+
+                    <td>
+                        {{ row.buffalo_evening }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+
+            <tfoot>
+
+                <tr>
+
+                    <th>
+                        एकूण
+                    </th>
+
+                    <th>
+                        {{ rec.total_cow_morning | round(1) }}
+                    </th>
+
+                    <th>
+                        {{ rec.total_cow_evening | round(1) }}
+                    </th>
+
+                    <th>
+                        {{ rec.total_buffalo_morning | round(1) }}
+                    </th>
+
+                    <th>
+                        {{ rec.total_buffalo_evening | round(1) }}
+                    </th>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
+
+
+        <!-- ================= RATE TABLE ================= -->
+
+        <table class="rate-table">
+
+            <tr>
+
+                <td rowspan="2">
+                    <strong>दुधाचा दर</strong>
+                </td>
+
+                <td>
+                    गाय
+                </td>
+
+                <td>
+                    ₹{{ rec.cow_rate }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    म्हैस
+                </td>
+
+                <td>
+                    ₹{{ rec.buffalo_rate }}
+                </td>
+
+            </tr>
+
+        </table>
+
+
+        <!-- ================= SUMMARY ================= -->
+
+        <table class="summary-table">
+
+            <tr>
+
+                <td>
+                    एकूण गायीचे दूध
+                </td>
+
+                <td>
+                    {{ rec.total_cow | round(1) }} लि
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    गायीच्या दूधाची रक्कम
+                </td>
+
+                <td>
+                    ₹{{ rec.cow_cost | int }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    एकूण म्हशीचे दूध
+                </td>
+
+                <td>
+                    {{ rec.total_buffalo | round(1) }} लि
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    म्हशीच्या दूधाची रक्कम
+                </td>
+
+                <td>
+                    ₹{{ rec.buffalo_cost | int }}
+                </td>
+
+            </tr>
+
+
+            <!-- ================= FOOD SACK ================= -->
+
+            {% if rec.food_sack_details %}
+
+                {% for sack in rec.food_sack_details %}
+
+                <tr>
+
+                    {% if loop.first %}
+
+                    <td rowspan="{{ rec.food_sack_details | length }}">
+
+                        <strong>
+                            खाद्य माहिती
+                        </strong>
+
+                    </td>
+
+                    {% endif %}
+
+                    <td>
+
+                        {{ sack.name }}
+
+                        (₹{{ sack.rate | int }}/गोणी)
+
+                        × {{ sack.qty }}
+
+                        =
+
+                        ₹{{ sack.total | int }}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            {% endif %}
+
+
+            <!-- ================= PERIOD DEDUCTION ================= -->
+
+            <tr>
+
+                <td>
+                    ॲडव्हान्स वजा
+                </td>
+
+                <td>
+                    ₹{{ rec.advance | int }}
+                </td>
+
+            </tr>
+
+
+            <!-- ================= FINAL PAYABLE ================= -->
+
+            <tr>
+
+                <th>
+                    अंतिम देय रक्कम
+                </th>
+
+                <th>
+                    ₹{{ rec.final_payable | int }}
+                </th>
+
+            </tr>
+
+
+            <!-- ================= REMAINING ADVANCE ================= -->
+
+            <tr>
+
+                <td>
+                    बाकी रक्कम
+                </td>
+
+                <td>
+                    ₹{{ rec.remaining_advance | int }}
+                </td>
+
+            </tr>
+
+
+        </table>
+
+
+    </div>
+
+    {% endfor %}
+
 {% else %}
-  <div class="receipt-empty">
-    निवडलेल्या तारखांमध्ये कोणतीही पावती सापडली नाही.
-  </div>
+
+    <div class="receipt-empty">
+
+        निवडलेल्या तारखांमध्ये कोणतीही पावती सापडली नाही.
+
+    </div>
+
 {% endif %}
 
 </div>
 
 {% endblock %}
 
+
 {% block scripts %}
+
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
 
-  const printBtn = document.getElementById("printBtn");
-  if (!printBtn) return;
+    const printBtn =
+        document.getElementById("printBtn");
 
-  printBtn.addEventListener("click", function () {
-    printBtn.disabled = true;
-    printBtn.innerText = "प्रिंट तयार होत आहे...";
+    if (!printBtn) {
+        return;
+    }
 
-    setTimeout(function () {
-      window.print();
-      printBtn.disabled = false;
-      printBtn.innerText = "🖨️ सर्व रिसीट्स प्रिंट करा";
-    }, 300);
-  });
+    printBtn.addEventListener("click", function () {
+
+        printBtn.disabled = true;
+
+        printBtn.innerText =
+            "प्रिंट तयार होत आहे...";
+
+        setTimeout(function () {
+
+            window.print();
+
+            printBtn.disabled = false;
+
+            printBtn.innerText =
+                "🖨️ सर्व रिसीट्स प्रिंट करा";
+
+        }, 300);
+
+    });
 
 });
+
 </script>
+
 {% endblock %}

@@ -2623,71 +2623,1564 @@ def get_milk_data():
 # ------------------------------
 # Advance (safe add/update)
 # ------------------------------
-@app.route('/advance', methods=['GET', 'POST'])
+# ==============================================================================
+# ADVANCE MANAGEMENT SYSTEM
+# ------------------------------------------------------------------------------
+# Ledger-based advance system.
+#
+# transaction_type:
+#   advance  = money given to vendor
+#   deduction = money recovered/cut from vendor's advance
+#
+# Remaining balance is ALWAYS calculated:
+#
+#   Total Advance Given - Total Deduction = Remaining Advance
+#
+# IMPORTANT:
+# - Old `advance` table is NOT deleted.
+# - Existing old data has already been migrated into
+#   `advance_transactions`.
+# - All queries are restricted by session['id'].
+# - Vendor ownership is verified before every operation.
+# - Vendor row is locked during financial mutations to avoid
+#   concurrent balance corruption.
+# - Amounts use Decimal/DECIMAL-safe values.
+# ==============================================================================
+
+
+from decimal import Decimal, InvalidOperation
+
+
+# ------------------------------------------------------------------------------
+# Helper: Validate money amount
+# ------------------------------------------------------------------------------
+
+def _parse_advance_amount(value):
+    """
+    Convert incoming amount into Decimal safely.
+
+    Returns:
+        Decimal amount
+
+    Raises:
+        ValueError for invalid/non-positive amount.
+    """
+
+    if value is None:
+        raise ValueError("Amount is required.")
+
+    value = str(value).strip()
+
+    if not value:
+        raise ValueError("Amount is required.")
+
+    try:
+        amount = Decimal(value)
+    except (InvalidOperation, ValueError):
+        raise ValueError("Invalid amount.")
+
+    # Reject NaN / Infinity
+    if not amount.is_finite():
+        raise ValueError("Invalid amount.")
+
+    # Amount must be positive
+    if amount <= 0:
+        raise ValueError("Amount must be greater than zero.")
+
+    # Maximum supported amount.
+    # DECIMAL(12,2) supports up to 9,999,999,999.99
+    if amount > Decimal("9999999999.99"):
+        raise ValueError("Amount is too large.")
+
+    # Force exactly 2 decimal places.
+    return amount.quantize(Decimal("0.01"))
+
+
+# ------------------------------------------------------------------------------
+# Helper: Validate date
+# ------------------------------------------------------------------------------
+
+def _parse_advance_date(value):
+    """
+    Validate YYYY-MM-DD date.
+    """
+
+    if not value:
+        return date.today()
+
+    try:
+        return datetime.strptime(
+            str(value).strip(),
+            "%Y-%m-%d"
+        ).date()
+
+    except (ValueError, TypeError):
+        raise ValueError("Invalid date.")
+
+
+# ------------------------------------------------------------------------------
+# Helper: JSON / normal response
+# ------------------------------------------------------------------------------
+
+def _advance_json_error(message, status=400):
+    return jsonify({
+        "success": False,
+        "message": message
+    }), status
+
+
+# ------------------------------------------------------------------------------
+# MAIN ADVANCE PAGE
+# ------------------------------------------------------------------------------
+
+@app.route('/advance', methods=['GET'])
 def advance():
-    cursor = SafeCursor(mysql.connection.cursor())
-    cursor.execute("""
-SELECT * FROM vendors
-WHERE user_id = %s
-ORDER BY vendor_id ASC
-""", (session['id'],))
-    vendors = cursor.fetchall()
 
-    if request.method == 'POST':
-        # Support both JSON and form POST
-        if request.is_json:
-            data = request.get_json(silent=True) or {}
-            entry_date = data.get('date') or date.today().isoformat()
-        else:
-            data = request.form
-            entry_date = request.form.get('date') or date.today().isoformat()
+    if 'id' not in session:
+        return redirect(url_for('login'))
 
-        # OPTIMIZATION: prefetch existing advance rows for this date ONCE
-        # instead of running 1 SELECT per vendor (BEFORE: up to N queries,
-        # AFTER: 1 query, regardless of vendor count).
+    user_id = int(session['id'])
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    # Do NOT load every vendor here.
+    #
+    # The new UI uses server-side search through /advance/search.
+    # This is much faster for large vendor databases.
+    #
+    # We still provide today's date to the template.
+
+    cursor.close()
+
+    return render_template(
+        'milk_operations/advance.html',
+        today_date=date.today().isoformat()
+    )
+
+
+# ------------------------------------------------------------------------------
+# SEARCH VENDORS
+# ------------------------------------------------------------------------------
+#
+# Searches by:
+#   - vendor ID
+#   - vendor name
+#
+# Prefix search is intentionally used:
+#
+#   name LIKE 'rah%'
+#
+# instead of:
+#
+#   name LIKE '%rah%'
+#
+# because prefix search can use an index much more efficiently.
+#
+# The frontend can call this endpoint while typing.
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/search', methods=['GET'])
+def advance_search():
+
+    if 'id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "Please login first."
+        }), 401
+
+    user_id = int(session['id'])
+
+    search = request.args.get(
+        'q',
+        ''
+    ).strip()
+
+    # Avoid expensive empty search.
+    if not search:
+        return jsonify({
+            "success": True,
+            "vendors": []
+        })
+
+    # Prevent unnecessarily huge search strings.
+    search = search[:100]
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    # --------------------------------------------------------------------------
+    # Numeric vendor ID search
+    # --------------------------------------------------------------------------
+
+    if search.isdigit():
+
         cursor.execute("""
-            SELECT id, vendor_id, amount FROM advance
-            WHERE user_id=%s AND date=%s
-        """, (session['id'], entry_date))
-        existing_map = {str(r['vendor_id']): r for r in cursor.fetchall()}
+            SELECT
+                vendor_id,
+                name,
+                address,
+                milk_type,
+                phone
+            FROM vendors
+            WHERE user_id=%s
+              AND vendor_id=%s
+            LIMIT 10
+        """, (
+            user_id,
+            int(search)
+        ))
 
-        for v in vendors:
-            vid = v['vendor_id']
-            # For JSON payload, the key will match "advance_<vendor_id>"
-            amount = data.get(f'advance_{vid}')
-            if not amount:
-                continue
-            try:
-                amt = float(amount)
-            except:
-                continue
+        vendors = cursor.fetchall()
 
-            # check existing (from prefetched map)
-            existing = existing_map.get(str(vid))
-            if existing:
-                # update to new total (keep behavior: add amount)
-                new_amt = float(existing['amount']) + amt
-                cursor.execute("UPDATE advance SET amount=%s WHERE id=%s", (new_amt, existing['id']))
-                existing['amount'] = new_amt  # keep map consistent within loop
-            else:
-                cursor.execute(
-                    "INSERT INTO advance (vendor_id, user_id, date, amount) VALUES (%s,%s,%s,%s)",
-                    (vid, session['id'], entry_date, amt)
-                )
+    else:
+
+        # ----------------------------------------------------------------------
+        # Name prefix search
+        # ----------------------------------------------------------------------
+
+        cursor.execute("""
+            SELECT
+                vendor_id,
+                name,
+                address,
+                milk_type,
+                phone
+            FROM vendors
+            WHERE user_id=%s
+              AND name LIKE %s
+            ORDER BY name ASC, vendor_id ASC
+            LIMIT 10
+        """, (
+            user_id,
+            search + '%'
+        ))
+
+        vendors = cursor.fetchall()
+
+    cursor.close()
+
+    return jsonify({
+        "success": True,
+        "vendors": vendors
+    }), 200
+
+
+# ------------------------------------------------------------------------------
+# GET VENDOR ADVANCE SUMMARY + HISTORY
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/vendor/<int:vendor_id>', methods=['GET'])
+def advance_vendor(vendor_id):
+
+    if 'id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "Please login first."
+        }), 401
+
+    user_id = int(session['id'])
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    # --------------------------------------------------------------------------
+    # Verify vendor belongs to logged-in owner
+    # --------------------------------------------------------------------------
+
+    cursor.execute("""
+        SELECT
+            vendor_id,
+            name,
+            address,
+            milk_type,
+            phone
+        FROM vendors
+        WHERE vendor_id=%s
+          AND user_id=%s
+        LIMIT 1
+    """, (
+        vendor_id,
+        user_id
+    ))
+
+    vendor = cursor.fetchone()
+
+    if not vendor:
+
+        cursor.close()
+
+        return jsonify({
+            "success": False,
+            "message": "Vendor not found or unauthorized."
+        }), 404
+
+    # --------------------------------------------------------------------------
+    # One aggregate query for complete balance.
+    # --------------------------------------------------------------------------
+
+    cursor.execute("""
+        SELECT
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type='advance'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_advance,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type='deduction'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_deduction,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type='advance'
+                        THEN amount
+                        WHEN transaction_type='deduction'
+                        THEN -amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS remaining_advance
+
+        FROM advance_transactions
+        WHERE vendor_id=%s
+          AND user_id=%s
+    """, (
+        vendor_id,
+        user_id
+    ))
+
+    summary = cursor.fetchone()
+
+    # --------------------------------------------------------------------------
+    # Transaction history.
+    #
+    # Latest transactions first.
+    # Limit prevents huge responses.
+    # --------------------------------------------------------------------------
+
+    cursor.execute("""
+        SELECT
+            id,
+            transaction_type,
+            amount,
+            transaction_date,
+            created_at,
+            updated_at
+        FROM advance_transactions
+        WHERE vendor_id=%s
+          AND user_id=%s
+        ORDER BY transaction_date DESC, id DESC
+        LIMIT 200
+    """, (
+        vendor_id,
+        user_id
+    ))
+
+    transactions = cursor.fetchall()
+
+    cursor.close()
+
+    # --------------------------------------------------------------------------
+    # Convert DB Decimal/date values into JSON-safe values.
+    # --------------------------------------------------------------------------
+
+    transaction_list = []
+
+    for row in transactions:
+
+        transaction_list.append({
+            "id": int(row["id"]),
+            "transaction_type": row["transaction_type"],
+            "amount": float(row["amount"]),
+            "transaction_date": (
+                row["transaction_date"].isoformat()
+                if row["transaction_date"]
+                else None
+            ),
+            "created_at": (
+                row["created_at"].isoformat()
+                if row["created_at"]
+                else None
+            ),
+            "updated_at": (
+                row["updated_at"].isoformat()
+                if row["updated_at"]
+                else None
+            )
+        })
+
+    return jsonify({
+        "success": True,
+
+        "vendor": {
+            "vendor_id": int(vendor["vendor_id"]),
+            "name": vendor["name"],
+            "address": vendor.get("address"),
+            "milk_type": vendor.get("milk_type"),
+            "phone": vendor.get("phone")
+        },
+
+        "summary": {
+            "total_advance": float(
+                summary["total_advance"] or 0
+            ),
+            "total_deduction": float(
+                summary["total_deduction"] or 0
+            ),
+            "remaining_advance": float(
+                summary["remaining_advance"] or 0
+            )
+        },
+
+        "transactions": transaction_list
+
+    }), 200
+
+
+# ------------------------------------------------------------------------------
+# ADD NEW ADVANCE
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/add', methods=['POST'])
+def advance_add():
+
+    if 'id' not in session:
+        return _advance_json_error(
+            "Please login first.",
+            401
+        )
+
+    user_id = int(session['id'])
+
+    # --------------------------------------------------------------------------
+    # Support JSON and normal form requests.
+    # --------------------------------------------------------------------------
+
+    if request.is_json:
+
+        data = request.get_json(
+            silent=True
+        ) or {}
+
+    else:
+
+        data = request.form
+
+    # --------------------------------------------------------------------------
+    # Read values.
+    # --------------------------------------------------------------------------
+
+    vendor_id_raw = data.get("vendor_id")
+    amount_raw = data.get("amount")
+    transaction_date_raw = data.get("date")
+
+    # --------------------------------------------------------------------------
+    # Validate vendor ID.
+    # --------------------------------------------------------------------------
+
+    try:
+
+        vendor_id = int(
+            str(vendor_id_raw).strip()
+        )
+
+        if vendor_id <= 0:
+            raise ValueError
+
+    except (TypeError, ValueError):
+
+        return _advance_json_error(
+            "Invalid vendor."
+        )
+
+    # --------------------------------------------------------------------------
+    # Validate amount/date.
+    # --------------------------------------------------------------------------
+
+    try:
+
+        amount = _parse_advance_amount(
+            amount_raw
+        )
+
+        transaction_date = _parse_advance_date(
+            transaction_date_raw
+        )
+
+    except ValueError as e:
+
+        return _advance_json_error(
+            str(e)
+        )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # ======================================================================
+        # TRANSACTION START
+        #
+        # Lock the vendor row.
+        #
+        # This serializes financial mutations for the same vendor.
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT vendor_id
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+            FOR UPDATE
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        vendor = cursor.fetchone()
+
+        if not vendor:
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Vendor not found or unauthorized.",
+                404
+            )
+
+        # ======================================================================
+        # INSERT ADVANCE TRANSACTION
+        # ======================================================================
+
+        cursor.execute("""
+            INSERT INTO advance_transactions
+            (
+                vendor_id,
+                user_id,
+                transaction_type,
+                amount,
+                transaction_date
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                'advance',
+                %s,
+                %s
+            )
+        """, (
+            vendor_id,
+            user_id,
+            amount,
+            transaction_date
+        ))
+
+        transaction_id = cursor.lastrowid
 
         mysql.connection.commit()
-        audit_log(session['id'], 'advance_update', f"date={entry_date}")
 
-        # Return JSON if AJAX request
-        if request.is_json:
-            return jsonify({"success": True, "message": "Advance saved successfully."}), 200
-        else:
-            flash('Advance saved.', 'success')
-            return redirect(url_for('advance'))
+        audit_log(
+            user_id,
+            'advance_add',
+            (
+                f'vendor_id={vendor_id} '
+                f'transaction_id={transaction_id} '
+                f'amount={amount} '
+                f'date={transaction_date}'
+            )
+        )
 
-    return render_template('milk_operations/advance.html',
-                           vendors=vendors,
-                           today_date=date.today().isoformat())
+        cursor.close()
+
+        return jsonify({
+            "success": True,
+            "message": "Advance added successfully.",
+            "transaction_id": int(transaction_id)
+        }), 200
+
+    except Exception as e:
+
+        mysql.connection.rollback()
+        cursor.close()
+
+        logging.exception(
+            "advance_add failed"
+        )
+
+        return _advance_json_error(
+            "Unable to add advance. Please try again.",
+            500
+        )
+
+
+# ------------------------------------------------------------------------------
+# DEDUCT ADVANCE
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/deduct', methods=['POST'])
+def advance_deduct():
+
+    if 'id' not in session:
+        return _advance_json_error(
+            "Please login first.",
+            401
+        )
+
+    user_id = int(session['id'])
+
+    if request.is_json:
+
+        data = request.get_json(
+            silent=True
+        ) or {}
+
+    else:
+
+        data = request.form
+
+    vendor_id_raw = data.get("vendor_id")
+    amount_raw = data.get("amount")
+    transaction_date_raw = data.get("date")
+
+    # --------------------------------------------------------------------------
+    # Validate vendor.
+    # --------------------------------------------------------------------------
+
+    try:
+
+        vendor_id = int(
+            str(vendor_id_raw).strip()
+        )
+
+        if vendor_id <= 0:
+            raise ValueError
+
+    except (TypeError, ValueError):
+
+        return _advance_json_error(
+            "Invalid vendor."
+        )
+
+    # --------------------------------------------------------------------------
+    # Validate amount/date.
+    # --------------------------------------------------------------------------
+
+    try:
+
+        amount = _parse_advance_amount(
+            amount_raw
+        )
+
+        transaction_date = _parse_advance_date(
+            transaction_date_raw
+        )
+
+    except ValueError as e:
+
+        return _advance_json_error(
+            str(e)
+        )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # ======================================================================
+        # LOCK VENDOR
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT vendor_id
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+            FOR UPDATE
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        vendor = cursor.fetchone()
+
+        if not vendor:
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Vendor not found or unauthorized.",
+                404
+            )
+
+        # ======================================================================
+        # CALCULATE CURRENT BALANCE
+        #
+        # This query uses the indexed:
+        # vendor_id + user_id
+        #
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type='advance'
+                            THEN amount
+                            WHEN transaction_type='deduction'
+                            THEN -amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS remaining_advance
+            FROM advance_transactions
+            WHERE vendor_id=%s
+              AND user_id=%s
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        balance_row = cursor.fetchone()
+
+        current_balance = Decimal(
+            str(
+                balance_row["remaining_advance"]
+                or 0
+            )
+        )
+
+        # ======================================================================
+        # NEVER ALLOW DEDUCTION GREATER THAN AVAILABLE BALANCE
+        # ======================================================================
+
+        if amount > current_balance:
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                (
+                    f"Deduction cannot exceed remaining "
+                    f"advance of ₹{current_balance:.2f}."
+                )
+            )
+
+        # ======================================================================
+        # INSERT DEDUCTION
+        # ======================================================================
+
+        cursor.execute("""
+            INSERT INTO advance_transactions
+            (
+                vendor_id,
+                user_id,
+                transaction_type,
+                amount,
+                transaction_date
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                'deduction',
+                %s,
+                %s
+            )
+        """, (
+            vendor_id,
+            user_id,
+            amount,
+            transaction_date
+        ))
+
+        transaction_id = cursor.lastrowid
+
+        # ======================================================================
+        # NEW BALANCE
+        # ======================================================================
+
+        new_balance = (
+            current_balance - amount
+        ).quantize(
+            Decimal("0.01")
+        )
+
+        mysql.connection.commit()
+
+        audit_log(
+            user_id,
+            'advance_deduction',
+            (
+                f'vendor_id={vendor_id} '
+                f'transaction_id={transaction_id} '
+                f'amount={amount} '
+                f'date={transaction_date} '
+                f'previous_balance={current_balance} '
+                f'new_balance={new_balance}'
+            )
+        )
+
+        cursor.close()
+
+        return jsonify({
+            "success": True,
+            "message": "Advance deduction saved successfully.",
+            "transaction_id": int(transaction_id),
+            "remaining_advance": float(new_balance)
+        }), 200
+
+    except Exception:
+
+        mysql.connection.rollback()
+        cursor.close()
+
+        logging.exception(
+            "advance_deduct failed"
+        )
+
+        return _advance_json_error(
+            "Unable to deduct advance. Please try again.",
+            500
+        )
+
+
+# ------------------------------------------------------------------------------
+# EDIT ADVANCE TRANSACTION
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/edit/<int:transaction_id>', methods=['POST'])
+def advance_edit(transaction_id):
+
+    if 'id' not in session:
+        return _advance_json_error(
+            "Please login first.",
+            401
+        )
+
+    user_id = int(session['id'])
+
+    if request.is_json:
+
+        data = request.get_json(
+            silent=True
+        ) or {}
+
+    else:
+
+        data = request.form
+
+    amount_raw = data.get("amount")
+    transaction_date_raw = data.get("date")
+
+    try:
+
+        amount = _parse_advance_amount(
+            amount_raw
+        )
+
+        transaction_date = _parse_advance_date(
+            transaction_date_raw
+        )
+
+    except ValueError as e:
+
+        return _advance_json_error(
+            str(e)
+        )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # ======================================================================
+        # GET TRANSACTION + VERIFY OWNERSHIP
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT
+                id,
+                vendor_id,
+                transaction_type,
+                amount,
+                transaction_date
+            FROM advance_transactions
+            WHERE id=%s
+              AND user_id=%s
+            LIMIT 1
+            FOR UPDATE
+        """, (
+            transaction_id,
+            user_id
+        ))
+
+        transaction = cursor.fetchone()
+
+        if not transaction:
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Transaction not found or unauthorized.",
+                404
+            )
+
+        vendor_id = int(
+            transaction["vendor_id"]
+        )
+
+        transaction_type = transaction[
+            "transaction_type"
+        ]
+
+        # ======================================================================
+        # LOCK VENDOR
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT vendor_id
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+            FOR UPDATE
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        if not cursor.fetchone():
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Vendor not found or unauthorized.",
+                404
+            )
+
+        # ======================================================================
+        # IF EDITING DEDUCTION:
+        #
+        # Calculate balance excluding current transaction.
+        #
+        # This prevents:
+        #
+        # Advance = 5000
+        # Deduction = 3000
+        #
+        # Editing deduction to 6000.
+        #
+        # Such edit must be rejected.
+        # ======================================================================
+
+        if transaction_type == 'deduction':
+
+            cursor.execute("""
+                SELECT
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type='advance'
+                                THEN amount
+                                WHEN transaction_type='deduction'
+                                THEN -amount
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS balance_without_transaction
+                FROM advance_transactions
+                WHERE vendor_id=%s
+                  AND user_id=%s
+                  AND id<>%s
+            """, (
+                vendor_id,
+                user_id,
+                transaction_id
+            ))
+
+            balance_row = cursor.fetchone()
+
+            balance_without_transaction = Decimal(
+                str(
+                    balance_row[
+                        "balance_without_transaction"
+                    ] or 0
+                )
+            )
+
+            if amount > balance_without_transaction:
+
+                mysql.connection.rollback()
+                cursor.close()
+
+                return _advance_json_error(
+                    (
+                        "Deduction cannot exceed available "
+                        f"advance of "
+                        f"₹{balance_without_transaction:.2f}."
+                    )
+                )
+
+        # ======================================================================
+        # UPDATE TRANSACTION
+        # ======================================================================
+
+        cursor.execute("""
+            UPDATE advance_transactions
+            SET
+                amount=%s,
+                transaction_date=%s
+            WHERE id=%s
+              AND user_id=%s
+        """, (
+            amount,
+            transaction_date,
+            transaction_id,
+            user_id
+        ))
+
+        mysql.connection.commit()
+
+        audit_log(
+            user_id,
+            'advance_edit',
+            (
+                f'vendor_id={vendor_id} '
+                f'transaction_id={transaction_id} '
+                f'type={transaction_type} '
+                f'new_amount={amount} '
+                f'new_date={transaction_date}'
+            )
+        )
+
+        cursor.close()
+
+        return jsonify({
+            "success": True,
+            "message": "Advance transaction updated successfully."
+        }), 200
+
+    except Exception:
+
+        mysql.connection.rollback()
+        cursor.close()
+
+        logging.exception(
+            "advance_edit failed"
+        )
+
+        return _advance_json_error(
+            "Unable to update transaction. Please try again.",
+            500
+        )
+
+
+# ------------------------------------------------------------------------------
+# DELETE ADVANCE TRANSACTION
+# ------------------------------------------------------------------------------
+
+@app.route('/advance/delete/<int:transaction_id>', methods=['POST'])
+def advance_delete(transaction_id):
+
+    if 'id' not in session:
+        return _advance_json_error(
+            "Please login first.",
+            401
+        )
+
+    user_id = int(session['id'])
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # ======================================================================
+        # GET TRANSACTION + OWNERSHIP
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT
+                id,
+                vendor_id,
+                transaction_type,
+                amount,
+                transaction_date
+            FROM advance_transactions
+            WHERE id=%s
+              AND user_id=%s
+            LIMIT 1
+            FOR UPDATE
+        """, (
+            transaction_id,
+            user_id
+        ))
+
+        transaction = cursor.fetchone()
+
+        if not transaction:
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Transaction not found or unauthorized.",
+                404
+            )
+
+        vendor_id = int(
+            transaction["vendor_id"]
+        )
+
+        transaction_type = transaction[
+            "transaction_type"
+        ]
+
+        transaction_amount = Decimal(
+            str(
+                transaction["amount"]
+            )
+        )
+
+        # ======================================================================
+        # LOCK VENDOR
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT vendor_id
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+            FOR UPDATE
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        if not cursor.fetchone():
+
+            mysql.connection.rollback()
+            cursor.close()
+
+            return _advance_json_error(
+                "Vendor not found or unauthorized.",
+                404
+            )
+
+        # ======================================================================
+        # IMPORTANT DELETE RULE
+        #
+        # If deleting an ADVANCE transaction would make the ledger negative,
+        # reject the delete.
+        #
+        # Example:
+        #
+        # Advance       5000
+        # Deduction     4000
+        # Remaining     1000
+        #
+        # Trying to delete the 5000 advance would produce:
+        #
+        # 0 - 4000 = -4000
+        #
+        # This must NOT be allowed.
+        # ======================================================================
+
+        if transaction_type == 'advance':
+
+            cursor.execute("""
+                SELECT
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type='advance'
+                                THEN amount
+                                WHEN transaction_type='deduction'
+                                THEN -amount
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS balance_without_transaction
+                FROM advance_transactions
+                WHERE vendor_id=%s
+                  AND user_id=%s
+                  AND id<>%s
+            """, (
+                vendor_id,
+                user_id,
+                transaction_id
+            ))
+
+            balance_row = cursor.fetchone()
+
+            balance_without_transaction = Decimal(
+                str(
+                    balance_row[
+                        "balance_without_transaction"
+                    ] or 0
+                )
+            )
+
+            if balance_without_transaction < 0:
+
+                mysql.connection.rollback()
+                cursor.close()
+
+                return _advance_json_error(
+                    (
+                        "This advance cannot be deleted because "
+                        "existing deductions depend on it."
+                    )
+                )
+
+        # ======================================================================
+        # DELETE
+        # ======================================================================
+
+        cursor.execute("""
+            DELETE FROM advance_transactions
+            WHERE id=%s
+              AND user_id=%s
+        """, (
+            transaction_id,
+            user_id
+        ))
+
+        mysql.connection.commit()
+
+        audit_log(
+            user_id,
+            'advance_delete',
+            (
+                f'vendor_id={vendor_id} '
+                f'transaction_id={transaction_id} '
+                f'type={transaction_type} '
+                f'amount={transaction_amount}'
+            )
+        )
+
+        cursor.close()
+
+        return jsonify({
+            "success": True,
+            "message": "Advance transaction deleted successfully."
+        }), 200
+
+    except Exception:
+
+        mysql.connection.rollback()
+        cursor.close()
+
+        logging.exception(
+            "advance_delete failed"
+        )
+
+        return _advance_json_error(
+            "Unable to delete transaction. Please try again.",
+            500
+        )
+
+
+
+
+
+# ==============================================================================
+# ADVANCE REPORT
+# ==============================================================================
+
+@app.route('/advance/report', methods=['GET'])
+def advance_report():
+
+    # --------------------------------------------------------------------------
+    # LOGIN CHECK
+    # --------------------------------------------------------------------------
+    if 'id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = int(session['id'])
+
+    return render_template(
+        'milk_operations/advance_report.html',
+        today_date=date.today().isoformat()
+    )
+
+
+# ==============================================================================
+# ADVANCE REPORT DATA API
+# ==============================================================================
+
+@app.route('/advance/report/data', methods=['GET'])
+def advance_report_data():
+
+    # --------------------------------------------------------------------------
+    # LOGIN CHECK
+    # --------------------------------------------------------------------------
+    if 'id' not in session:
+        return jsonify({
+            "success": False,
+            "message": "Please login first."
+        }), 401
+
+    user_id = int(session['id'])
+
+    # --------------------------------------------------------------------------
+    # GET DATES
+    # --------------------------------------------------------------------------
+    from_date_raw = request.args.get('from_date', '').strip()
+    to_date_raw = request.args.get('to_date', '').strip()
+
+    if not from_date_raw or not to_date_raw:
+        return jsonify({
+            "success": False,
+            "message": "From Date आणि To Date निवडा."
+        }), 400
+
+    # --------------------------------------------------------------------------
+    # VALIDATE DATES
+    # --------------------------------------------------------------------------
+    try:
+
+        from_date = datetime.strptime(
+            from_date_raw,
+            "%Y-%m-%d"
+        ).date()
+
+        to_date = datetime.strptime(
+            to_date_raw,
+            "%Y-%m-%d"
+        ).date()
+
+    except ValueError:
+
+        return jsonify({
+            "success": False,
+            "message": "Invalid date format."
+        }), 400
+
+    # --------------------------------------------------------------------------
+    # DATE VALIDATION
+    # --------------------------------------------------------------------------
+    if from_date > to_date:
+
+        return jsonify({
+            "success": False,
+            "message": "From Date ही To Date पेक्षा मोठी असू शकत नाही."
+        }), 400
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # ======================================================================
+        # GET ALL ADVANCE TRANSACTIONS
+        #
+        # Only transaction_type='advance'
+        # Only logged-in user's vendors
+        # ======================================================================
+
+        cursor.execute("""
+            SELECT
+
+                at.id AS transaction_id,
+
+                at.vendor_id,
+
+                v.name AS vendor_name,
+
+                v.phone AS phone,
+
+                v.address AS address,
+
+                v.milk_type AS milk_type,
+
+                at.amount AS advance_amount,
+
+                at.transaction_date,
+
+                at.created_at
+
+            FROM advance_transactions at
+
+            INNER JOIN vendors v
+                ON v.vendor_id = at.vendor_id
+               AND v.user_id = at.user_id
+
+            WHERE at.user_id = %s
+
+              AND at.transaction_type = 'advance'
+
+              AND at.transaction_date BETWEEN %s AND %s
+
+            ORDER BY
+                at.transaction_date DESC,
+                at.id DESC
+
+        """, (
+            user_id,
+            from_date,
+            to_date
+        ))
+
+        transactions = cursor.fetchall()
+
+        # ======================================================================
+        # PREPARE TRANSACTION DATA
+        # ======================================================================
+
+        report = []
+
+        total_advance = Decimal("0.00")
+
+        vendor_ids = set()
+
+        for row in transactions:
+
+            amount = Decimal(
+                str(row["advance_amount"] or 0)
+            )
+
+            total_advance += amount
+
+            vendor_ids.add(
+                int(row["vendor_id"])
+            )
+
+            report.append({
+                "transaction_id": int(
+                    row["transaction_id"]
+                ),
+
+                "vendor_id": int(
+                    row["vendor_id"]
+                ),
+
+                "vendor_name": row["vendor_name"] or "",
+
+                "phone": row["phone"] or "",
+
+                "address": row["address"] or "",
+
+                "milk_type": row["milk_type"] or "",
+
+                "advance_amount": float(
+                    amount
+                ),
+
+                "transaction_date": (
+                    row["transaction_date"].isoformat()
+                    if row["transaction_date"]
+                    else None
+                ),
+
+                "created_at": (
+                    row["created_at"].isoformat()
+                    if row["created_at"]
+                    else None
+                )
+            })
+
+        # ======================================================================
+        # VENDOR-WISE TOTAL ADVANCE IN SELECTED DATE RANGE
+        # ======================================================================
+
+        vendor_totals = {}
+
+        for row in report:
+
+            vendor_id = row["vendor_id"]
+
+            if vendor_id not in vendor_totals:
+
+                vendor_totals[vendor_id] = 0
+
+            vendor_totals[vendor_id] += (
+                row["advance_amount"]
+            )
+
+        # ======================================================================
+        # ADD VENDOR TOTAL TO EACH TRANSACTION
+        # ======================================================================
+
+        for row in report:
+
+            row["vendor_total_advance"] = round(
+                vendor_totals[
+                    row["vendor_id"]
+                ],
+                2
+            )
+
+        # ======================================================================
+        # RESPONSE
+        # ======================================================================
+
+        return jsonify({
+
+            "success": True,
+
+            "from_date": from_date.isoformat(),
+
+            "to_date": to_date.isoformat(),
+
+            "total_transactions": len(report),
+
+            "total_vendors": len(vendor_ids),
+
+            "total_advance": float(
+                total_advance
+            ),
+
+            "transactions": report
+
+        }), 200
+
+    except Exception as e:
+
+        logging.exception(
+            "advance_report_data failed"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Advance report load करता आला नाही."
+        }), 500
+
+    finally:
+
+        cursor.close()
+
 
 
 # ------------------------------
@@ -3021,301 +4514,792 @@ def delete_food_sack_rate(sack_id):
 # Edit Entry & safer update_entries
 # ------------------------------
 
-@app.route('/edit_entry', methods=['GET','POST'])
+@app.route('/edit_entry', methods=['GET', 'POST'])
 def edit_entry():
 
     if "id" not in session:
         flash("Please login first.", "danger")
         return redirect(url_for("login"))
 
-    cursor = SafeCursor(mysql.connection.cursor())
+    user_id = int(session['id'])
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    # =========================================================
+    # LOAD VENDORS
+    # =========================================================
 
     cursor.execute("""
-        SELECT vendor_id,name,milk_type
+        SELECT
+            vendor_id,
+            name,
+            milk_type
         FROM vendors
         WHERE user_id=%s
         ORDER BY vendor_id ASC
-    """,(session['id'],))
+    """, (user_id,))
 
     vendors = cursor.fetchall()
 
-    data=[]
-    selected_vendor_type=None
+    data = []
+    selected_vendor_type = None
 
-    vendor_id=request.args.get("vendor_id")
-    from_date=request.args.get("from_date")
-    to_date=request.args.get("to_date")
+    vendor_id = request.args.get("vendor_id")
+    from_date = request.args.get("from_date")
+    to_date = request.args.get("to_date")
+
+    # =========================================================
+    # LOAD SELECTED VENDOR DATA
+    # =========================================================
 
     if vendor_id and from_date and to_date:
+
+        # -----------------------------------------------------
+        # OWNERSHIP + MILK TYPE CHECK
+        # -----------------------------------------------------
 
         cursor.execute("""
             SELECT milk_type
             FROM vendors
-            WHERE vendor_id=%s AND user_id=%s
-        """,(vendor_id,session['id']))
+            WHERE vendor_id=%s
+              AND user_id=%s
+        """, (
+            vendor_id,
+            user_id
+        ))
 
-        vendor_info=cursor.fetchone()
+        vendor_info = cursor.fetchone()
 
         if not vendor_info:
-            flash("Unauthorized vendor.","danger")
-            return redirect(url_for("edit_entry"))
 
-        selected_vendor_type=vendor_info["milk_type"]
+            cursor.close()
 
-        # 🔹 LOAD ALL MILK DATA (1 query)
+            flash(
+                "Unauthorized vendor.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("edit_entry")
+            )
+
+        selected_vendor_type = vendor_info["milk_type"]
+
+        # =====================================================
+        # LOAD ALL MILK DATA
+        # =====================================================
+
         cursor.execute("""
-            SELECT date,slot,milk_type,quantity
+            SELECT
+                id,
+                date,
+                slot,
+                milk_type,
+                quantity
             FROM milk_collection
             WHERE vendor_id=%s
-            AND user_id=%s
-            AND date BETWEEN %s AND %s
-        """,(vendor_id,session['id'],from_date,to_date))
+              AND user_id=%s
+              AND date BETWEEN %s AND %s
+        """, (
+            vendor_id,
+            user_id,
+            from_date,
+            to_date
+        ))
 
-        milk_rows=cursor.fetchall()
+        milk_rows = cursor.fetchall()
 
-        milk_map={}
+        milk_map = {}
+
         for r in milk_rows:
-            d=r['date'].strftime("%Y-%m-%d")
-            key=(d,r['slot'],r['milk_type'])
-            milk_map[key]=r['quantity']
 
-        # 🔹 LOAD ADVANCE DATA (1 query)
-        cursor.execute("""
-            SELECT date,amount
-            FROM advance
-            WHERE vendor_id=%s
-            AND user_id=%s
-            AND date BETWEEN %s AND %s
-        """,(vendor_id,session['id'],from_date,to_date))
+            d = r['date'].strftime(
+                "%Y-%m-%d"
+            )
 
-        adv_rows=cursor.fetchall()
+            key = (
+                d,
+                r['slot'],
+                r['milk_type']
+            )
 
-        advance_map={}
-        for a in adv_rows:
-            d=a['date'].strftime("%Y-%m-%d")
-            advance_map[d]=a['amount']
+            milk_map[key] = r['quantity']
 
-        start=datetime.strptime(from_date,"%Y-%m-%d")
-        end=datetime.strptime(to_date,"%Y-%m-%d")
+        # =====================================================
+        # BUILD DATE RANGE
+        # =====================================================
 
-        d=start
+        start = datetime.strptime(
+            from_date,
+            "%Y-%m-%d"
+        )
 
-        while d<=end:
+        end = datetime.strptime(
+            to_date,
+            "%Y-%m-%d"
+        )
 
-            ds=d.strftime("%Y-%m-%d")
+        d = start
 
-            rec={
-                "date":ds,
-                "cow_morning":milk_map.get((ds,"morning","cow"),0),
-                "cow_evening":milk_map.get((ds,"evening","cow"),0),
-                "buffalo_morning":milk_map.get((ds,"morning","buffalo"),0),
-                "buffalo_evening":milk_map.get((ds,"evening","buffalo"),0),
-                "advance_amt":advance_map.get(ds,0)
+        while d <= end:
+
+            ds = d.strftime(
+                "%Y-%m-%d"
+            )
+
+            rec = {
+                "date": ds,
+
+                "cow_morning": milk_map.get(
+                    (
+                        ds,
+                        "morning",
+                        "cow"
+                    ),
+                    0
+                ),
+
+                "cow_evening": milk_map.get(
+                    (
+                        ds,
+                        "evening",
+                        "cow"
+                    ),
+                    0
+                ),
+
+                "buffalo_morning": milk_map.get(
+                    (
+                        ds,
+                        "morning",
+                        "buffalo"
+                    ),
+                    0
+                ),
+
+                "buffalo_evening": milk_map.get(
+                    (
+                        ds,
+                        "evening",
+                        "buffalo"
+                    ),
+                    0
+                )
             }
 
             data.append(rec)
 
-            d+=timedelta(days=1)
-    today = date.today().strftime('%Y-%m-%d')
+            d += timedelta(
+                days=1
+            )
+
+    # =========================================================
+    # TODAY
+    # =========================================================
+
+    today = date.today().strftime(
+        "%Y-%m-%d"
+    )
+
+    cursor.close()
+
     return render_template(
         "milk_operations/edit_entry.html",
         vendors=vendors,
         data=data,
         selected_vendor_type=selected_vendor_type,
         today=today
-
     )
 
-
-    
 @app.route('/update_entries', methods=['POST'])
 def update_entries():
 
     if "id" not in session:
-        flash("Please login first.", "danger")
-        return redirect(url_for("login"))
+        flash(
+            "Please login first.",
+            "danger"
+        )
 
-    vendor_id = request.form.get("vendor_id")
-    from_date = request.form.get("from_date")
-    to_date = request.form.get("to_date")
+        return redirect(
+            url_for("login")
+        )
 
-    cursor = SafeCursor(mysql.connection.cursor())
+    user_id = int(
+        session['id']
+    )
 
-    # Ownership + milk_type
-    cursor.execute("""
-        SELECT milk_type
-        FROM vendors
-        WHERE vendor_id=%s AND user_id=%s
-    """, (vendor_id, session['id']))
-    vendor_info = cursor.fetchone()
+    vendor_id = request.form.get(
+        "vendor_id"
+    )
 
-    if not vendor_info:
-        flash("Unauthorized vendor.", "danger")
-        return redirect(url_for("edit_entry"))
+    from_date = request.form.get(
+        "from_date"
+    )
 
-    vendor_type = vendor_info["milk_type"]
+    to_date = request.form.get(
+        "to_date"
+    )
 
-    # Allowed milk types
-    if vendor_type == "cow":
-        allowed_types = ["cow"]
-    elif vendor_type == "buffalo":
-        allowed_types = ["buffalo"]
-    else:
-        allowed_types = ["cow", "buffalo"]
+    # =========================================================
+    # BASIC INPUT VALIDATION
+    # =========================================================
 
-    # Load existing milk entries
-    cursor.execute("""
-        SELECT id, date, slot, milk_type, quantity
-        FROM milk_collection
-        WHERE vendor_id=%s AND user_id=%s
-        AND date BETWEEN %s AND %s
-    """, (vendor_id, session['id'], from_date, to_date))
+    if not vendor_id or not from_date or not to_date:
 
-    existing = cursor.fetchall() or {}
-    existing_map = {}
+        flash(
+            "Invalid update request.",
+            "danger"
+        )
 
-    for r in existing:
-        dstr = r['date'].strftime("%Y-%m-%d")
-        existing_map[(dstr, r['slot'], r['milk_type'])] = {
-            'id': r['id'],
-            'quantity': float(r['quantity'])
-        }
+        return redirect(
+            url_for("edit_entry")
+        )
 
-    # Advances
-    cursor.execute("""
-        SELECT id, date, amount
-        FROM advance
-        WHERE vendor_id=%s AND user_id=%s
-        AND date BETWEEN %s AND %s
-    """, (vendor_id, session['id'], from_date, to_date))
+    try:
 
-    advs = cursor.fetchall() or {}
-    adv_map = {}
+        datetime.strptime(
+            from_date,
+            "%Y-%m-%d"
+        )
 
-    for a in advs:
-        dstr = a['date'].strftime("%Y-%m-%d")
-        adv_map[dstr] = {
-            'id': a['id'],
-            'amount': float(a['amount'])
-        }
+        datetime.strptime(
+            to_date,
+            "%Y-%m-%d"
+        )
 
-    cur_date = datetime.strptime(from_date, "%Y-%m-%d").date()
-    end_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+    except ValueError:
 
-    while cur_date <= end_date:
-        ds = cur_date.strftime("%Y-%m-%d")
+        flash(
+            "Invalid date format.",
+            "danger"
+        )
 
-        for milk_type in allowed_types:
-            for slot in ('morning', 'evening'):
+        return redirect(
+            url_for("edit_entry")
+        )
 
-                field_name = f"{milk_type}_{slot}_{ds}"
-                qty = float(request.form.get(field_name) or 0)
+    if from_date > to_date:
 
-                key = (ds, slot, milk_type)
-                existing_row = existing_map.get(key)
+        flash(
+            "Invalid date range.",
+            "danger"
+        )
 
-                if qty > 0:
-                    if existing_row:
-                        if abs(existing_row['quantity'] - qty) > 1e-9:
-                            cursor.execute(
-                                "UPDATE milk_collection SET quantity=%s WHERE id=%s",
-                                (qty, existing_row['id'])
-                            )
-                    else:
-                        cursor.execute("""
-                            INSERT INTO milk_collection
-                            (vendor_id, user_id, date, slot, milk_type, quantity)
-                            VALUES (%s,%s,%s,%s,%s,%s)
-                        """, (vendor_id, session['id'], ds, slot, milk_type, qty))
-                else:
-                    if existing_row:
-                        cursor.execute(
-                            "DELETE FROM milk_collection WHERE id=%s",
-                            (existing_row['id'],)
+        return redirect(
+            url_for("edit_entry")
+        )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # =====================================================
+        # OWNERSHIP + MILK TYPE
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                milk_type
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        vendor_info = cursor.fetchone()
+
+        if not vendor_info:
+
+            mysql.connection.rollback()
+
+            cursor.close()
+
+            flash(
+                "Unauthorized vendor.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("edit_entry")
+            )
+
+        vendor_type = vendor_info[
+            "milk_type"
+        ]
+
+        # =====================================================
+        # ALLOWED MILK TYPES
+        # =====================================================
+
+        if vendor_type == "cow":
+
+            allowed_types = [
+                "cow"
+            ]
+
+        elif vendor_type == "buffalo":
+
+            allowed_types = [
+                "buffalo"
+            ]
+
+        else:
+
+            allowed_types = [
+                "cow",
+                "buffalo"
+            ]
+
+        # =====================================================
+        # LOAD EXISTING MILK ENTRIES
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                id,
+                date,
+                slot,
+                milk_type,
+                quantity
+            FROM milk_collection
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND date BETWEEN %s AND %s
+        """, (
+            vendor_id,
+            user_id,
+            from_date,
+            to_date
+        ))
+
+        existing = cursor.fetchall() or []
+
+        existing_map = {}
+
+        for r in existing:
+
+            dstr = r['date'].strftime(
+                "%Y-%m-%d"
+            )
+
+            existing_map[
+                (
+                    dstr,
+                    r['slot'],
+                    r['milk_type']
+                )
+            ] = {
+                'id': r['id'],
+                'quantity': float(
+                    r['quantity']
+                )
+            }
+
+        # =====================================================
+        # DATE LOOP
+        # =====================================================
+
+        cur_date = datetime.strptime(
+            from_date,
+            "%Y-%m-%d"
+        ).date()
+
+        end_date = datetime.strptime(
+            to_date,
+            "%Y-%m-%d"
+        ).date()
+
+        while cur_date <= end_date:
+
+            ds = cur_date.strftime(
+                "%Y-%m-%d"
+            )
+
+            # =================================================
+            # MILK UPDATE
+            # =================================================
+
+            for milk_type in allowed_types:
+
+                for slot in (
+                    "morning",
+                    "evening"
+                ):
+
+                    field_name = (
+                        f"{milk_type}_"
+                        f"{slot}_"
+                        f"{ds}"
+                    )
+
+                    raw_qty = request.form.get(
+                        field_name
+                    )
+
+                    try:
+
+                        qty = float(
+                            raw_qty or 0
                         )
 
-        # Advance
-        adv_field = f"advance_{ds}"
-        adv_amt = float(request.form.get(adv_field) or 0)
-        existing_adv = adv_map.get(ds)
+                    except (
+                        TypeError,
+                        ValueError
+                    ):
 
-        if adv_amt > 0:
-            if existing_adv:
-                if abs(existing_adv['amount'] - adv_amt) > 1e-9:
-                    cursor.execute(
-                        "UPDATE advance SET amount=%s WHERE id=%s",
-                        (adv_amt, existing_adv['id'])
+                        raise ValueError(
+                            "Invalid milk quantity."
+                        )
+
+                    # -------------------------------------------------
+                    # SECURITY / DATA VALIDATION
+                    # -------------------------------------------------
+
+                    if qty < 0:
+
+                        raise ValueError(
+                            "Milk quantity cannot be negative."
+                        )
+
+                    key = (
+                        ds,
+                        slot,
+                        milk_type
                     )
-            else:
-                cursor.execute("""
-                    INSERT INTO advance (vendor_id, user_id, date, amount)
-                    VALUES (%s,%s,%s,%s)
-                """, (vendor_id, session['id'], ds, adv_amt))
-        else:
-            if existing_adv:
-                cursor.execute(
-                    "DELETE FROM advance WHERE id=%s",
-                    (existing_adv['id'],)
-                )
 
-        cur_date += timedelta(days=1)
+                    existing_row = (
+                        existing_map.get(
+                            key
+                        )
+                    )
 
-    mysql.connection.commit()
-    flash("Entries updated successfully.", "success")
-    return redirect(url_for(
-    "edit_entry",
-    vendor_id=vendor_id,
-    from_date=from_date,
-    to_date=to_date
-))
+                    # =================================================
+                    # INSERT / UPDATE
+                    # =================================================
+
+                    if qty > 0:
+
+                        if existing_row:
+
+                            if abs(
+                                existing_row[
+                                    'quantity'
+                                ] - qty
+                            ) > 1e-9:
+
+                                cursor.execute("""
+                                    UPDATE milk_collection
+                                    SET quantity=%s
+                                    WHERE id=%s
+                                      AND vendor_id=%s
+                                      AND user_id=%s
+                                """, (
+                                    qty,
+                                    existing_row['id'],
+                                    vendor_id,
+                                    user_id
+                                ))
+
+                        else:
+
+                            cursor.execute("""
+                                INSERT INTO milk_collection
+                                (
+                                    vendor_id,
+                                    user_id,
+                                    date,
+                                    slot,
+                                    milk_type,
+                                    quantity
+                                )
+                                VALUES
+                                (
+                                    %s,
+                                    %s,
+                                    %s,
+                                    %s,
+                                    %s,
+                                    %s
+                                )
+                            """, (
+                                vendor_id,
+                                user_id,
+                                ds,
+                                slot,
+                                milk_type,
+                                qty
+                            ))
+
+                    # =================================================
+                    # DELETE MILK
+                    # =================================================
+
+                    else:
+
+                        if existing_row:
+
+                            cursor.execute("""
+                                DELETE FROM milk_collection
+                                WHERE id=%s
+                                  AND vendor_id=%s
+                                  AND user_id=%s
+                            """, (
+                                existing_row['id'],
+                                vendor_id,
+                                user_id
+                            ))
+
+            # =====================================================
+            # NEXT DATE
+            # =====================================================
+
+            cur_date += timedelta(
+                days=1
+            )
+
+        # =========================================================
+        # COMMIT EVERYTHING AT ONCE
+        # =========================================================
+
+        mysql.connection.commit()
+
+        flash(
+            "Entries updated successfully.",
+            "success"
+        )
+
+    except Exception as e:
+
+        # =========================================================
+        # ROLLBACK EVERYTHING
+        # =========================================================
+
+        mysql.connection.rollback()
+
+        app.logger.exception(
+            "Error updating entries"
+        )
+
+        flash(
+            "Error updating entries.",
+            "danger"
+        )
+
+    finally:
+
+        cursor.close()
+
+    # =========================================================
+    # RETURN TO EDIT PAGE
+    # =========================================================
+
+    return redirect(
+        url_for(
+            "edit_entry",
+            vendor_id=vendor_id,
+            from_date=from_date,
+            to_date=to_date
+        )
+    )
 
 @app.route('/delete_entry', methods=['POST'])
 def delete_entry():
 
     if "id" not in session:
-        flash("Please login first.", "danger")
-        return redirect(url_for("login"))
+        flash(
+            "Please login first.",
+            "danger"
+        )
 
-    vendor_id = request.form.get('vendor_id')
-    date_str = request.form.get('date')
-    confirm = request.form.get('confirm')
+        return redirect(
+            url_for("login")
+        )
 
-    if str(confirm) != '1':
-        flash("Please confirm deletion.", "warning")
-        return redirect(url_for('edit_entry'))
+    user_id = int(
+        session['id']
+    )
 
-    cursor = SafeCursor(mysql.connection.cursor())
+    vendor_id = request.form.get(
+        "vendor_id"
+    )
 
-    cursor.execute("""
-        SELECT 1 FROM vendors
-        WHERE vendor_id=%s AND user_id=%s
-    """, (vendor_id, session['id']))
+    date_str = request.form.get(
+        "date"
+    )
 
-    if not cursor.fetchone():
-        flash("Unauthorized to delete.", "danger")
-        return redirect(url_for('edit_entry'))
+    confirm = request.form.get(
+        "confirm"
+    )
+
+    # =========================================================
+    # CONFIRMATION CHECK
+    # =========================================================
+
+    if str(confirm) != "1":
+
+        flash(
+            "Please confirm deletion.",
+            "warning"
+        )
+
+        return redirect(
+            url_for("edit_entry")
+        )
+
+    # =========================================================
+    # BASIC VALIDATION
+    # =========================================================
+
+    if not vendor_id or not date_str:
+
+        flash(
+            "Invalid deletion request.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("edit_entry")
+        )
 
     try:
-        cursor.execute("DELETE FROM milk_collection WHERE vendor_id=%s AND user_id=%s AND date=%s",
-                       (vendor_id, session['id'], date_str))
-        cursor.execute("DELETE FROM advance WHERE vendor_id=%s AND user_id=%s AND date=%s",
-                       (vendor_id, session['id'], date_str))
-        cursor.execute("DELETE FROM food_sack WHERE vendor_id=%s AND user_id=%s AND date=%s",
-                       (vendor_id, session['id'], date_str))
+
+        datetime.strptime(
+            date_str,
+            "%Y-%m-%d"
+        )
+
+    except ValueError:
+
+        flash(
+            "Invalid date.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("edit_entry")
+        )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor()
+    )
+
+    try:
+
+        # =====================================================
+        # OWNERSHIP CHECK
+        # =====================================================
+
+        cursor.execute("""
+            SELECT 1
+            FROM vendors
+            WHERE vendor_id=%s
+              AND user_id=%s
+            LIMIT 1
+        """, (
+            vendor_id,
+            user_id
+        ))
+
+        if not cursor.fetchone():
+
+            mysql.connection.rollback()
+
+            flash(
+                "Unauthorized to delete.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("edit_entry")
+            )
+
+        # =====================================================
+        # DELETE MILK
+        # =====================================================
+
+        cursor.execute("""
+            DELETE FROM milk_collection
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND date=%s
+        """, (
+            vendor_id,
+            user_id,
+            date_str
+        ))
+
+        # =====================================================
+        # DELETE FOOD SACK
+        # =====================================================
+
+        cursor.execute("""
+            DELETE FROM food_sack
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND date=%s
+        """, (
+            vendor_id,
+            user_id,
+            date_str
+        ))
+
+        # =====================================================
+        # COMMIT
+        # =====================================================
 
         mysql.connection.commit()
-        flash("Entry deleted successfully.", "success")
+
+        flash(
+            "Entry deleted successfully.",
+            "success"
+        )
 
     except Exception as e:
-        mysql.connection.rollback()
-        flash("Error deleting entry.", "danger")
 
-    return redirect(url_for(
-    "edit_entry",
-    vendor_id=vendor_id,
-    from_date=request.form.get("from_date"),
-    to_date=request.form.get("to_date")
-))
+        # =====================================================
+        # ROLLBACK
+        # =====================================================
+
+        mysql.connection.rollback()
+
+        app.logger.exception(
+            "Error deleting entry"
+        )
+
+        flash(
+            "Error deleting entry.",
+            "danger"
+        )
+
+    finally:
+
+        cursor.close()
+
+    # =========================================================
+    # RETURN
+    # =========================================================
+
+    return redirect(
+        url_for(
+            "edit_entry",
+            vendor_id=vendor_id,
+            from_date=request.form.get(
+                "from_date"
+            ),
+            to_date=request.form.get(
+                "to_date"
+            )
+        )
+    )
+# ------------------------------
+# Receipts, calculation, payment (kept logic but with small safety)
+# ------------------------------
 # ------------------------------
 # Receipts, calculation, payment (kept logic but with small safety)
 # ------------------------------
@@ -3326,104 +5310,346 @@ def calculation():
         flash('Please login first.', 'danger')
         return redirect(url_for('login'))
 
-    cursor = SafeCursor(mysql.connection.cursor())
+    cursor = SafeCursor(
+        mysql.connection.cursor(
+            MySQLdb.cursors.DictCursor
+        )
+    )
 
     cursor.execute("""
         SELECT *
         FROM vendors
         WHERE user_id=%s
         ORDER BY vendor_id ASC
-    """,(session['id'],))
+    """, (session['id'],))
 
     vendors = cursor.fetchall()
 
-    results=None
+    results = None
 
-    if request.method=='POST':
+    if request.method == 'POST':
 
         vendor_id = request.form.get('vendor_id')
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
 
+        # =====================================================
+        # LOAD MILK DATA
+        # =====================================================
+
         cursor.execute("""
-            SELECT date,slot,milk_type,quantity
+            SELECT
+                date,
+                slot,
+                milk_type,
+                quantity
             FROM milk_collection
-            WHERE vendor_id=%s AND user_id=%s
-            AND date BETWEEN %s AND %s
-        """,(vendor_id,session['id'],start_date,end_date))
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND date BETWEEN %s AND %s
+        """, (
+            vendor_id,
+            session['id'],
+            start_date,
+            end_date
+        ))
 
         milk_data = cursor.fetchall()
 
-        mcq=ecq=mbq=ebq=0
-        mcp=ecp=mbp=ebp=0
+        mcq = ecq = mbq = ebq = 0
+        mcp = ecp = mbp = ebp = 0
 
-        # NOTE: get_vendor_rate() now resolves against an in-memory,
-        # per-request rate cache (see _load_rate_cache) instead of hitting
-        # MySQL on every row - same output, far fewer queries.
+        # =====================================================
+        # MILK CALCULATION
+        # =====================================================
+
         for row in milk_data:
 
-            rate = get_vendor_rate(cursor, vendor_id, row['milk_type'], row['date'])
+            rate = get_vendor_rate(
+                cursor,
+                vendor_id,
+                row['milk_type'],
+                row['date']
+            )
 
-            amt = float(row['quantity']) * rate
+            amt = (
+                float(row['quantity'])
+                * rate
+            )
 
-            if row['milk_type']=="cow":
+            if row['milk_type'] == "cow":
 
-                if row['slot']=="morning":
-                    mcq+=row['quantity']; mcp+=amt
+                if row['slot'] == "morning":
+
+                    mcq += row['quantity']
+
+                    mcp += amt
+
                 else:
-                    ecq+=row['quantity']; ecp+=amt
+
+                    ecq += row['quantity']
+
+                    ecp += amt
 
             else:
 
-                if row['slot']=="morning":
-                    mbq+=row['quantity']; mbp+=amt
+                if row['slot'] == "morning":
+
+                    mbq += row['quantity']
+
+                    mbp += amt
+
                 else:
-                    ebq+=row['quantity']; ebp+=amt
+
+                    ebq += row['quantity']
+
+                    ebp += amt
+
+        # =====================================================
+        # ADVANCE LEDGER
+        # =====================================================
+        #
+        # Current-period deduction:
+        # Only deduction transactions between start_date
+        # and end_date.
+        #
+        # Remaining balance:
+        # All advance transactions up to end_date
+        # minus all deduction transactions up to end_date.
+        # =====================================================
 
         cursor.execute("""
-            SELECT SUM(amount) total
-            FROM advance
-            WHERE vendor_id=%s AND user_id=%s
-            AND date BETWEEN %s AND %s
-        """,(vendor_id,session['id'],start_date,end_date))
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS period_deduction
+            FROM advance_transactions
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND transaction_date BETWEEN %s AND %s
+        """, (
+            vendor_id,
+            session['id'],
+            start_date,
+            end_date
+        ))
 
-        total_advance = cursor.fetchone()['total'] or 0
+        deduction_row = (
+            cursor.fetchone()
+            or {}
+        )
+
+        period_deduction = float(
+            deduction_row.get(
+                'period_deduction'
+            ) or 0
+        )
+
+        period_deduction = round(
+            period_deduction,
+            2
+        )
+
+        # =====================================================
+        # REMAINING ADVANCE BALANCE
+        # =====================================================
 
         cursor.execute("""
-            SELECT SUM(total_cost) total
+            SELECT
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'advance'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_advance,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_deduction
+
+            FROM advance_transactions
+
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND transaction_date <= %s
+        """, (
+            vendor_id,
+            session['id'],
+            end_date
+        ))
+
+        balance_row = (
+            cursor.fetchone()
+            or {}
+        )
+
+        total_advance_balance = float(
+            balance_row.get(
+                'total_advance'
+            ) or 0
+        )
+
+        total_deduction_balance = float(
+            balance_row.get(
+                'total_deduction'
+            ) or 0
+        )
+
+        remaining_advance = round(
+            total_advance_balance
+            - total_deduction_balance,
+            2
+        )
+
+        remaining_advance = max(
+            remaining_advance,
+            0
+        )
+
+        # =====================================================
+        # FOOD SACK
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                SUM(total_cost) AS total
             FROM food_sack
-            WHERE vendor_id=%s AND user_id=%s
-            AND date BETWEEN %s AND %s
-        """,(vendor_id,session['id'],start_date,end_date))
+            WHERE vendor_id=%s
+              AND user_id=%s
+              AND date BETWEEN %s AND %s
+        """, (
+            vendor_id,
+            session['id'],
+            start_date,
+            end_date
+        ))
 
-        total_food = cursor.fetchone()['total'] or 0
+        food_row = cursor.fetchone()
 
-        milk_total = mcp+ecp+mbp+ebp
-        final_payment = milk_total-(total_advance+total_food)
+        total_food = (
+            food_row['total']
+            if food_row
+            and food_row['total'] is not None
+            else 0
+        )
 
-        results={
+        # =====================================================
+        # FINAL CALCULATION
+        # =====================================================
 
-            'morning_cow_quantity':mcq,
-            'evening_cow_quantity':ecq,
-            'morning_cow_payment':mcp,
-            'evening_cow_payment':ecp,
-            'total_cow_quantity':mcq+ecq,
-            'total_cow_payment':mcp+ecp,
+        milk_total = (
+            mcp
+            + ecp
+            + mbp
+            + ebp
+        )
 
-            'morning_buffalo_quantity':mbq,
-            'evening_buffalo_quantity':ebq,
-            'morning_buffalo_payment':mbp,
-            'evening_buffalo_payment':ebp,
-            'total_buffalo_quantity':mbq+ebq,
-            'total_buffalo_payment':mbp+ebp,
+        # IMPORTANT:
+        # Only current-period deduction is subtracted.
+        #
+        # Old unpaid advance remains in
+        # remaining_advance and is NOT deducted again.
 
-            'total_milk_quantity':mcq+ecq+mbq+ebq,
-            'milk_total':milk_total,
-            'total_food_sack_cost':total_food,
-            'total_advance':total_advance,
-            'final_payable_amount':final_payment
+        final_payment = round(
+            milk_total
+            - (
+                period_deduction
+                + float(total_food)
+            ),
+            2
+        )
 
+        # =====================================================
+        # RESULT
+        # =====================================================
+
+        results = {
+
+            'morning_cow_quantity':
+                mcq,
+
+            'evening_cow_quantity':
+                ecq,
+
+            'morning_cow_payment':
+                mcp,
+
+            'evening_cow_payment':
+                ecp,
+
+            'total_cow_quantity':
+                mcq + ecq,
+
+            'total_cow_payment':
+                mcp + ecp,
+
+            'morning_buffalo_quantity':
+                mbq,
+
+            'evening_buffalo_quantity':
+                ebq,
+
+            'morning_buffalo_payment':
+                mbp,
+
+            'evening_buffalo_payment':
+                ebp,
+
+            'total_buffalo_quantity':
+                mbq + ebq,
+
+            'total_buffalo_payment':
+                mbp + ebp,
+
+            'total_milk_quantity':
+                (
+                    mcq
+                    + ecq
+                    + mbq
+                    + ebq
+                ),
+
+            'milk_total':
+                milk_total,
+
+            'total_food_sack_cost':
+                total_food,
+
+            # Current period deduction
+            'total_advance':
+                period_deduction,
+
+            # Explicit deduction field
+            'total_deduction':
+                period_deduction,
+
+            # Carry-forward balance
+            'remaining_advance':
+                remaining_advance,
+
+            'final_payable_amount':
+                final_payment
         }
+
+    cursor.close()
 
     return render_template(
         'milk_operations/calculation.html',
@@ -3435,95 +5661,309 @@ def calculation():
 @app.route('/payment', methods=['GET', 'POST'])
 def payment():
     """
-    OPTIMIZATION NOTE:
-    BEFORE: for V vendors this ran 3 queries PER vendor (milk_collection,
-            advance, food_sack) = 3V queries, PLUS get_vendor_rate() ran up
-            to 2 more queries per milk row inside that loop (effectively
-            unbounded). A 100-vendor report over a month could hit thousands
-            of queries -> worker timeout.
-    AFTER:  milk_collection, advance and food_sack are each fetched in ONE
-            bulk, grouped query for the whole date range (3 queries total),
-            then looped in Python using dict lookups. get_vendor_rate() now
-            reads from the in-memory rate cache. Total queries for the whole
-            report: ~5, regardless of vendor count.
-    Output is mathematically identical - same GROUP BY math, just done once
-    instead of once per vendor.
+    Payment calculation for all vendors.
+
+    Advance ledger logic:
+
+    1. advance:
+       Money given to vendor.
+
+    2. deduction:
+       Money recovered from vendor.
+
+    3. Current-period deduction:
+       Only deduction transactions inside the selected
+       start_date -> end_date period.
+
+    4. Remaining advance:
+       All advances up to end_date
+       minus
+       all deductions up to end_date.
+
+    5. Final payment:
+       Milk payment
+       - Food cost
+       - Current-period deduction
+
+    Old unpaid advance is carried forward and is NOT
+    deducted again from the next payment.
     """
 
     if 'id' not in session:
         flash('Please login first.', 'danger')
         return redirect(url_for('login'))
 
-    # POST → redirect
+    # ---------------------------------------------------------
+    # POST -> redirect
+    # ---------------------------------------------------------
+
     if request.method == 'POST':
 
-        start_date = request.form.get('start_date')
-        end_date = request.form.get('end_date')
+        start_date = request.form.get(
+            'start_date'
+        )
 
-        return redirect(url_for(
-            'payment',
-            start_date=start_date,
-            end_date=end_date
-        ))
+        end_date = request.form.get(
+            'end_date'
+        )
 
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
+        return redirect(
+            url_for(
+                'payment',
+                start_date=start_date,
+                end_date=end_date
+            )
+        )
 
-    cursor = SafeCursor(mysql.connection.cursor())
+    # ---------------------------------------------------------
+    # GET parameters
+    # ---------------------------------------------------------
+
+    start_date = request.args.get(
+        'start_date'
+    )
+
+    end_date = request.args.get(
+        'end_date'
+    )
+
+    cursor = SafeCursor(
+        mysql.connection.cursor(
+            MySQLdb.cursors.DictCursor
+        )
+    )
 
     data = []
+
+    # ---------------------------------------------------------
+    # Only calculate when valid date range is available
+    # ---------------------------------------------------------
 
     if start_date and end_date:
 
         user_id = session['id']
 
-        # load vendors
+        # =====================================================
+        # LOAD VENDORS
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id,name
+            SELECT
+                vendor_id,
+                name
             FROM vendors
             WHERE user_id=%s
             ORDER BY vendor_id ASC
-        """,(user_id,))
+        """, (user_id,))
 
         vendors = cursor.fetchall()
 
-        # ---- bulk milk data for ALL vendors in one query ----
+        # =====================================================
+        # BULK MILK DATA
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, date, milk_type, SUM(quantity) AS qty
+            SELECT
+                vendor_id,
+                date,
+                milk_type,
+                SUM(quantity) AS qty
             FROM milk_collection
-            WHERE user_id=%s AND date BETWEEN %s AND %s
-            GROUP BY vendor_id, date, milk_type
-        """, (user_id, start_date, end_date))
+            WHERE user_id=%s
+              AND date BETWEEN %s AND %s
+            GROUP BY
+                vendor_id,
+                date,
+                milk_type
+        """, (
+            user_id,
+            start_date,
+            end_date
+        ))
 
         milk_map = {}
-        for r in cursor.fetchall():
-            vid = str(r['vendor_id'])
-            milk_map.setdefault(vid, []).append(r)
 
-        # ---- bulk advance totals for ALL vendors in one query ----
+        for row in cursor.fetchall():
+
+            vendor_key = str(
+                row['vendor_id']
+            )
+
+            milk_map.setdefault(
+                vendor_key,
+                []
+            ).append(row)
+
+        # =====================================================
+        # CURRENT PERIOD DEDUCTION
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, SUM(amount) AS total_advance
-            FROM advance
-            WHERE user_id=%s AND date BETWEEN %s AND %s
+            SELECT
+                vendor_id,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS period_deduction
+
+            FROM advance_transactions
+
+            WHERE user_id=%s
+              AND transaction_date BETWEEN %s AND %s
+
             GROUP BY vendor_id
-        """, (user_id, start_date, end_date))
+        """, (
+            user_id,
+            start_date,
+            end_date
+        ))
 
-        adv_map = {str(r['vendor_id']): float(r['total_advance'] or 0) for r in cursor.fetchall()}
+        deduction_map = {}
 
-        # ---- bulk food sack totals for ALL vendors in one query ----
+        for row in cursor.fetchall():
+
+            deduction_map[
+                str(row['vendor_id'])
+            ] = round(
+                float(
+                    row['period_deduction']
+                    or 0
+                ),
+                2
+            )
+
+        # =====================================================
+        # REMAINING ADVANCE BALANCE
+        # =====================================================
+        #
+        # All transactions up to end_date.
+        #
+        # remaining =
+        #     total advance
+        #     -
+        #     total deduction
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, SUM(total_cost) AS total_food
+            SELECT
+                vendor_id,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'advance'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_advance,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_deduction
+
+            FROM advance_transactions
+
+            WHERE user_id=%s
+              AND transaction_date <= %s
+
+            GROUP BY vendor_id
+        """, (
+            user_id,
+            end_date
+        ))
+
+        balance_map = {}
+
+        for row in cursor.fetchall():
+
+            total_advance = float(
+                row['total_advance']
+                or 0
+            )
+
+            total_deduction = float(
+                row['total_deduction']
+                or 0
+            )
+
+            remaining_balance = round(
+                total_advance
+                - total_deduction,
+                2
+            )
+
+            remaining_balance = max(
+                remaining_balance,
+                0
+            )
+
+            balance_map[
+                str(row['vendor_id'])
+            ] = remaining_balance
+
+        # =====================================================
+        # BULK FOOD SACK DATA
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                vendor_id,
+                SUM(total_cost) AS total_food
             FROM food_sack
-            WHERE user_id=%s AND date BETWEEN %s AND %s
+            WHERE user_id=%s
+              AND date BETWEEN %s AND %s
             GROUP BY vendor_id
-        """, (user_id, start_date, end_date))
+        """, (
+            user_id,
+            start_date,
+            end_date
+        ))
 
-        food_map = {str(r['vendor_id']): float(r['total_food'] or 0) for r in cursor.fetchall()}
+        food_map = {}
 
-        for v in vendors:
+        for row in cursor.fetchall():
 
-            vendor_id = v['vendor_id']
-            milk_entries = milk_map.get(str(vendor_id), [])
+            food_map[
+                str(row['vendor_id'])
+            ] = float(
+                row['total_food']
+                or 0
+            )
+
+        # =====================================================
+        # PROCESS ALL VENDORS
+        # =====================================================
+
+        for vendor in vendors:
+
+            vendor_id = vendor[
+                'vendor_id'
+            ]
+
+            vendor_key = str(
+                vendor_id
+            )
+
+            milk_entries = milk_map.get(
+                vendor_key,
+                []
+            )
 
             total_cow = 0
             total_buffalo = 0
@@ -3531,165 +5971,431 @@ def payment():
             cow_cost = 0
             buffalo_cost = 0
 
-            for m in milk_entries:
+            # -------------------------------------------------
+            # Calculate milk payment
+            # -------------------------------------------------
+
+            for milk in milk_entries:
 
                 rate = get_vendor_rate(
                     cursor,
                     vendor_id,
-                    m['milk_type'],
-                    m['date'],
+                    milk['milk_type'],
+                    milk['date'],
                     user_id=user_id
                 )
 
-                qty = float(m['qty'])
+                qty = float(
+                    milk['qty']
+                    or 0
+                )
 
-                if m['milk_type'] == "cow":
+                if milk['milk_type'] == "cow":
 
                     total_cow += qty
-                    cow_cost += qty * rate
+
+                    cow_cost += (
+                        qty * rate
+                    )
 
                 else:
 
                     total_buffalo += qty
-                    buffalo_cost += qty * rate
 
-            adv = adv_map.get(str(vendor_id), 0)
-            food = food_map.get(str(vendor_id), 0)
+                    buffalo_cost += (
+                        qty * rate
+                    )
 
-            total_milk_payment = round(cow_cost + buffalo_cost, 2)
+            # -------------------------------------------------
+            # Current period deduction
+            # -------------------------------------------------
 
-            total_payment = round(
-                total_milk_payment - adv - food,
+            deduction = deduction_map.get(
+                vendor_key,
+                0
+            )
+
+            # -------------------------------------------------
+            # Remaining advance
+            # -------------------------------------------------
+
+            remaining_advance = balance_map.get(
+                vendor_key,
+                0
+            )
+
+            # -------------------------------------------------
+            # Food sack total
+            # -------------------------------------------------
+
+            food = food_map.get(
+                vendor_key,
+                0
+            )
+
+            # -------------------------------------------------
+            # Total milk payment
+            # -------------------------------------------------
+
+            total_milk_payment = round(
+                cow_cost
+                + buffalo_cost,
                 2
             )
 
+            # -------------------------------------------------
+            # Final payable
+            # -------------------------------------------------
+
+            total_payment = round(
+                total_milk_payment
+                - deduction
+                - food,
+                2
+            )
+
+            # -------------------------------------------------
+            # Append vendor result
+            # -------------------------------------------------
+
             data.append({
 
-                'vendor_id': vendor_id,
-                'vendor_name': v['name'],
+                'vendor_id':
+                    vendor_id,
 
-                'total_cow': total_cow,
-                'total_buffalo': total_buffalo,
+                'vendor_name':
+                    vendor['name'],
 
-                'cow_rate': "-",
-                'buffalo_rate': "-",
+                'total_cow':
+                    total_cow,
 
-                'total_milk_payment': total_milk_payment,
+                'total_buffalo':
+                    total_buffalo,
 
-                'total_advance': adv,
-                'total_food': food,
+                'cow_rate':
+                    "-",
 
-                'total_payment': total_payment
+                'buffalo_rate':
+                    "-",
+
+                'total_milk_payment':
+                    total_milk_payment,
+
+                # Current period deduction
+                'total_advance':
+                    deduction,
+
+                'total_deduction':
+                    deduction,
+
+                # Carry-forward balance
+                'remaining_advance':
+                    remaining_advance,
+
+                'total_food':
+                    food,
+
+                'total_payment':
+                    total_payment
             })
 
+    # ---------------------------------------------------------
+    # Close cursor
+    # ---------------------------------------------------------
+
     cursor.close()
+
+    # ---------------------------------------------------------
+    # Render payment page
+    # ---------------------------------------------------------
 
     return render_template(
         'milk_operations/payment.html',
         data=data
-    )
-    
-    
+    )    
+# ------------------------------
+# Receipt - All Vendors
+# ------------------------------
 @app.route('/receipt_all_vendors', methods=['GET', 'POST'])
 def receipt_all_vendors():
-
 
     if 'id' not in session:
         return redirect(url_for('login'))
 
     user_id = int(session['id'])
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    cursor = mysql.connection.cursor(
+        MySQLdb.cursors.DictCursor
+    )
 
     if request.method == 'POST':
 
         from_date = request.form.get('from_date')
         to_date = request.form.get('to_date')
 
-        # -------------------------
+        # =====================================================
         # LOAD VENDORS
-        # -------------------------
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, name, milk_type, address
+            SELECT
+                vendor_id,
+                name,
+                milk_type,
+                address
             FROM vendors
             WHERE user_id=%s
             ORDER BY vendor_id
         """, (user_id,))
+
         vendors = cursor.fetchall()
 
-        # -------------------------
+        # =====================================================
         # LOAD MILK DATA
-        # -------------------------
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, date, slot, milk_type, quantity
+            SELECT
+                vendor_id,
+                date,
+                slot,
+                milk_type,
+                quantity
             FROM milk_collection
             WHERE user_id=%s
-            AND date BETWEEN %s AND %s
-        """, (user_id, from_date, to_date))
+              AND date BETWEEN %s AND %s
+        """, (
+            user_id,
+            from_date,
+            to_date
+        ))
 
         milk_rows = cursor.fetchall()
 
         milk_map = {}
-        for r in milk_rows:
-            vid = int(r['vendor_id'])
-            milk_map.setdefault(vid, []).append(r)
 
-        # -------------------------
+        for row in milk_rows:
+
+            vid = int(row['vendor_id'])
+
+            milk_map.setdefault(
+                vid,
+                []
+            ).append(row)
+
+        # =====================================================
         # LOAD FOOD SACK
-        # -------------------------
+        # =====================================================
+
         cursor.execute("""
             SELECT
                 fs.vendor_id,
                 fs.sack_qty,
                 r.name,
-                COALESCE(r.rate,0) AS rate,
-                COALESCE(fs.total_cost,0) AS total
+                COALESCE(r.rate, 0) AS rate,
+                COALESCE(fs.total_cost, 0) AS total
             FROM food_sack fs
             JOIN food_sack_rates r
-            ON r.id = fs.sack_rate_id
+                ON r.id = fs.sack_rate_id
             WHERE fs.user_id=%s
-            AND fs.date BETWEEN %s AND %s
+              AND fs.date BETWEEN %s AND %s
             ORDER BY fs.vendor_id
-        """,(user_id,from_date,to_date))
+        """, (
+            user_id,
+            from_date,
+            to_date
+        ))
 
         food_rows = cursor.fetchall()
 
         food_map = {}
-        for f in food_rows:
-            vid = int(f['vendor_id'])
-            food_map.setdefault(vid, []).append(f)
 
-        # -------------------------
-        # LOAD ADVANCE
-        # -------------------------
+        for food in food_rows:
+
+            vid = int(food['vendor_id'])
+
+            food_map.setdefault(
+                vid,
+                []
+            ).append(food)
+
+        # =====================================================
+        # LOAD ADVANCE LEDGER
+        # =====================================================
+        #
+        # IMPORTANT ACCOUNTING LOGIC
+        #
+        # advance   = amount given to vendor
+        # deduction = amount recovered from vendor
+        #
+        # 1. Period deduction:
+        #    Only deductions inside selected period.
+        #
+        # 2. Remaining advance:
+        #    ALL advances up to end_date
+        #    minus
+        #    ALL deductions up to end_date
+        #
+        # This allows old unpaid advances to carry forward.
+        # =====================================================
+
         cursor.execute("""
-            SELECT vendor_id, SUM(amount) total
-            FROM advance
+            SELECT
+                vendor_id,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS period_deduction
+
+            FROM advance_transactions
+
             WHERE user_id=%s
-            AND date BETWEEN %s AND %s
+              AND transaction_date BETWEEN %s AND %s
+
             GROUP BY vendor_id
-        """, (user_id, from_date, to_date))
+        """, (
+            user_id,
+            from_date,
+            to_date
+        ))
 
-        adv_map = {
-            int(a['vendor_id']): float(a['total'] or 0)
-            for a in cursor.fetchall()
-        }
+        deduction_map = {}
 
-        # -------------------------
+        for row in cursor.fetchall():
+
+            deduction_map[
+                int(row['vendor_id'])
+            ] = round(
+                float(row['period_deduction'] or 0),
+                2
+            )
+
+        # =====================================================
+        # REMAINING ADVANCE BALANCE
+        # =====================================================
+        #
+        # Balance is calculated from the beginning of ledger
+        # up to selected end_date.
+        #
+        # remaining =
+        #     total advances
+        #     -
+        #     total deductions
+        #
+        # Only transactions belonging to this user are used.
+        # =====================================================
+
+        cursor.execute("""
+            SELECT
+                vendor_id,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'advance'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_advance,
+
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN transaction_type = 'deduction'
+                            THEN amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS total_deduction
+
+            FROM advance_transactions
+
+            WHERE user_id=%s
+              AND transaction_date <= %s
+
+            GROUP BY vendor_id
+        """, (
+            user_id,
+            to_date
+        ))
+
+        balance_map = {}
+
+        for row in cursor.fetchall():
+
+            total_advance = float(
+                row['total_advance'] or 0
+            )
+
+            total_deduction = float(
+                row['total_deduction'] or 0
+            )
+
+            remaining_balance = round(
+                total_advance - total_deduction,
+                2
+            )
+
+            # Prevent displaying negative "बाकी"
+            remaining_balance = max(
+                remaining_balance,
+                0
+            )
+
+            balance_map[
+                int(row['vendor_id'])
+            ] = remaining_balance
+
+        # =====================================================
         # PROCESS VENDORS
-        # NOTE: get_vendor_rate() below now resolves from the in-memory,
-        # per-request rate cache (2 queries loaded once, shared across all
-        # vendors) instead of running 2 fresh SQL queries per vendor.
-        # -------------------------
+        # =====================================================
+
         all_receipts = []
 
         for vendor in vendors:
 
-            vid = int(vendor['vendor_id'])
+            vid = int(
+                vendor['vendor_id']
+            )
 
-            cow_rate = get_vendor_rate(cursor, vid, "cow", from_date, user_id=user_id)
-            buffalo_rate = get_vendor_rate(cursor, vid, "buffalo", from_date, user_id=user_id)
+            # =================================================
+            # GET RATES
+            # =================================================
 
-            milk_data = milk_map.get(vid, [])
+            cow_rate = get_vendor_rate(
+                cursor,
+                vid,
+                "cow",
+                from_date,
+                user_id=user_id
+            )
+
+            buffalo_rate = get_vendor_rate(
+                cursor,
+                vid,
+                "buffalo",
+                from_date,
+                user_id=user_id
+            )
+
+            # =================================================
+            # GET MILK DATA
+            # =================================================
+
+            milk_data = milk_map.get(
+                vid,
+                []
+            )
 
             grouped = {}
 
@@ -3703,104 +6409,264 @@ def receipt_all_vendors():
             cow_cost = 0
             buffalo_cost = 0
 
+            # =================================================
+            # PROCESS MILK
+            # =================================================
+
             for row in milk_data:
 
-                dt = row['date'].strftime("%Y-%m-%d")
-                slot = row['slot']
-                mtype = row['milk_type']
-                qty = float(row['quantity'])
+                dt = row['date'].strftime(
+                    "%Y-%m-%d"
+                )
 
-                rate = cow_rate if mtype == "cow" else buffalo_rate
+                slot = row['slot']
+
+                mtype = row['milk_type']
+
+                qty = float(
+                    row['quantity']
+                )
+
+                rate = (
+                    cow_rate
+                    if mtype == "cow"
+                    else buffalo_rate
+                )
 
                 if dt not in grouped:
+
                     grouped[dt] = {
-                        'day': row['date'].strftime("%d"),
+
+                        'day':
+                            row['date'].strftime("%d"),
+
                         'cow_morning': 0,
+
                         'cow_evening': 0,
+
                         'buffalo_morning': 0,
+
                         'buffalo_evening': 0
                     }
 
-                grouped[dt][f"{mtype}_{slot}"] += qty
-                totals[f"{mtype}_{slot}"] += qty
+                grouped[dt][
+                    f"{mtype}_{slot}"
+                ] += qty
+
+                totals[
+                    f"{mtype}_{slot}"
+                ] += qty
 
                 if mtype == "cow":
-                    cow_cost += qty * rate
+
+                    cow_cost += (
+                        qty * rate
+                    )
+
                 else:
-                    buffalo_cost += qty * rate
 
-            entries = list(grouped.values())
+                    buffalo_cost += (
+                        qty * rate
+                    )
 
-            food_data = food_map.get(vid, [])
-            food_total = sum(float(f['total']) for f in food_data)
+            # =================================================
+            # ENTRIES
+            # =================================================
+
+            entries = list(
+                grouped.values()
+            )
+
+            # =================================================
+            # FOOD SACK
+            # =================================================
+
+            food_data = food_map.get(
+                vid,
+                []
+            )
+
+            food_total = sum(
+                float(f['total'])
+                for f in food_data
+            )
 
             food_sack_details = [
+
                 {
                     "name": f['name'],
-                    "rate": float(f['rate'] or 0),
-                    "qty": int(f['sack_qty'] or 0),
-                    "total": float(f['total'] or 0)
+
+                    "rate": float(
+                        f['rate'] or 0
+                    ),
+
+                    "qty": int(
+                        f['sack_qty'] or 0
+                    ),
+
+                    "total": float(
+                        f['total'] or 0
+                    )
                 }
+
                 for f in food_data
             ]
 
-            advance = float(adv_map.get(vid, 0))
+            # =================================================
+            # PERIOD DEDUCTION
+            # =================================================
+
+            period_deduction = float(
+                deduction_map.get(
+                    vid,
+                    0
+                )
+            )
+
+            # =================================================
+            # REMAINING ADVANCE
+            # =================================================
+
+            remaining_advance = float(
+                balance_map.get(
+                    vid,
+                    0
+                )
+            )
+
+            # =================================================
+            # FINAL PAYABLE
+            # =================================================
+            #
+            # IMPORTANT:
+            #
+            # Old unpaid advance is NOT deducted again.
+            #
+            # Only current period deduction is deducted.
+            # =================================================
 
             final_payable = round(
-                (cow_cost + buffalo_cost) - (advance + food_total),
+                (
+                    cow_cost
+                    + buffalo_cost
+                )
+                - (
+                    period_deduction
+                    + food_total
+                ),
                 2
             )
 
+            # =================================================
+            # BUILD RECEIPT
+            # =================================================
+
             all_receipts.append({
 
-                'vendor_id': vid,
-                'name': vendor['name'],
-                'address': vendor['address'],
-                'milk_type': vendor['milk_type'],
+                'vendor_id':
+                    vid,
 
-                'data': entries,
+                'name':
+                    vendor['name'],
 
-                'total_cow': totals['cow_morning'] + totals['cow_evening'],
-                'total_buffalo': totals['buffalo_morning'] + totals['buffalo_evening'],
+                'address':
+                    vendor['address'],
 
-                'cow_cost': round(cow_cost, 2),
-                'buffalo_cost': round(buffalo_cost, 2),
+                'milk_type':
+                    vendor['milk_type'],
 
-                'food_sack_details': food_sack_details,
-                'food_cost': food_total,
+                'data':
+                    entries,
 
-                'advance': advance,
-                'final_payable': final_payable,
+                'total_cow':
+                    (
+                        totals['cow_morning']
+                        + totals['cow_evening']
+                    ),
 
-                'total_cow_morning': totals['cow_morning'],
-                'total_cow_evening': totals['cow_evening'],
+                'total_buffalo':
+                    (
+                        totals['buffalo_morning']
+                        + totals['buffalo_evening']
+                    ),
 
-                'total_buffalo_morning': totals['buffalo_morning'],
-                'total_buffalo_evening': totals['buffalo_evening'],
+                'cow_cost':
+                    round(
+                        cow_cost,
+                        2
+                    ),
 
-                'cow_rate': cow_rate,
-                'buffalo_rate': buffalo_rate
+                'buffalo_cost':
+                    round(
+                        buffalo_cost,
+                        2
+                    ),
+
+                'food_sack_details':
+                    food_sack_details,
+
+                'food_cost':
+                    food_total,
+
+                # Current period deduction
+                'advance':
+                    period_deduction,
+
+                # Remaining unpaid advance
+                'remaining_advance':
+                    remaining_advance,
+
+                'final_payable':
+                    final_payable,
+
+                'total_cow_morning':
+                    totals['cow_morning'],
+
+                'total_cow_evening':
+                    totals['cow_evening'],
+
+                'total_buffalo_morning':
+                    totals['buffalo_morning'],
+
+                'total_buffalo_evening':
+                    totals['buffalo_evening'],
+
+                'cow_rate':
+                    cow_rate,
+
+                'buffalo_rate':
+                    buffalo_rate
             })
+
+        # =====================================================
+        # CLOSE CURSOR
+        # =====================================================
 
         cursor.close()
 
+        # =====================================================
+        # RENDER RECEIPT
+        # =====================================================
+
         return render_template(
-    'receipt_all_vendors.html',
-    receipts=all_receipts,
-    from_date=from_date,
-    to_date=to_date
-)
+            'receipt_all_vendors.html',
+            receipts=all_receipts,
+            from_date=from_date,
+            to_date=to_date
+        )
+
+    # =========================================================
+    # GET REQUEST
+    # =========================================================
+
     cursor.close()
 
     return render_template(
-    'receipt_all_vendors.html',
-    receipts=None,
-    from_date=None,
-    to_date=None
-)
-
-
-
+        'receipt_all_vendors.html',
+        receipts=None,
+        from_date=None,
+        to_date=None
+    )
 # ------------------------------
 # Edit food sack & delete
 # ------------------------------
@@ -4209,281 +7075,323 @@ def generate_bank_report():
         int(f["vendor_id"]): float(f["total"] or 0)
         for f in cursor.fetchall()
     }
-
     # -------------------------------------------------
     # 4. Advances
     # -------------------------------------------------
+    # Ledger-based advance calculation:
+    # advance     = +
+    # deduction   = -
     cursor.execute("""
-        SELECT vendor_id,SUM(amount) total
-        FROM advance
+        SELECT
+            vendor_id,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type = 'advance'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_advance,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN transaction_type = 'deduction'
+                        THEN amount
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS total_deduction
+
+        FROM advance_transactions
+
         WHERE user_id=%s
         AND date BETWEEN %s AND %s
+
         GROUP BY vendor_id
     """, (user_id, from_date, to_date))
 
-    adv_map = {
-        int(a["vendor_id"]): float(a["total"] or 0)
-        for a in cursor.fetchall()
-    }
+    adv_map = {}
 
-    # -------------------------------------------------
-    # 5. Rates - fetched ONCE for all vendors (no N+1 queries)
-    # -------------------------------------------------
-    if isinstance(from_date, str):
-        rate_date = datetime.strptime(from_date, "%Y-%m-%d").date()
-    else:
-        rate_date = from_date
+    for a in cursor.fetchall():
+        vendor_id_key = int(a["vendor_id"])
 
-    cursor.execute("""
-        SELECT vendor_id, cow_rate, buffalo_rate, date_from
-        FROM vendor_milk_rates
-        WHERE user_id=%s
-        AND date_from<=%s
-        ORDER BY vendor_id, date_from DESC
-    """, (user_id, rate_date))
+        total_advance = float(
+            a["total_advance"] or 0
+        )
 
-    special_rate_map = {}
-    for r in cursor.fetchall():
-        vid = int(r["vendor_id"])
-        if vid not in special_rate_map:
-            special_rate_map[vid] = r
+        total_deduction = float(
+            a["total_deduction"] or 0
+        )
 
-    cursor.execute("""
-        SELECT animal, rate, date_from
-        FROM milk_rates
-        WHERE user_id=%s
-        AND date_from<=%s
-        ORDER BY animal, date_from DESC
-    """, (user_id, rate_date))
+        # Net advance
+        adv_map[vendor_id_key] = round(
+            total_advance - total_deduction,
+            2
+        )
 
-    default_rate_map = {}
-    for r in cursor.fetchall():
-        if r["animal"] not in default_rate_map:
-            default_rate_map[r["animal"]] = float(r["rate"])
+        # -------------------------------------------------
+        # 5. Rates - fetched ONCE for all vendors (no N+1 queries)
+        # -------------------------------------------------
+        if isinstance(from_date, str):
+            rate_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        else:
+            rate_date = from_date
 
-    def resolve_rate(vid, animal):
-        special = special_rate_map.get(vid)
-        if special:
-            val = special.get(f"{animal}_rate")
-            if val:
-                return float(val)
-        return default_rate_map.get(animal, 0)
+        cursor.execute("""
+            SELECT vendor_id, cow_rate, buffalo_rate, date_from
+            FROM vendor_milk_rates
+            WHERE user_id=%s
+            AND date_from<=%s
+            ORDER BY vendor_id, date_from DESC
+        """, (user_id, rate_date))
 
-    # -------------------------------------------------
-    # 6. Styles (reused everywhere)
-    # -------------------------------------------------
-    FONT_NAME = "Times New Roman"
+        special_rate_map = {}
+        for r in cursor.fetchall():
+            vid = int(r["vendor_id"])
+            if vid not in special_rate_map:
+                special_rate_map[vid] = r
 
-    header_font = Font(name=FONT_NAME, size=12, bold=True)      # dairy/owner/date/branch lines
-    col_header_font = Font(name=FONT_NAME, size=12, bold=True)  # table column headings
-    data_font = Font(name=FONT_NAME, size=12, bold=False)       # normal data rows
+        cursor.execute("""
+            SELECT animal, rate, date_from
+            FROM milk_rates
+            WHERE user_id=%s
+            AND date_from<=%s
+            ORDER BY animal, date_from DESC
+        """, (user_id, rate_date))
 
-    thin = Side(style="thin", color="000000")
-    full_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+        default_rate_map = {}
+        for r in cursor.fetchall():
+            if r["animal"] not in default_rate_map:
+                default_rate_map[r["animal"]] = float(r["rate"])
 
-    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    left_align = Alignment(horizontal="left", vertical="center")
-    right_align = Alignment(horizontal="right", vertical="center")
+        def resolve_rate(vid, animal):
+            special = special_rate_map.get(vid)
+            if special:
+                val = special.get(f"{animal}_rate")
+                if val:
+                    return float(val)
+            return default_rate_map.get(animal, 0)
 
-    headers = [
-        "Sr.No",
-        "Beneficiary IFSC CODE",
-        "Beneficiary Account No",
-        "Beneficiary Name",
-        "ADDRESS",
-        "AMOUNT"
-    ]
-    last_col = len(headers)
-    last_col_letter = get_column_letter(last_col)
+        # -------------------------------------------------
+        # 6. Styles (reused everywhere)
+        # -------------------------------------------------
+        FONT_NAME = "Times New Roman"
 
-    def style_range(ws, cell_range):
-        """Apply border to every cell in a merged/unmerged range string like 'A1:F1'."""
-        for row in ws[cell_range]:
-            for cell in row:
+        header_font = Font(name=FONT_NAME, size=12, bold=True)      # dairy/owner/date/branch lines
+        col_header_font = Font(name=FONT_NAME, size=12, bold=True)  # table column headings
+        data_font = Font(name=FONT_NAME, size=12, bold=False)       # normal data rows
+
+        thin = Side(style="thin", color="000000")
+        full_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+        center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        left_align = Alignment(horizontal="left", vertical="center")
+        right_align = Alignment(horizontal="right", vertical="center")
+
+        headers = [
+            "Sr.No",
+            "Beneficiary IFSC CODE",
+            "Beneficiary Account No",
+            "Beneficiary Name",
+            "ADDRESS",
+            "AMOUNT"
+        ]
+        last_col = len(headers)
+        last_col_letter = get_column_letter(last_col)
+
+        def style_range(ws, cell_range):
+            """Apply border to every cell in a merged/unmerged range string like 'A1:F1'."""
+            for row in ws[cell_range]:
+                for cell in row:
+                    cell.border = full_border
+
+        def write_header_block(ws):
+            """
+            Row1: dairy/user name
+            Row2: owner name
+            Row3: date range
+            Row4: branch
+            Row5: column headings
+            Returns the row number where data should start.
+            """
+            # Row 1 - dairy/login name
+            ws.merge_cells(f"A1:{last_col_letter}1")
+            c = ws["A1"]
+            c.value = dairy_name
+            c.font = header_font
+            c.alignment = center_align
+            style_range(ws, f"A1:{last_col_letter}1")
+
+            # Row 2 - owner name
+            ws.merge_cells(f"A2:{last_col_letter}2")
+            c = ws["A2"]
+            c.value = owner_name
+            c.font = header_font
+            c.alignment = center_align
+            style_range(ws, f"A2:{last_col_letter}2")
+
+            # Row 3 - date range
+            ws.merge_cells(f"A3:{last_col_letter}3")
+            c = ws["A3"]
+            c.value = f"DATE:- {from_date} TO {to_date}"
+            c.font = header_font
+            c.alignment = center_align
+            style_range(ws, f"A3:{last_col_letter}3")
+
+            # Row 4 - branch
+            ws.merge_cells(f"A4:{last_col_letter}4")
+            c = ws["A4"]
+            c.value = f"Branch:- {branch_name}"
+            c.font = header_font
+            c.alignment = right_align
+            style_range(ws, f"A4:{last_col_letter}4")
+
+            # Row 5 - column headings
+            for col_idx, h in enumerate(headers, 1):
+                cell = ws.cell(row=5, column=col_idx, value=h)
+                cell.font = col_header_font
+                cell.alignment = center_align
                 cell.border = full_border
 
-    def write_header_block(ws):
-        """
-        Row1: dairy/user name
-        Row2: owner name
-        Row3: date range
-        Row4: branch
-        Row5: column headings
-        Returns the row number where data should start.
-        """
-        # Row 1 - dairy/login name
-        ws.merge_cells(f"A1:{last_col_letter}1")
-        c = ws["A1"]
-        c.value = dairy_name
-        c.font = header_font
-        c.alignment = center_align
-        style_range(ws, f"A1:{last_col_letter}1")
+            return 6  # first data row
 
-        # Row 2 - owner name
-        ws.merge_cells(f"A2:{last_col_letter}2")
-        c = ws["A2"]
-        c.value = owner_name
-        c.font = header_font
-        c.alignment = center_align
-        style_range(ws, f"A2:{last_col_letter}2")
+        def new_workbook(title):
+            wb = Workbook()
+            ws = wb.active
+            ws.title = title
+            start_row = write_header_block(ws)
+            return wb, ws, start_row
 
-        # Row 3 - date range
-        ws.merge_cells(f"A3:{last_col_letter}3")
-        c = ws["A3"]
-        c.value = f"DATE:- {from_date} TO {to_date}"
-        c.font = header_font
-        c.alignment = center_align
-        style_range(ws, f"A3:{last_col_letter}3")
+        same_wb, same_ws, same_start_row = new_workbook("Same Bank Report")
+        other_wb, other_ws, other_start_row = new_workbook("Other Bank Report")
 
-        # Row 4 - branch
-        ws.merge_cells(f"A4:{last_col_letter}4")
-        c = ws["A4"]
-        c.value = f"Branch:- {branch_name}"
-        c.font = header_font
-        c.alignment = right_align
-        style_range(ws, f"A4:{last_col_letter}4")
+        same_row = same_start_row
+        other_row = other_start_row
+        same_sr = 1
+        other_sr = 1
+        same_total = 0
+        other_total = 0
 
-        # Row 5 - column headings
-        for col_idx, h in enumerate(headers, 1):
-            cell = ws.cell(row=5, column=col_idx, value=h)
-            cell.font = col_header_font
-            cell.alignment = center_align
-            cell.border = full_border
+        for vendor in vendors:
 
-        return 6  # first data row
+            vid = int(vendor["vendor_id"])
 
-    def new_workbook(title):
-        wb = Workbook()
-        ws = wb.active
-        ws.title = title
-        start_row = write_header_block(ws)
-        return wb, ws, start_row
+            cow_rate = resolve_rate(vid, "cow")
+            buffalo_rate = resolve_rate(vid, "buffalo")
 
-    same_wb, same_ws, same_start_row = new_workbook("Same Bank Report")
-    other_wb, other_ws, other_start_row = new_workbook("Other Bank Report")
+            qtys = milk_map.get(vid, {})
+            cow_qty = qtys.get("cow", 0)
+            buffalo_qty = qtys.get("buffalo", 0)
 
-    same_row = same_start_row
-    other_row = other_start_row
-    same_sr = 1
-    other_sr = 1
-    same_total = 0
-    other_total = 0
+            cow_cost = cow_qty * cow_rate
+            buffalo_cost = buffalo_qty * buffalo_rate
 
-    for vendor in vendors:
+            food_total = food_map.get(vid, 0)
+            advance = adv_map.get(vid, 0)
 
-        vid = int(vendor["vendor_id"])
+            final_payable = int(round(
+                (cow_cost + buffalo_cost) - (advance + food_total)
+            ))
 
-        cow_rate = resolve_rate(vid, "cow")
-        buffalo_rate = resolve_rate(vid, "buffalo")
+            vendor_ifsc = (vendor.get("ifsc_code") or "").strip().upper()
+            vendor_bank_code = vendor_ifsc[:4]
 
-        qtys = milk_map.get(vid, {})
-        cow_qty = qtys.get("cow", 0)
-        buffalo_qty = qtys.get("buffalo", 0)
-
-        cow_cost = cow_qty * cow_rate
-        buffalo_cost = buffalo_qty * buffalo_rate
-
-        food_total = food_map.get(vid, 0)
-        advance = adv_map.get(vid, 0)
-
-        final_payable = int(round(
-            (cow_cost + buffalo_cost) - (advance + food_total)
-        ))
-
-        vendor_ifsc = (vendor.get("ifsc_code") or "").strip().upper()
-        vendor_bank_code = vendor_ifsc[:4]
-
-        if vendor_bank_code and vendor_bank_code == owner_bank_code:
-            ws, row_num, sr = same_ws, same_row, same_sr
-            same_total += final_payable
-        else:
-            ws, row_num, sr = other_ws, other_row, other_sr
-            other_total += final_payable
-
-        row_values = [
-            sr,
-            vendor_ifsc,
-            vendor.get("account_no") or "",
-            (vendor.get("name_en") or vendor.get("name") or "").upper(),
-            vendor.get("address"),
-            final_payable
-        ]
-
-        for col_idx, val in enumerate(row_values, 1):
-            cell = ws.cell(row=row_num, column=col_idx, value=val)
-            cell.font = data_font
-            cell.border = full_border
-            if col_idx == 6:
-                cell.number_format = '0'
-                cell.alignment = right_align
+            if vendor_bank_code and vendor_bank_code == owner_bank_code:
+                ws, row_num, sr = same_ws, same_row, same_sr
+                same_total += final_payable
             else:
-                cell.alignment = left_align if col_idx != 1 else center_align
+                ws, row_num, sr = other_ws, other_row, other_sr
+                other_total += final_payable
 
-        if ws is same_ws:
-            same_row += 1
-            same_sr += 1
-        else:
-            other_row += 1
-            other_sr += 1
+            row_values = [
+                sr,
+                vendor_ifsc,
+                vendor.get("account_no") or "",
+                (vendor.get("name_en") or vendor.get("name") or "").upper(),
+                vendor.get("address"),
+                final_payable
+            ]
 
-    # -------------------------------------------------
-    # 6b. Total row at the bottom of each sheet
-    # -------------------------------------------------
-    def write_total_row(ws, row_num, total_amount):
-        ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=last_col - 1)
-        label_cell = ws.cell(row=row_num, column=1, value="Total")
-        label_cell.font = col_header_font
-        label_cell.alignment = right_align
-        label_cell.border = full_border
+            for col_idx, val in enumerate(row_values, 1):
+                cell = ws.cell(row=row_num, column=col_idx, value=val)
+                cell.font = data_font
+                cell.border = full_border
+                if col_idx == 6:
+                    cell.number_format = '0'
+                    cell.alignment = right_align
+                else:
+                    cell.alignment = left_align if col_idx != 1 else center_align
 
-        for col_idx in range(2, last_col):
-            ws.cell(row=row_num, column=col_idx).border = full_border
+            if ws is same_ws:
+                same_row += 1
+                same_sr += 1
+            else:
+                other_row += 1
+                other_sr += 1
 
-        total_cell = ws.cell(row=row_num, column=last_col, value=int(round(total_amount)))
-        total_cell.font = col_header_font
-        total_cell.number_format = '0'
-        total_cell.alignment = right_align
-        total_cell.border = full_border
+        # -------------------------------------------------
+        # 6b. Total row at the bottom of each sheet
+        # -------------------------------------------------
+        def write_total_row(ws, row_num, total_amount):
+            ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=last_col - 1)
+            label_cell = ws.cell(row=row_num, column=1, value="Total")
+            label_cell.font = col_header_font
+            label_cell.alignment = right_align
+            label_cell.border = full_border
 
-    write_total_row(same_ws, same_row, same_total)
-    write_total_row(other_ws, other_row, other_total)
+            for col_idx in range(2, last_col):
+                ws.cell(row=row_num, column=col_idx).border = full_border
 
-    # -------------------------------------------------
-    # 7. Fixed column widths
-    # -------------------------------------------------
-    widths = [8, 20, 22, 40, 32, 14]
-    for ws in (same_ws, other_ws):
-        for i, w in enumerate(widths, 1):
-            ws.column_dimensions[get_column_letter(i)].width = w
-        # header rows a bit taller so wrapped text looks clean
-        for r in (1, 2, 3, 4):
-            ws.row_dimensions[r].height = 20
+            total_cell = ws.cell(row=row_num, column=last_col, value=int(round(total_amount)))
+            total_cell.font = col_header_font
+            total_cell.number_format = '0'
+            total_cell.alignment = right_align
+            total_cell.border = full_border
 
-    cursor.close()
+        write_total_row(same_ws, same_row, same_total)
+        write_total_row(other_ws, other_row, other_total)
 
-    # -------------------------------------------------
-    # 8. Save both workbooks into a single ZIP
-    # -------------------------------------------------
-    same_bytes = BytesIO()
-    same_wb.save(same_bytes)
-    same_bytes.seek(0)
+        # -------------------------------------------------
+        # 7. Fixed column widths
+        # -------------------------------------------------
+        widths = [8, 20, 22, 40, 32, 14]
+        for ws in (same_ws, other_ws):
+            for i, w in enumerate(widths, 1):
+                ws.column_dimensions[get_column_letter(i)].width = w
+            # header rows a bit taller so wrapped text looks clean
+            for r in (1, 2, 3, 4):
+                ws.row_dimensions[r].height = 20
 
-    other_bytes = BytesIO()
-    other_wb.save(other_bytes)
-    other_bytes.seek(0)
+        cursor.close()
 
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("Same_Bank_Report.xlsx", same_bytes.getvalue())
-        zf.writestr("Other_Bank_Report.xlsx", other_bytes.getvalue())
-    zip_buffer.seek(0)
+        # -------------------------------------------------
+        # 8. Save both workbooks into a single ZIP
+        # -------------------------------------------------
+        same_bytes = BytesIO()
+        same_wb.save(same_bytes)
+        same_bytes.seek(0)
 
-    return send_file(
-        zip_buffer,
-        as_attachment=True,
-        download_name=f"Bank_Reports_{from_date}_to_{to_date}.zip",
-        mimetype="application/zip"
-    )
+        other_bytes = BytesIO()
+        other_wb.save(other_bytes)
+        other_bytes.seek(0)
+
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("Same_Bank_Report.xlsx", same_bytes.getvalue())
+            zf.writestr("Other_Bank_Report.xlsx", other_bytes.getvalue())
+        zip_buffer.seek(0)
+
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=f"Bank_Reports_{from_date}_to_{to_date}.zip",
+            mimetype="application/zip"
+        )
 @app.route('/bank_settings', methods=['GET', 'POST'])
 def bank_settings():
 
@@ -5211,10 +8119,46 @@ def generate_receipt(vendor_id):
             cursor.execute("""
                 SELECT
                     date,
-                    COALESCE(SUM(CASE WHEN milk_type='cow' AND slot='morning' THEN quantity END),0) AS cow_morning,
-                    COALESCE(SUM(CASE WHEN milk_type='cow' AND slot='evening' THEN quantity END),0) AS cow_evening,
-                    COALESCE(SUM(CASE WHEN milk_type='buffalo' AND slot='morning' THEN quantity END),0) AS buffalo_morning,
-                    COALESCE(SUM(CASE WHEN milk_type='buffalo' AND slot='evening' THEN quantity END),0) AS buffalo_evening
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN milk_type='cow'
+                                AND slot='morning'
+                                THEN quantity
+                            END
+                        ), 0
+                    ) AS cow_morning,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN milk_type='cow'
+                                AND slot='evening'
+                                THEN quantity
+                            END
+                        ), 0
+                    ) AS cow_evening,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN milk_type='buffalo'
+                                AND slot='morning'
+                                THEN quantity
+                            END
+                        ), 0
+                    ) AS buffalo_morning,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN milk_type='buffalo'
+                                AND slot='evening'
+                                THEN quantity
+                            END
+                        ), 0
+                    ) AS buffalo_evening
+
                 FROM milk_collection
                 WHERE vendor_id = %s
                   AND user_id = %s
@@ -5226,7 +8170,10 @@ def generate_receipt(vendor_id):
             daily_rows = cursor.fetchall()
 
             if not daily_rows:
-                flash("No milk collection found for selected period.", "warning")
+                flash(
+                    "No milk collection found for selected period.",
+                    "warning"
+                )
 
             total_cow_morning = 0
             total_cow_evening = 0
@@ -5234,29 +8181,62 @@ def generate_receipt(vendor_id):
             total_buffalo_evening = 0
 
             for row in daily_rows:
-                row['cow_morning'] = round(float(row['cow_morning']), 1)
-                row['cow_evening'] = round(float(row['cow_evening']), 1)
-                row['buffalo_morning'] = round(float(row['buffalo_morning']), 1)
-                row['buffalo_evening'] = round(float(row['buffalo_evening']), 1)
+
+                row['cow_morning'] = round(
+                    float(row['cow_morning']), 1
+                )
+
+                row['cow_evening'] = round(
+                    float(row['cow_evening']), 1
+                )
+
+                row['buffalo_morning'] = round(
+                    float(row['buffalo_morning']), 1
+                )
+
+                row['buffalo_evening'] = round(
+                    float(row['buffalo_evening']), 1
+                )
 
                 # Display-friendly date (dd-mm-yyyy)
-                row['display_date'] = row['date'].strftime("%d-%m-%Y")
+                row['display_date'] = row['date'].strftime(
+                    "%d-%m-%Y"
+                )
 
                 total_cow_morning += row['cow_morning']
                 total_cow_evening += row['cow_evening']
                 total_buffalo_morning += row['buffalo_morning']
                 total_buffalo_evening += row['buffalo_evening']
 
-            total_cow_morning = round(total_cow_morning, 1)
-            total_cow_evening = round(total_cow_evening, 1)
-            total_buffalo_morning = round(total_buffalo_morning, 1)
-            total_buffalo_evening = round(total_buffalo_evening, 1)
+            total_cow_morning = round(
+                total_cow_morning, 1
+            )
 
-            total_cow_milk = round(total_cow_morning + total_cow_evening, 1)
-            total_buffalo_milk = round(total_buffalo_morning + total_buffalo_evening, 1)
+            total_cow_evening = round(
+                total_cow_evening, 1
+            )
+
+            total_buffalo_morning = round(
+                total_buffalo_morning, 1
+            )
+
+            total_buffalo_evening = round(
+                total_buffalo_evening, 1
+            )
+
+            total_cow_milk = round(
+                total_cow_morning + total_cow_evening,
+                1
+            )
+
+            total_buffalo_milk = round(
+                total_buffalo_morning + total_buffalo_evening,
+                1
+            )
 
             # ----------------------------
-            # Rates: vendor-specific first, else default
+            # Rates: vendor-specific first,
+            # else default
             # ----------------------------
             cursor.execute("""
                 SELECT cow_rate, buffalo_rate
@@ -5271,9 +8251,17 @@ def generate_receipt(vendor_id):
             vendor_rate = cursor.fetchone()
 
             if vendor_rate:
-                cow_rate = float(vendor_rate.get('cow_rate') or 0)
-                buffalo_rate = float(vendor_rate.get('buffalo_rate') or 0)
+
+                cow_rate = float(
+                    vendor_rate.get('cow_rate') or 0
+                )
+
+                buffalo_rate = float(
+                    vendor_rate.get('buffalo_rate') or 0
+                )
+
             else:
+
                 cursor.execute("""
                     SELECT animal, rate
                     FROM milk_rates
@@ -5286,38 +8274,98 @@ def generate_receipt(vendor_id):
 
                 cow_rate = 0
                 buffalo_rate = 0
+
                 got_cow = False
                 got_buffalo = False
 
                 for r in rate_rows:
+
                     if r['animal'] == 'cow' and not got_cow:
                         cow_rate = float(r['rate'] or 0)
                         got_cow = True
-                    elif r['animal'] == 'buffalo' and not got_buffalo:
+
+                    elif (
+                        r['animal'] == 'buffalo'
+                        and not got_buffalo
+                    ):
                         buffalo_rate = float(r['rate'] or 0)
                         got_buffalo = True
+
                     if got_cow and got_buffalo:
                         break
 
-            cow_amount = round(total_cow_milk * cow_rate, 2)
-            buffalo_amount = round(total_buffalo_milk * buffalo_rate, 2)
-            total_milk_amount = round(cow_amount + buffalo_amount, 2)
+            cow_amount = round(
+                total_cow_milk * cow_rate,
+                2
+            )
+
+            buffalo_amount = round(
+                total_buffalo_milk * buffalo_rate,
+                2
+            )
+
+            total_milk_amount = round(
+                cow_amount + buffalo_amount,
+                2
+            )
 
             # ----------------------------
-            # Advance
+            # Advance Ledger
             # ----------------------------
             cursor.execute("""
-                SELECT COALESCE(SUM(amount),0) AS total_advance
-                FROM advance
+                SELECT
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type = 'advance'
+                                THEN amount
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS total_advance,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN transaction_type = 'deduction'
+                                THEN amount
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS total_deduction
+
+                FROM advance_transactions
                 WHERE vendor_id = %s
                   AND user_id = %s
                   AND date BETWEEN %s AND %s
-            """, (vendor_id, user_id, from_date, to_date))
+            """, (
+                vendor_id,
+                user_id,
+                from_date,
+                to_date
+            ))
 
-            total_advance = round(float(cursor.fetchone()['total_advance']), 2)
+            advance_row = cursor.fetchone() or {}
+
+            total_advance = float(
+                advance_row.get('total_advance') or 0
+            )
+
+            total_deduction = float(
+                advance_row.get('total_deduction') or 0
+            )
+
+            # Net advance = advances - deductions
+            total_advance = round(
+                total_advance - total_deduction,
+                2
+            )
 
             # ----------------------------
-            # Food Sack (JOIN with food_sack_rates)
+            # Food Sack
+            # (JOIN with food_sack_rates)
             # ----------------------------
             cursor.execute("""
                 SELECT
@@ -5327,50 +8375,120 @@ def generate_receipt(vendor_id):
                     fs.sack_rate,
                     fs.total_cost
                 FROM food_sack fs
-                JOIN food_sack_rates r ON r.id = fs.sack_rate_id
+                JOIN food_sack_rates r
+                    ON r.id = fs.sack_rate_id
                 WHERE fs.vendor_id = %s
                   AND fs.user_id = %s
                   AND fs.date BETWEEN %s AND %s
                 ORDER BY fs.date
-            """, (vendor_id, user_id, from_date, to_date))
+            """, (
+                vendor_id,
+                user_id,
+                from_date,
+                to_date
+            ))
 
             food_sack_rows = cursor.fetchall()
 
             total_food_sack = 0
+
             for fs in food_sack_rows:
-                fs['sack_qty'] = round(float(fs['sack_qty']), 1)
-                fs['sack_rate'] = round(float(fs['sack_rate']), 2)
-                fs['total_cost'] = round(float(fs['total_cost']), 2)
-                fs['display_date'] = fs['date'].strftime("%d-%m-%Y")
+
+                fs['sack_qty'] = round(
+                    float(fs['sack_qty']),
+                    1
+                )
+
+                fs['sack_rate'] = round(
+                    float(fs['sack_rate']),
+                    2
+                )
+
+                fs['total_cost'] = round(
+                    float(fs['total_cost']),
+                    2
+                )
+
+                fs['display_date'] = fs['date'].strftime(
+                    "%d-%m-%Y"
+                )
+
                 total_food_sack += fs['total_cost']
 
-            total_food_sack = round(total_food_sack, 2)
+            total_food_sack = round(
+                total_food_sack,
+                2
+            )
 
             # ----------------------------
             # Final Payable
             # ----------------------------
-            net_payable = round(total_milk_amount - total_advance - total_food_sack, 2)
+            net_payable = round(
+                total_milk_amount
+                - total_advance
+                - total_food_sack,
+                2
+            )
 
+            # ----------------------------
+            # Receipt Data
+            # ----------------------------
             receipt = {
                 'daily_rows': daily_rows,
-                'total_cow_morning': total_cow_morning,
-                'total_cow_evening': total_cow_evening,
-                'total_buffalo_morning': total_buffalo_morning,
-                'total_buffalo_evening': total_buffalo_evening,
-                'total_cow_milk': total_cow_milk,
-                'total_buffalo_milk': total_buffalo_milk,
-                'cow_rate': cow_rate,
-                'buffalo_rate': buffalo_rate,
-                'cow_amount': cow_amount,
-                'buffalo_amount': buffalo_amount,
-                'total_milk_amount': total_milk_amount,
-                'food_sack_rows': food_sack_rows,
-                'total_food_sack': total_food_sack,
-                'total_advance': total_advance,
-                'net_payable': net_payable,
-                'from_date': from_date,
-                'to_date': to_date,
-                'print_date': date.today().strftime('%d-%m-%Y')
+
+                'total_cow_morning':
+                    total_cow_morning,
+
+                'total_cow_evening':
+                    total_cow_evening,
+
+                'total_buffalo_morning':
+                    total_buffalo_morning,
+
+                'total_buffalo_evening':
+                    total_buffalo_evening,
+
+                'total_cow_milk':
+                    total_cow_milk,
+
+                'total_buffalo_milk':
+                    total_buffalo_milk,
+
+                'cow_rate':
+                    cow_rate,
+
+                'buffalo_rate':
+                    buffalo_rate,
+
+                'cow_amount':
+                    cow_amount,
+
+                'buffalo_amount':
+                    buffalo_amount,
+
+                'total_milk_amount':
+                    total_milk_amount,
+
+                'food_sack_rows':
+                    food_sack_rows,
+
+                'total_food_sack':
+                    total_food_sack,
+
+                'total_advance':
+                    total_advance,
+
+                'net_payable':
+                    net_payable,
+
+                'from_date':
+                    from_date,
+
+                'to_date':
+                    to_date,
+
+                'print_date':
+                    date.today().strftime('%d-%m-%Y')
             }
 
     cursor.close()

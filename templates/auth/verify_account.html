@@ -1,67 +1,1378 @@
 <!DOCTYPE html>
 <html lang="mr">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Account Verification</title>
-<head>
-  <meta charset="UTF-8">
-  <title>Account Verification</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-  <!-- BOOTSTRAP -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0">
 
-  <!-- YOUR CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <title>OTP Verification - Dairy Mitr</title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
+
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         AUTH CSS
+    ====================================================== -->
+
+    <link
+        href="{{ url_for('static', filename='css/auth.css') }}"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        /* =================================================
+           OTP PAGE
+        ================================================= */
+
+        .otp-page-card {
+
+            text-align: center;
+
+        }
+
+
+        /* =================================================
+           OTP ICON
+        ================================================= */
+
+        .otp-icon {
+
+            width: 78px;
+
+            height: 78px;
+
+            margin: 0 auto 18px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: #2563eb;
+
+            font-size: 27px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #eff6ff,
+                    #dbeafe
+                );
+
+            border:
+                1px solid #bfdbfe;
+
+            box-shadow:
+                0 12px 28px
+                rgba(37, 99, 235, .14);
+
+            animation:
+                otpIconFloat
+                3s
+                ease-in-out
+                infinite;
+
+        }
+
+
+        @keyframes otpIconFloat {
+
+            0%,
+            100% {
+
+                transform:
+                    translateY(0)
+                    scale(1);
+
+            }
+
+            50% {
+
+                transform:
+                    translateY(-7px)
+                    scale(1.04);
+
+            }
+
+        }
+
+
+        /* =================================================
+           EMAIL
+        ================================================= */
+
+        .otp-email {
+
+            display: inline-block;
+
+            max-width: 100%;
+
+            padding:
+                6px 12px;
+
+            margin-top: 3px;
+
+            margin-bottom: 20px;
+
+            border-radius: 8px;
+
+            background:
+                #eff6ff;
+
+            color:
+                #2563eb;
+
+            font-size:
+                12px;
+
+            font-weight:
+                700;
+
+            overflow:
+                hidden;
+
+            text-overflow:
+                ellipsis;
+
+            white-space:
+                nowrap;
+
+        }
+
+
+        /* =================================================
+           OTP BOXES
+        ================================================= */
+
+        .otp-boxes {
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            gap:
+                9px;
+
+            margin:
+                5px 0 20px;
+
+        }
+
+
+        .otp-input {
+
+            width:
+                48px;
+
+            height:
+                55px;
+
+            border:
+                1px solid
+                #e2e8f0;
+
+            border-radius:
+                12px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #0f172a;
+
+            font-size:
+                20px;
+
+            font-weight:
+                800;
+
+            text-align:
+                center;
+
+            outline:
+                none;
+
+            transition:
+                all .25s ease;
+
+        }
+
+
+        /* =================================================
+           OTP FOCUS
+        ================================================= */
+
+        .otp-input:focus {
+
+            border-color:
+                #2563eb;
+
+            background:
+                #ffffff;
+
+            transform:
+                translateY(-3px)
+                scale(1.03);
+
+            box-shadow:
+                0 0 0 4px
+                rgba(37,99,235,.10);
+
+        }
+
+
+        /* =================================================
+           OTP FILLED
+        ================================================= */
+
+        .otp-input.filled {
+
+            border-color:
+                #60a5fa;
+
+            background:
+                #eff6ff;
+
+            color:
+                #2563eb;
+
+        }
+
+
+        /* =================================================
+           OTP ERROR
+        ================================================= */
+
+        .otp-input.error {
+
+            border-color:
+                #ef4444;
+
+            background:
+                #fef2f2;
+
+            animation:
+                otpShake .35s ease;
+
+        }
+
+
+        @keyframes otpShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+
+        }
+
+
+        /* =================================================
+           HIDDEN ACTUAL OTP INPUT
+        ================================================= */
+
+        #otp {
+
+            position:
+                absolute;
+
+            width:
+                1px;
+
+            height:
+                1px;
+
+            opacity:
+                0;
+
+            pointer-events:
+                none;
+
+        }
+
+
+        /* =================================================
+           TIMER
+        ================================================= */
+
+        .otp-timer-wrapper {
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            align-items:
+                center;
+
+            gap:
+                7px;
+
+            margin-bottom:
+                18px;
+
+            font-size:
+                12px;
+
+            color:
+                #64748b;
+
+        }
+
+
+        .otp-timer {
+
+            min-width:
+                42px;
+
+            color:
+                #2563eb;
+
+            font-weight:
+                800;
+
+        }
+
+
+        /* =================================================
+           RESEND
+        ================================================= */
+
+        .resend-section {
+
+            font-size:
+                12px;
+
+            color:
+                #64748b;
+
+            margin-top:
+                14px;
+
+        }
+
+
+        .resend-btn {
+
+            border:
+                none;
+
+            background:
+                transparent;
+
+            color:
+                #2563eb;
+
+            font-size:
+                12px;
+
+            font-weight:
+                700;
+
+            cursor:
+                pointer;
+
+            padding:
+                0;
+
+        }
+
+
+        .resend-btn:hover {
+
+            color:
+                #1d4ed8;
+
+            text-decoration:
+                underline;
+
+        }
+
+
+        .resend-btn:disabled {
+
+            color:
+                #94a3b8;
+
+            cursor:
+                not-allowed;
+
+            text-decoration:
+                none;
+
+        }
+
+
+        /* =================================================
+           VERIFY BUTTON
+        ================================================= */
+
+        .verify-btn {
+
+            margin-top:
+                5px;
+
+        }
+
+
+        .verify-btn i {
+
+            transition:
+                transform .3s ease;
+
+        }
+
+
+        .verify-btn:hover i {
+
+            transform:
+                translateX(4px);
+
+        }
+
+
+        /* =================================================
+           SUCCESS CHECK
+        ================================================= */
+
+        .otp-success {
+
+            display:
+                none;
+
+            width:
+                55px;
+
+            height:
+                55px;
+
+            margin:
+                0 auto 15px;
+
+            border-radius:
+                50%;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            background:
+                #dcfce7;
+
+            color:
+                #16a34a;
+
+            font-size:
+                22px;
+
+            animation:
+                successPop .4s ease;
+
+        }
+
+
+        @keyframes successPop {
+
+            from {
+
+                transform:
+                    scale(.5);
+
+                opacity:
+                    0;
+
+            }
+
+            to {
+
+                transform:
+                    scale(1);
+
+                opacity:
+                    1;
+
+            }
+
+        }
+
+
+        /* =================================================
+           MOBILE
+        ================================================= */
+
+        @media(max-width:420px) {
+
+            .otp-boxes {
+
+                gap:
+                    6px;
+
+            }
+
+
+            .otp-input {
+
+                width:
+                    42px;
+
+                height:
+                    50px;
+
+                font-size:
+                    18px;
+
+                border-radius:
+                    10px;
+
+            }
+
+        }
+
+
+        @media(max-width:350px) {
+
+            .otp-input {
+
+                width:
+                    38px;
+
+                height:
+                    47px;
+
+            }
+
+        }
+
+    </style>
+
 </head>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+
 
 <body class="auth-body">
 
-<div class="auth-card">
 
-  <h2 class="auth-title">🔑 OTP Verification</h2>
-  <p class="auth-subtitle">
-    {{ email }} या email वर OTP पाठवला आहे.
-  </p>
+<!-- =========================================================
+     CARD
+========================================================= -->
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+<div class="auth-card otp-page-card">
 
-  <form method="POST">
 
-    <div class="form-floating">
-      <input type="text"
-             class="form-control"
-             name="otp"
-             placeholder="Enter OTP"
-             required>
-      <label>Enter OTP</label>
+    <!-- =====================================================
+         ICON
+    ====================================================== -->
+
+    <div class="otp-icon">
+
+        <i class="fa-solid fa-shield-halved"></i>
+
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">
-      Verify Account
-    </button>
 
-  </form>
+    <!-- =====================================================
+         SUCCESS ICON
+    ====================================================== -->
 
-  <div class="auth-links">
-    <a href="{{ url_for('signup') }}">
-      ← Back to Signup
-    </a>
-  </div>
+    <div
+        class="otp-success"
+        id="otpSuccess"
+    >
+
+        <i class="fa-solid fa-check"></i>
+
+    </div>
+
+
+    <!-- =====================================================
+         TITLE
+    ====================================================== -->
+
+    <h1 class="auth-title">
+
+        OTP Verification
+
+    </h1>
+
+
+    <!-- =====================================================
+         SUBTITLE
+    ====================================================== -->
+
+    <p class="auth-subtitle">
+
+        तुमच्या email वर 6 अंकी OTP पाठवला आहे.
+
+        <br>
+
+        खाली OTP enter करा.
+
+    </p>
+
+
+    <!-- =====================================================
+         EMAIL
+    ====================================================== -->
+
+    <div class="otp-email">
+
+        <i class="fa-solid fa-envelope"></i>
+
+        {{ email }}
+
+    </div>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }}"
+                    role="alert"
+                >
+
+                    {{ message }}
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+
+    <form
+        method="POST"
+        id="otpForm"
+    >
+
+
+        <!-- =================================================
+             REAL OTP FIELD
+
+             Flask backend ला name="otp" मिळेल.
+        ================================================== -->
+
+        <input
+            type="text"
+            name="otp"
+            id="otp"
+            maxlength="6"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            required
+        >
+
+
+        <!-- =================================================
+             OTP BOXES
+        ================================================== -->
+
+        <div
+            class="otp-boxes"
+            id="otpBoxes"
+        >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                aria-label="OTP digit 1"
+            >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                aria-label="OTP digit 2"
+            >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                aria-label="OTP digit 3"
+            >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                aria-label="OTP digit 4"
+            >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                aria-label="OTP digit 5"
+            >
+
+            <input
+                type="text"
+                class="otp-input"
+                maxlength="1"
+                inputmode="numeric"
+                aria-label="OTP digit 6"
+            >
+
+        </div>
+
+
+        <!-- =================================================
+             TIMER
+        ================================================== -->
+
+        <div class="otp-timer-wrapper">
+
+            <i class="fa-regular fa-clock"></i>
+
+            OTP expires in
+
+            <span
+                class="otp-timer"
+                id="otpTimer"
+            >
+                02:00
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             VERIFY
+        ================================================== -->
+
+        <button
+            type="submit"
+            class="btn btn-primary w-100 verify-btn"
+            id="verifyButton"
+        >
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            Verify Account
+
+        </button>
+
+
+    </form>
+
+
+    <!-- =====================================================
+         RESEND
+    ====================================================== -->
+
+    <div class="resend-section">
+
+        OTP मिळाला नाही?
+
+        <button
+            type="button"
+            class="resend-btn"
+            id="resendBtn"
+            disabled
+        >
+
+            पुन्हा पाठवा
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
+
+    <div class="auth-links">
+
+        <a href="{{ url_for('signup') }}">
+
+            <i class="fa-solid fa-arrow-left"></i>
+
+            Signup वर परत जा
+
+        </a>
+
+    </div>
+
 
 </div>
 
+
+
+<script>
+
+
+/* =========================================================
+   OTP ELEMENTS
+========================================================= */
+
+const otpInputs =
+    document.querySelectorAll(
+        ".otp-input"
+    );
+
+const realOtp =
+    document.getElementById("otp");
+
+const otpForm =
+    document.getElementById("otpForm");
+
+const otpTimer =
+    document.getElementById("otpTimer");
+
+const resendBtn =
+    document.getElementById("resendBtn");
+
+const verifyButton =
+    document.getElementById(
+        "verifyButton"
+    );
+
+
+
+/* =========================================================
+   OTP VALUE UPDATE
+========================================================= */
+
+function updateOTP() {
+
+    let value = "";
+
+    otpInputs.forEach(
+        function(input) {
+
+            value += input.value;
+
+        }
+    );
+
+    realOtp.value = value;
+
+
+    /* Filled class */
+
+    otpInputs.forEach(
+        function(input) {
+
+            if (input.value) {
+
+                input.classList.add(
+                    "filled"
+                );
+
+            }
+
+            else {
+
+                input.classList.remove(
+                    "filled"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   INPUT EVENTS
+========================================================= */
+
+otpInputs.forEach(
+    function(input, index) {
+
+
+        /* -----------------------------------------------
+           TYPING
+        ------------------------------------------------ */
+
+        input.addEventListener(
+            "input",
+            function(event) {
+
+                /* Numbers only */
+
+                this.value =
+                    this.value.replace(
+                        /[^0-9]/g,
+                        ""
+                    );
+
+
+                if (this.value) {
+
+                    this.classList.add(
+                        "filled"
+                    );
+
+
+                    /* Move next */
+
+                    if (
+                        index <
+                        otpInputs.length - 1
+                    ) {
+
+                        otpInputs[
+                            index + 1
+                        ].focus();
+
+                    }
+
+                }
+
+
+                updateOTP();
+
+            }
+        );
+
+
+        /* -----------------------------------------------
+           BACKSPACE
+        ------------------------------------------------ */
+
+        input.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key ===
+                    "Backspace" &&
+                    !this.value &&
+                    index > 0
+                ) {
+
+                    otpInputs[
+                        index - 1
+                    ].focus();
+
+                }
+
+            }
+        );
+
+
+        /* -----------------------------------------------
+           ARROW LEFT
+        ------------------------------------------------ */
+
+        input.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key ===
+                    "ArrowLeft" &&
+                    index > 0
+                ) {
+
+                    otpInputs[
+                        index - 1
+                    ].focus();
+
+                }
+
+            }
+        );
+
+
+        /* -----------------------------------------------
+           ARROW RIGHT
+        ------------------------------------------------ */
+
+        input.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key ===
+                    "ArrowRight" &&
+                    index <
+                    otpInputs.length - 1
+                ) {
+
+                    otpInputs[
+                        index + 1
+                    ].focus();
+
+                }
+
+            }
+        );
+
+
+    }
+);
+
+
+
+/* =========================================================
+   PASTE OTP
+========================================================= */
+
+document
+    .getElementById("otpBoxes")
+    .addEventListener(
+        "paste",
+        function(event) {
+
+            event.preventDefault();
+
+
+            const pasted =
+                (
+                    event.clipboardData ||
+                    window.clipboardData
+                )
+                .getData("text")
+                .replace(
+                    /[^0-9]/g,
+                    ""
+                )
+                .slice(0, 6);
+
+
+            if (!pasted) {
+
+                return;
+
+            }
+
+
+            pasted
+                .split("")
+                .forEach(
+                    function(number, index) {
+
+                        if (
+                            otpInputs[index]
+                        ) {
+
+                            otpInputs[
+                                index
+                            ].value = number;
+
+                            otpInputs[
+                                index
+                            ].classList.add(
+                                "filled"
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            updateOTP();
+
+
+            /* Focus last */
+
+            const lastIndex =
+                Math.min(
+                    pasted.length - 1,
+                    5
+                );
+
+
+            otpInputs[
+                lastIndex
+            ].focus();
+
+        }
+    );
+
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+let timeLeft = 120;
+
+let timerInterval;
+
+
+function startTimer() {
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    timeLeft = 120;
+
+    resendBtn.disabled = true;
+
+
+    timerInterval =
+        setInterval(
+            function() {
+
+                timeLeft--;
+
+
+                const minutes =
+                    Math.floor(
+                        timeLeft / 60
+                    );
+
+                const seconds =
+                    timeLeft % 60;
+
+
+                otpTimer.textContent =
+                    String(minutes)
+                        .padStart(2, "0")
+                    +
+                    ":"
+                    +
+                    String(seconds)
+                        .padStart(2, "0");
+
+
+                if (timeLeft <= 0) {
+
+                    clearInterval(
+                        timerInterval
+                    );
+
+
+                    otpTimer.textContent =
+                        "00:00";
+
+
+                    resendBtn.disabled =
+                        false;
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+/* Start */
+
+startTimer();
+
+
+
+/* =========================================================
+   RESEND
+========================================================= */
+
+resendBtn.addEventListener(
+    "click",
+    function() {
+
+        /*
+         * Actual resend API/Flask route
+         * उपलब्ध नसल्यामुळे येथे backend
+         * request केलेली नाही.
+         *
+         * Actual resend route असल्यास येथे
+         * fetch() जोडू शकतो.
+         */
+
+
+        startTimer();
+
+
+        /* Visual feedback */
+
+        resendBtn.textContent =
+            "OTP पुन्हा पाठवला ✓";
+
+
+        setTimeout(
+            function() {
+
+                resendBtn.textContent =
+                    "पुन्हा पाठवा";
+
+            },
+            2500
+        );
+
+    }
+);
+
+
+
+/* =========================================================
+   FORM VALIDATION
+========================================================= */
+
+otpForm.addEventListener(
+    "submit",
+    function(event) {
+
+        updateOTP();
+
+
+        const otp =
+            realOtp.value;
+
+
+        /* -----------------------------------------------
+           Check 6 digits
+        ------------------------------------------------ */
+
+        if (
+            otp.length !== 6
+        ) {
+
+            event.preventDefault();
+
+
+            otpInputs.forEach(
+                function(input) {
+
+                    input.classList.add(
+                        "error"
+                    );
+
+
+                    setTimeout(
+                        function() {
+
+                            input.classList.remove(
+                                "error"
+                            );
+
+                        },
+                        450
+                    );
+
+                }
+            );
+
+
+            otpInputs[
+                Math.min(
+                    otp.length,
+                    5
+                )
+            ].focus();
+
+
+            return;
+
+        }
+
+
+        /* -----------------------------------------------
+           Loading
+        ------------------------------------------------ */
+
+        verifyButton.classList.add(
+            "loading"
+        );
+
+        verifyButton.disabled =
+            true;
+
+    }
+);
+
+
+
+/* =========================================================
+   AUTO FOCUS
+========================================================= */
+
+window.addEventListener(
+    "load",
+    function() {
+
+        setTimeout(
+            function() {
+
+                if (otpInputs[0]) {
+
+                    otpInputs[0].focus();
+
+                }
+
+            },
+            500
+        );
+
+    }
+);
+
+
+</script>
+
+
 </body>
+
 </html>

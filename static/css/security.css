@@ -1,135 +1,576 @@
-/* =====================================
-   SECURITY PAGES – SIMPLE CLEAN STYLE
-===================================== */
+/* =====================================================
+   DAIRY MITR — SECURITY / AUTHENTICATION MATCHED STYLE
+   Same Purple + Indigo visual language as auth.css
+===================================================== */
+
+:root{
+    --security-purple:#5730bb;
+    --security-purple-dark:#35147f;
+    --security-purple-light:#7655d6;
+    --security-indigo:#4f46e5;
+
+    --security-bg-1:#f8f9ff;
+    --security-bg-2:#eef2ff;
+    --security-card:rgba(255,255,255,.92);
+
+    --security-text:#17142b;
+    --security-muted:#756f88;
+    --security-border:#e3def1;
+
+    --security-radius:20px;
+    --security-shadow:0 20px 55px rgba(53,20,127,.14);
+}
+
+/* =====================================================
+   PAGE
+===================================================== */
 
 .security-body{
     min-height:100vh;
+    width:100%;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:#f1f5f9;
-    font-family:Inter, system-ui, sans-serif;
-    padding:20px;
+
+    padding:24px;
+
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--security-text);
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(118,85,214,.18),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(79,70,229,.14),
+            transparent 32%
+        ),
+        linear-gradient(
+            135deg,
+            var(--security-bg-1) 0%,
+            #f4f1ff 48%,
+            var(--security-bg-2) 100%
+        );
+
+    overflow-x:hidden;
+    position:relative;
 }
+
+/* Soft animated background */
+.security-body::before,
+.security-body::after{
+    content:"";
+    position:fixed;
+    border-radius:50%;
+    pointer-events:none;
+    filter:blur(2px);
+    z-index:0;
+}
+
+.security-body::before{
+    width:280px;
+    height:280px;
+    top:-120px;
+    left:-100px;
+    background:rgba(118,85,214,.10);
+    animation:securityFloat 7s ease-in-out infinite;
+}
+
+.security-body::after{
+    width:340px;
+    height:340px;
+    right:-150px;
+    bottom:-150px;
+    background:rgba(79,70,229,.08);
+    animation:securityFloat 9s ease-in-out infinite reverse;
+}
+
+@keyframes securityFloat{
+    0%,100%{
+        transform:translate3d(0,0,0);
+    }
+    50%{
+        transform:translate3d(0,16px,0);
+    }
+}
+
+/* =====================================================
+   CARD
+===================================================== */
 
 .security-card{
+    position:relative;
+    z-index:1;
+
     width:100%;
-    max-width:360px;
-    background:#ffffff;
-    padding:28px 24px;
-    border-radius:16px;
-    box-shadow:0 15px 35px rgba(15,23,42,.08);
-    animation:fadeIn .25s ease;
+    max-width:390px;
+
+    padding:32px 28px;
+
+    background:var(--security-card);
+
+    border:1px solid rgba(87,48,187,.12);
+    border-radius:var(--security-radius);
+
+    box-shadow:var(--security-shadow);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    animation:securityCardIn .55s cubic-bezier(.2,.8,.2,1);
+
+    overflow:hidden;
 }
 
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(10px)}
-    to{opacity:1; transform:none}
+/* Premium top accent */
+.security-card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+
+    height:4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--security-purple-dark),
+            var(--security-purple-light),
+            var(--security-indigo)
+        );
 }
+
+/* Subtle inner glow */
+.security-card::after{
+    content:"";
+    position:absolute;
+    width:180px;
+    height:180px;
+    top:-120px;
+    right:-100px;
+
+    border-radius:50%;
+    background:rgba(118,85,214,.10);
+
+    pointer-events:none;
+}
+
+@keyframes securityCardIn{
+    from{
+        opacity:0;
+        transform:translateY(18px) scale(.97);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+/* =====================================================
+   TITLE
+===================================================== */
 
 .security-title{
+    position:relative;
+    z-index:1;
+
     text-align:center;
-    font-size:18px;
-    font-weight:700;
-    margin-bottom:6px;
-    color:#0f172a;
+
+    font-size:21px;
+    line-height:1.25;
+    font-weight:750;
+
+    margin-bottom:7px;
+
+    color:var(--security-purple-dark);
+    letter-spacing:-.25px;
 }
 
 .security-subtitle{
+    position:relative;
+    z-index:1;
+
     text-align:center;
+
     font-size:13px;
-    color:#64748b;
-    margin-bottom:20px;
+    line-height:1.55;
+
+    color:var(--security-muted);
+
+    margin:0 auto 23px;
+
+    max-width:310px;
 }
 
-/* INPUT */
+/* =====================================================
+   INPUT
+===================================================== */
+
 .security-input{
+    position:relative;
+    z-index:1;
+
     width:100%;
-    height:44px;
-    padding:0 12px;
+    height:46px;
+
+    padding:0 13px;
+
+    border:1px solid var(--security-border);
     border-radius:12px;
-    border:1px solid #e2e8f0;
+
+    background:rgba(255,255,255,.95);
+
+    color:var(--security-text);
+
+    font-family:inherit;
     font-size:14px;
+
     margin-bottom:14px;
-    transition:.2s;
+
+    outline:none;
+
+    transition:
+        border-color .22s ease,
+        box-shadow .22s ease,
+        transform .22s ease,
+        background .22s ease;
+}
+
+.security-input::placeholder{
+    color:#a29bb2;
+}
+
+.security-input:hover{
+    border-color:#cfc5e7;
 }
 
 .security-input:focus{
-    outline:none;
-    border-color:#2563eb;
-    box-shadow:0 0 0 3px rgba(37,99,235,.15);
+    border-color:var(--security-purple-light);
+
+    background:#fff;
+
+    box-shadow:
+        0 0 0 4px rgba(118,85,214,.12),
+        0 6px 18px rgba(87,48,187,.06);
+
+    transform:translateY(-1px);
 }
 
-/* BUTTON */
+/* =====================================================
+   BUTTON
+===================================================== */
+
 .security-btn{
+    position:relative;
+    z-index:1;
+
     width:100%;
-    height:44px;
+    min-height:46px;
+
+    padding:0 18px;
+
     border:none;
     border-radius:12px;
-    font-weight:600;
-    background:#2563eb;
-    color:#ffffff;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--security-purple-light),
+            var(--security-purple-dark)
+        );
+
+    color:#fff;
+
     cursor:pointer;
-    transition:.2s;
+
+    box-shadow:
+        0 8px 20px rgba(87,48,187,.22);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        filter .2s ease;
 }
 
 .security-btn:hover{
-    background:#1d4ed8;
+    background:
+        linear-gradient(
+            135deg,
+            #6742c7,
+            var(--security-purple-dark)
+        );
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 12px 26px rgba(87,48,187,.30);
 }
 
-/* SECONDARY BUTTON */
+.security-btn:active{
+    transform:translateY(0) scale(.98);
+
+    box-shadow:
+        0 5px 12px rgba(87,48,187,.18);
+}
+
+.security-btn:focus-visible{
+    outline:none;
+    box-shadow:
+        0 0 0 4px rgba(118,85,214,.18),
+        0 8px 20px rgba(87,48,187,.22);
+}
+
+/* =====================================================
+   SECONDARY BUTTON
+===================================================== */
+
 .security-btn-secondary{
-    background:#e2e8f0;
-    color:#0f172a;
+    background:#f3f0fa;
+    color:#433b55;
+
+    border:1px solid #e1dbed;
+
+    box-shadow:none;
 }
 
 .security-btn-secondary:hover{
-    background:#cbd5e1;
+    background:#ebe5f7;
+    color:var(--security-purple-dark);
+
+    border-color:#d3c8e9;
+
+    box-shadow:0 7px 16px rgba(53,20,127,.08);
 }
 
-/* LINKS */
+/* =====================================================
+   LINKS
+===================================================== */
+
 .security-links{
+    position:relative;
+    z-index:1;
+
     text-align:center;
-    margin-top:14px;
+
+    margin-top:16px;
 }
 
 .security-links a{
     font-size:13px;
+    line-height:1.4;
+
     text-decoration:none;
-    color:#2563eb;
-    font-weight:600;
+
+    color:var(--security-purple);
+
+    font-weight:650;
+
+    transition:
+        color .2s ease,
+        opacity .2s ease;
 }
 
 .security-links a:hover{
-    text-decoration:underline;
+    color:var(--security-purple-dark);
+    text-decoration:none;
 }
 
-/* ALERT */
+.security-links a:focus-visible{
+    outline:2px solid rgba(118,85,214,.35);
+    outline-offset:3px;
+    border-radius:4px;
+}
+
+/* =====================================================
+   ALERTS
+===================================================== */
+
 .security-alert{
-    padding:10px 12px;
-    border-radius:10px;
+    position:relative;
+    z-index:1;
+
+    padding:11px 13px;
+
+    border-radius:11px;
+
     font-size:13px;
-    margin-bottom:12px;
+    line-height:1.45;
+
+    margin-bottom:14px;
+
+    border:1px solid transparent;
 }
 
 .security-alert-success{
-    background:#dcfce7;
+    background:#f0fdf4;
     color:#166534;
+    border-color:#bbf7d0;
 }
 
 .security-alert-danger{
-    background:#fee2e2;
-    color:#991b1b;
+    background:#fff1f2;
+    color:#9f1239;
+    border-color:#fecdd3;
 }
 
 .security-alert-warning{
-    background:#fef3c7;
+    background:#fffbeb;
     color:#92400e;
+    border-color:#fde68a;
 }
 
-/* MOBILE */
-@media(max-width:400px){
+/* =====================================================
+   OPTIONAL FORM LABEL SUPPORT
+===================================================== */
+
+.security-card label{
+    position:relative;
+    z-index:1;
+
+    display:block;
+
+    font-size:13px;
+    font-weight:600;
+
+    color:#41394f;
+
+    margin-bottom:6px;
+}
+
+/* =====================================================
+   OPTIONAL ICON SUPPORT
+===================================================== */
+
+.security-card i,
+.security-card svg{
+    color:var(--security-purple);
+}
+
+.security-btn i,
+.security-btn svg{
+    color:inherit;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:600px){
+
+    .security-body{
+        padding:18px;
+    }
+
     .security-card{
-        padding:22px 18px;
+        max-width:390px;
+        padding:29px 23px;
+        border-radius:18px;
+    }
+
+    .security-title{
+        font-size:20px;
+    }
+
+    .security-subtitle{
+        font-size:12.5px;
+        margin-bottom:20px;
+    }
+
+    .security-input{
+        height:45px;
+    }
+
+    .security-btn{
+        min-height:45px;
+    }
+}
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media(max-width:400px){
+
+    .security-body{
+        padding:14px;
+    }
+
+    .security-card{
+        padding:25px 18px;
+        border-radius:17px;
+    }
+
+    .security-title{
+        font-size:19px;
+    }
+
+    .security-subtitle{
+        font-size:12px;
+    }
+
+    .security-input{
+        height:44px;
+        font-size:13px;
+    }
+
+    .security-btn{
+        min-height:44px;
+        font-size:13px;
+    }
+
+    .security-links{
+        margin-top:14px;
+    }
+}
+
+/* =====================================================
+   VERY SMALL DEVICES
+===================================================== */
+
+@media(max-width:340px){
+
+    .security-body{
+        padding:10px;
+    }
+
+    .security-card{
+        padding:23px 15px;
+    }
+
+    .security-title{
+        font-size:18px;
+    }
+}
+
+/* =====================================================
+   REDUCED MOTION
+===================================================== */
+
+@media(prefers-reduced-motion:reduce){
+
+    .security-body::before,
+    .security-body::after,
+    .security-card{
+        animation:none;
+    }
+
+    .security-btn,
+    .security-input,
+    .security-links a{
+        transition:none;
     }
 }

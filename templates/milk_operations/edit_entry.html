@@ -5,228 +5,306 @@
 <h2 class="page-title">📝 नोंदी संपादित करा</h2>
 
 <div class="mb-4">
-<a href="{{ url_for('edit_food_sack') }}" class="btn-pro btn-pro-edit">
-खाद्य पोती नोंदी व्यवस्थापन
-</a>
+    <a href="{{ url_for('edit_food_sack') }}" class="btn-pro btn-pro-edit">
+        खाद्य पोती नोंदी व्यवस्थापन
+    </a>
 </div>
 
 <!-- SEARCH FORM -->
 <form method="GET" class="section mb-4 flex flex-wrap gap-3 items-end">
 
-<div>
-<label class="form-label">विक्रेता:</label>
+    <div>
+        <label class="form-label">विक्रेता:</label>
 
-<select name="vendor_id" required class="form-select">
+        <select name="vendor_id" required class="form-select">
 
-{% set selected_vendor = request.values.get('vendor_id') %}
+            {% set selected_vendor = request.values.get('vendor_id') %}
 
-{% for v in vendors %}
+            {% for v in vendors %}
 
-<option value="{{ v.vendor_id }}"
-{% if selected_vendor == v.vendor_id|string %}selected{% endif %}>
+                <option
+                    value="{{ v.vendor_id }}"
+                    {% if selected_vendor == v.vendor_id|string %}selected{% endif %}
+                >
+                    {{ v.name }}
+                </option>
 
-{{ v.name }}
+            {% endfor %}
 
-</option>
-
-{% endfor %}
-
-</select>
-</div>
-
-
-<div>
-<label class="form-label">पासून:</label>
-
-<input type="date"
-name="from_date"
-value="{{ request.values.get('from_date', today) }}"
-required
-class="form-input">
-
-</div>
+        </select>
+    </div>
 
 
-<div>
-<label class="form-label">पर्यंत:</label>
+    <div>
+        <label class="form-label">पासून:</label>
 
-<input type="date"
-name="to_date"
-value="{{ request.values.get('to_date', today) }}"
-required
-class="form-input">
+        <input
+            type="date"
+            name="from_date"
+            value="{{ request.values.get('from_date', today) }}"
+            required
+            class="form-input"
+        >
 
-</div>
+    </div>
 
 
-<div>
-<button type="submit" class="btn btn-primary">
-डेटा आणा
-</button>
-</div>
+    <div>
+        <label class="form-label">पर्यंत:</label>
+
+        <input
+            type="date"
+            name="to_date"
+            value="{{ request.values.get('to_date', today) }}"
+            required
+            class="form-input"
+        >
+
+    </div>
+
+
+    <div>
+        <button type="submit" class="btn btn-primary">
+            डेटा आणा
+        </button>
+    </div>
 
 </form>
-
 
 
 {% if data %}
 
 <!-- UPDATE FORM -->
-<form method="POST" action="{{ url_for('update_entries') }}" class="section">
+<form
+    method="POST"
+    action="{{ url_for('update_entries') }}"
+    class="section"
+>
 
-<input type="hidden" name="vendor_id" value="{{ request.values.get('vendor_id') }}">
-<input type="hidden" name="from_date" value="{{ request.values.get('from_date') }}">
-<input type="hidden" name="to_date" value="{{ request.values.get('to_date') }}">
+    <input
+        type="hidden"
+        name="vendor_id"
+        value="{{ request.values.get('vendor_id') }}"
+    >
 
-<div class="table-wrap">
+    <input
+        type="hidden"
+        name="from_date"
+        value="{{ request.values.get('from_date') }}"
+    >
 
-<table class="table edit-table">
-
-<thead>
-<tr>
-<th>तारीख</th>
-<th>गायीचे दूध<br>(सकाळ)</th>
-<th>गायीचे दूध<br>(संध्याकाळ)</th>
-<th>म्हशीचे दूध<br>(सकाळ)</th>
-<th>म्हशीचे दूध<br>(संध्याकाळ)</th>
-<th>आगाऊ रक्कम</th>
-<th>क्रिया</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for row in data %}
-
-<tr>
-
-<td>{{ row.date }}</td>
-
-<!-- Cow Morning -->
-<td>
-<input type="number"
-step="0.1"
-name="cow_morning_{{ row.date }}"
-value="{{ row.cow_morning }}"
-class="form-input"
-{% if selected_vendor_type == 'buffalo' %}disabled{% endif %}>
-</td>
-
-<!-- Cow Evening -->
-<td>
-<input type="number"
-step="0.1"
-name="cow_evening_{{ row.date }}"
-value="{{ row.cow_evening }}"
-class="form-input"
-{% if selected_vendor_type == 'buffalo' %}disabled{% endif %}>
-</td>
-
-<!-- Buffalo Morning -->
-<td>
-<input type="number"
-step="0.1"
-name="buffalo_morning_{{ row.date }}"
-value="{{ row.buffalo_morning }}"
-class="form-input"
-{% if selected_vendor_type == 'cow' %}disabled{% endif %}>
-</td>
-
-<!-- Buffalo Evening -->
-<td>
-<input type="number"
-step="0.1"
-name="buffalo_evening_{{ row.date }}"
-value="{{ row.buffalo_evening }}"
-class="form-input"
-{% if selected_vendor_type == 'cow' %}disabled{% endif %}>
-</td>
-
-<!-- Advance -->
-<td>
-<input type="number"
-step="0.1"
-name="advance_{{ row.date }}"
-value="{{ row.advance_amt }}"
-class="form-input">
-</td>
-
-<!-- DELETE -->
-<td>
-
-<button
-type="button"
-class="btn btn-danger btn-sm"
-onclick="deleteEntry('{{ row.date }}')">
-
-<i class="fa-solid fa-trash"></i>
-
-</button>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
+    <input
+        type="hidden"
+        name="to_date"
+        value="{{ request.values.get('to_date') }}"
+    >
 
 
-<button type="submit" class="btn btn-primary mt-4">
-नोंदी अपडेट करा
-</button>
+    <div class="table-wrap">
+
+        <table class="table edit-table">
+
+            <thead>
+
+                <tr>
+                    <th>तारीख</th>
+
+                    <th>
+                        गायीचे दूध<br>
+                        (सकाळ)
+                    </th>
+
+                    <th>
+                        गायीचे दूध<br>
+                        (संध्याकाळ)
+                    </th>
+
+                    <th>
+                        म्हशीचे दूध<br>
+                        (सकाळ)
+                    </th>
+
+                    <th>
+                        म्हशीचे दूध<br>
+                        (संध्याकाळ)
+                    </th>
+
+                    <th>क्रिया</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for row in data %}
+
+                <tr>
+
+                    <td>
+                        {{ row.date }}
+                    </td>
+
+
+                    <!-- Cow Morning -->
+                    <td>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            name="cow_morning_{{ row.date }}"
+                            value="{{ row.cow_morning }}"
+                            class="form-input"
+                            {% if selected_vendor_type == 'buffalo' %}disabled{% endif %}
+                        >
+
+                    </td>
+
+
+                    <!-- Cow Evening -->
+                    <td>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            name="cow_evening_{{ row.date }}"
+                            value="{{ row.cow_evening }}"
+                            class="form-input"
+                            {% if selected_vendor_type == 'buffalo' %}disabled{% endif %}
+                        >
+
+                    </td>
+
+
+                    <!-- Buffalo Morning -->
+                    <td>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            name="buffalo_morning_{{ row.date }}"
+                            value="{{ row.buffalo_morning }}"
+                            class="form-input"
+                            {% if selected_vendor_type == 'cow' %}disabled{% endif %}
+                        >
+
+                    </td>
+
+
+                    <!-- Buffalo Evening -->
+                    <td>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            name="buffalo_evening_{{ row.date }}"
+                            value="{{ row.buffalo_evening }}"
+                            class="form-input"
+                            {% if selected_vendor_type == 'cow' %}disabled{% endif %}
+                        >
+
+                    </td>
+
+
+                    <!-- DELETE -->
+                    <td>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm"
+                            onclick="deleteEntry('{{ row.date }}')"
+                        >
+
+                            <i class="fa-solid fa-trash"></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="btn btn-primary mt-4"
+    >
+        नोंदी अपडेट करा
+    </button>
 
 </form>
 
 {% endif %}
 
 
-
 <!-- DELETE HIDDEN FORM -->
-<form id="deleteForm"
-method="POST"
-action="{{ url_for('delete_entry') }}">
+<form
+    id="deleteForm"
+    method="POST"
+    action="{{ url_for('delete_entry') }}"
+>
 
-<input type="hidden"
-name="vendor_id"
-value="{{ request.values.get('vendor_id') }}">
+    <input
+        type="hidden"
+        name="vendor_id"
+        value="{{ request.values.get('vendor_id') }}"
+    >
 
-<input type="hidden"
-name="from_date"
-value="{{ request.values.get('from_date') }}">
+    <input
+        type="hidden"
+        name="from_date"
+        value="{{ request.values.get('from_date') }}"
+    >
 
-<input type="hidden"
-name="to_date"
-value="{{ request.values.get('to_date') }}">
+    <input
+        type="hidden"
+        name="to_date"
+        value="{{ request.values.get('to_date') }}"
+    >
 
-<input type="hidden"
-name="date"
-id="deleteDate">
+    <input
+        type="hidden"
+        name="date"
+        id="deleteDate"
+    >
 
-<input type="hidden"
-name="confirm"
-value="1">
+    <input
+        type="hidden"
+        name="confirm"
+        value="1"
+    >
 
 </form>
-
 
 
 <!-- DELETE SCRIPT -->
 <script>
 
-function deleteEntry(date){
+function deleteEntry(date) {
 
-if(confirm(date + " साठी सर्व नोंदी हटवायच्या आहेत का?")){
+    if (
+        confirm(
+            date +
+            " साठी सर्व नोंदी हटवायच्या आहेत का?"
+        )
+    ) {
 
-document.getElementById("deleteDate").value = date;
+        document.getElementById(
+            "deleteDate"
+        ).value = date;
 
-document.getElementById("deleteForm").submit();
+        document.getElementById(
+            "deleteForm"
+        ).submit();
 
-}
+    }
 
 }
 

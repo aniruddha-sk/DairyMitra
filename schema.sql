@@ -460,3 +460,53 @@ ORDER BY v.vendor_id;
 
 DESCRIBE users;
 DESCRIBE vendors;
+
+
+CREATE TABLE IF NOT EXISTS advance_transactions (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+
+    vendor_id INT NOT NULL,
+    user_id INT NOT NULL,
+
+    transaction_type ENUM('advance', 'deduction') NOT NULL,
+
+    amount DECIMAL(12,2) NOT NULL,
+
+    transaction_date DATE NOT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+
+    -- Fast vendor-wise ledger queries
+    INDEX idx_advance_vendor_date (
+        vendor_id,
+        user_id,
+        transaction_date
+    ),
+
+    -- Fast user-wise date-range queries
+    INDEX idx_advance_user_date (
+        user_id,
+        transaction_date
+    ),
+
+    -- Useful for transaction-type filtering
+    INDEX idx_advance_vendor_type_date (
+        vendor_id,
+        user_id,
+        transaction_type,
+        transaction_date
+    ),
+
+    CONSTRAINT fk_advance_vendor
+        FOREIGN KEY (vendor_id, user_id)
+        REFERENCES vendors(vendor_id, user_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_advance_amount
+        CHECK (amount > 0)
+
+) ENGINE=InnoDB;

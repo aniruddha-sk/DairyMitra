@@ -1,114 +1,780 @@
 <!DOCTYPE html>
 <html lang="mr">
+
 <head>
+
     <meta charset="UTF-8">
-    <title>Login - Dairy Mitr</title>
 
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Login - Dairy Mitr</title>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- Font Awesome -->
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        rel="stylesheet"
+    >
+
+
+    <!-- Auth CSS -->
+    <link
+        href="{{ url_for('static', filename='css/auth.css') }}"
+        rel="stylesheet"
+    >
+
 </head>
+
 
 <body class="auth-body">
 
-<div class="auth-card">
 
-    <img src="{{ url_for('static', filename='images/Logo-img.png') }}" class="auth-logo">
+<div class="auth-page-wrapper">
 
-    <h5 class="auth-title">लॉगिन</h5>
 
-    <p class="auth-subtitle">
-        Dairy Mitr मध्ये स्वागत आहे
-    </p>
+    <div class="auth-animated-container" id="authContainer">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    {{ message }}
+
+        <!-- ==================================================
+             LOGIN PANEL
+        =================================================== -->
+
+        <div class="auth-form-panel auth-login-panel">
+
+            <form
+                method="POST"
+                action="{{ url_for('login') }}"
+                class="auth-card border-0 shadow-none p-0"
+            >
+
+                <!-- LOGO -->
+
+                <img
+                    src="{{ url_for('static', filename='images/Logo-img.png') }}"
+                    alt="Dairy Mitr"
+                    class="auth-logo"
+                >
+
+
+                <!-- TITLE -->
+
+                <h1 class="auth-title">
+                    लॉगिन
+                </h1>
+
+
+                <p class="auth-subtitle">
+                    Dairy Mitr मध्ये स्वागत आहे
+                </p>
+
+
+                <!-- ==================================================
+                     FLASH MESSAGES
+                =================================================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert alert-{{ category }}">
+
+                                {{ message }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- ==================================================
+                     EMAIL
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="loginEmail"
+                        name="email"
+                        placeholder="Email"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <label for="loginEmail">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        ई-मेल
+
+                    </label>
+
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
 
-    <form method="POST">
 
-        <div class="form-floating mb-3">
-            <input
-                type="email"
-                class="form-control"
-                id="email"
-                name="email"
-                placeholder="Email"
-                required>
+                <!-- ==================================================
+                     PASSWORD
+                =================================================== -->
 
-            <label for="email">
-                <i class="fa-solid fa-envelope"></i>
-                ई-मेल
-            </label>
+                <div class="form-floating">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="loginPassword"
+                        name="password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <label for="loginPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        पासवर्ड
+
+                    </label>
+
+
+                    <!-- PASSWORD TOGGLE -->
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('loginPassword', this)"
+                        title="Show Password"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     FORGOT PASSWORD
+                =================================================== -->
+
+                <div class="auth-links">
+
+                    <a href="{{ url_for('forgot_password') }}">
+
+                        पासवर्ड विसरलात?
+
+                    </a>
+
+                </div>
+
+
+                <!-- ==================================================
+                     LOGIN BUTTON
+                =================================================== -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                >
+
+                    <i class="fa-solid fa-right-to-bracket"></i>
+
+                    लॉगिन
+
+                </button>
+
+
+                <!-- ==================================================
+                     MOBILE SIGNUP LINK
+                =================================================== -->
+
+                <div class="auth-links mobile-switch">
+
+                    नवीन खाते आहे?
+
+                    <a href="{{ url_for('signup') }}">
+
+                        खाते तयार करा
+
+                    </a>
+
+                </div>
+
+
+            </form>
+
         </div>
 
-        <div class="form-floating mb-3">
-            <input
-                type="password"
-                class="form-control"
-                id="password"
-                name="password"
-                placeholder="Password"
-                required>
 
-            <label for="password">
-                <i class="fa-solid fa-lock"></i>
-                पासवर्ड
-            </label>
+
+        <!-- ==================================================
+             SIGNUP PANEL
+        =================================================== -->
+
+        <div class="auth-form-panel auth-signup-panel">
+
+            <form
+                method="POST"
+                action="{{ url_for('signup') }}"
+                class="auth-card border-0 shadow-none p-0"
+            >
+
+
+                <!-- LOGO -->
+
+                <img
+                    src="{{ url_for('static', filename='images/Logo-img.png') }}"
+                    alt="Dairy Mitr"
+                    class="auth-logo"
+                >
+
+
+                <!-- TITLE -->
+
+                <h1 class="auth-title">
+
+                    नवीन खाते तयार करा
+
+                </h1>
+
+
+                <p class="auth-subtitle">
+
+                    Dairy Mitr सोबत तुमची डेअरी व्यवस्थापित करा
+
+                </p>
+
+
+                <!-- ==================================================
+                     FLASH MESSAGES
+                =================================================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert alert-{{ category }}">
+
+                                {{ message }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- ==================================================
+                     DAIRY NAME
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="dairyName"
+                        name="dairy_name"
+                        placeholder="Dairy Name"
+                        autocomplete="organization"
+                        required
+                    >
+
+                    <label for="dairyName">
+
+                        <i class="fa-solid fa-cow"></i>
+
+                        डेअरीचं नाव
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     EMAIL
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="signupEmail"
+                        name="email"
+                        placeholder="Email"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <label for="signupEmail">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        ई-मेल
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     PHONE
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="tel"
+                        class="form-control"
+                        id="signupPhone"
+                        name="phone"
+                        placeholder="Phone"
+                        autocomplete="tel"
+                    >
+
+                    <label for="signupPhone">
+
+                        <i class="fa-solid fa-phone"></i>
+
+                        मोबाईल
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     PASSWORD
+                =================================================== -->
+
+                <div class="form-floating position-relative">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="signupPassword"
+                        name="password"
+                        placeholder="Password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <label for="signupPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        पासवर्ड
+
+                    </label>
+
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('signupPassword', this)"
+                        title="Show Password"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     CONFIRM PASSWORD
+                =================================================== -->
+
+                <div class="form-floating position-relative">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="confirmPassword"
+                        name="confirm_password"
+                        placeholder="Confirm Password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <label for="confirmPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        पासवर्ड पुन्हा लिहा
+
+                    </label>
+
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('confirmPassword', this)"
+                        title="Show Password"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     SIGNUP BUTTON
+                =================================================== -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                >
+
+                    <i class="fa-solid fa-user-plus"></i>
+
+                    खाते तयार करा
+
+                </button>
+
+
+                <!-- MOBILE LOGIN -->
+
+                <div class="auth-links mobile-switch">
+
+                    आधीपासून खाते आहे?
+
+                    <a href="{{ url_for('login') }}">
+
+                        लॉगिन करा
+
+                    </a>
+
+                </div>
+
+
+            </form>
+
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 btn-auth">
-            <i class="fa-solid fa-right-to-bracket"></i>
-            लॉगिन
-        </button>
 
-    </form>
 
-    <div class="auth-links mt-3">
+        <!-- ==================================================
+             ANIMATED BLUE OVERLAY
+        =================================================== -->
 
-        <a href="{{ url_for('forgot_password') }}">
-            पासवर्ड विसरलात?
-        </a>
+        <div class="auth-overlay">
 
-        |
 
-        <a href="{{ url_for('signup') }}">
-            नवीन खाते तयार करा
-        </a>
+            <!-- ==================================================
+                 LOGIN SIDE
+            =================================================== -->
+
+            <div class="auth-overlay-panel auth-overlay-login">
+
+
+                <!-- Decorative Shapes -->
+
+                <div class="auth-shape auth-shape-one"></div>
+
+                <div class="auth-shape auth-shape-two"></div>
+
+
+                <!-- Content -->
+
+                <div class="auth-overlay-content">
+
+
+                    <h2>
+
+                        Welcome Back!
+
+                    </h2>
+
+
+                    <p>
+
+                        तुमच्या Dairy Mitr account मध्ये
+                        login करा आणि तुमची डेअरी
+                        सहजपणे manage करा.
+
+                    </p>
+
+
+                    <button
+                        type="button"
+                        class="auth-outline-btn"
+                        id="showLogin"
+                    >
+
+                        <i class="fa-solid fa-arrow-left"></i>
+
+                        SIGN IN
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 SIGNUP SIDE
+            =================================================== -->
+
+            <div class="auth-overlay-panel auth-overlay-signup">
+
+
+                <!-- Decorative Shapes -->
+
+                <div class="auth-shape auth-shape-three"></div>
+
+                <div class="auth-shape auth-shape-four"></div>
+
+
+                <!-- Content -->
+
+                <div class="auth-overlay-content">
+
+
+                    <h2>
+
+                        Hello, Friend!
+
+                    </h2>
+
+
+                    <p>
+
+                        तुमची Dairy Mitr journey
+                        सुरू करण्यासाठी तुमचे account
+                        तयार करा.
+
+                    </p>
+
+
+                    <button
+                        type="button"
+                        class="auth-outline-btn"
+                        id="showSignup"
+                    >
+
+                        SIGN UP
+
+                        <i class="fa-solid fa-arrow-right"></i>
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
 
     </div>
 
-    <hr class="my-4">
-
-    <div class="text-center">
-
-        <p class="text-muted mb-3">
-            ग्राहकांसाठी
-        </p>
-
-        <a href="{{ url_for('customer_login') }}"
-           class="btn btn-success w-100">
-
-            <i class="fa-solid fa-user-group"></i>
-
-            Customer Login
-
-        </a>
-
-    </div>
 
 </div>
 
+
+
+<!-- ==================================================
+     JAVASCRIPT
+================================================== -->
+
+<script>
+
+
+/* =====================================================
+   AUTH PANEL SWITCH
+===================================================== */
+
+const authContainer =
+    document.getElementById("authContainer");
+
+const showSignup =
+    document.getElementById("showSignup");
+
+const showLogin =
+    document.getElementById("showLogin");
+
+
+/* SIGNUP */
+
+showSignup.addEventListener("click", function () {
+
+    authContainer.classList.add("signup-mode");
+
+});
+
+
+/* LOGIN */
+
+showLogin.addEventListener("click", function () {
+
+    authContainer.classList.remove("signup-mode");
+
+});
+
+
+
+/* =====================================================
+   PASSWORD SHOW / HIDE
+===================================================== */
+
+function togglePassword(fieldId, icon) {
+
+    const field =
+        document.getElementById(fieldId);
+
+
+    if (field.type === "password") {
+
+        field.type = "text";
+
+        icon.classList.remove("fa-eye");
+
+        icon.classList.add("fa-eye-slash");
+
+        icon.setAttribute(
+            "title",
+            "Hide Password"
+        );
+
+    }
+
+    else {
+
+        field.type = "password";
+
+        icon.classList.remove("fa-eye-slash");
+
+        icon.classList.add("fa-eye");
+
+        icon.setAttribute(
+            "title",
+            "Show Password"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   ESC KEY = LOGIN
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+
+            authContainer.classList.remove(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   ALT + S = SIGNUP
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.altKey &&
+            event.key.toLowerCase() === "s"
+        ) {
+
+            authContainer.classList.add(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   ALT + L = LOGIN
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.altKey &&
+            event.key.toLowerCase() === "l"
+        ) {
+
+            authContainer.classList.remove(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   BUTTON LOADING
+===================================================== */
+
+document.querySelectorAll(
+    ".auth-form-panel form"
+).forEach(function (form) {
+
+    form.addEventListener(
+        "submit",
+        function () {
+
+            const button =
+                form.querySelector(
+                    "button[type='submit']"
+                );
+
+            if (button) {
+
+                button.classList.add(
+                    "loading"
+                );
+
+                button.disabled = true;
+
+            }
+
+        }
+    );
+
+});
+
+
+</script>
+
+
 </body>
+
 </html>

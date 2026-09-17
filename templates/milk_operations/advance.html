@@ -2,145 +2,1734 @@
 {% block title %}ॲडव्हान्स एन्ट्री{% endblock %}
 
 {% block content %}
-<h2 class="page-title flex items-center gap-2">
-  <div class="icon-hand-coins" data-lucide="hand-coins"></div>
-  ॲडव्हान्स एन्ट्री
-</h2>
 
-<!-- Alert area -->
+<h2 class="page-title flex items-center gap-2">
+    <div class="icon-hand-coins" data-lucide="hand-coins"></div>
+    ॲडव्हान्स एन्ट्री
+</h2>
+<a
+        href="{{ url_for('advance_report') }}"
+        class="btn btn-primary"
+    >
+        💎 Advance Report
+    </a>
+<!-- Alert -->
 <div id="ajax-alert" class="mb-4"></div>
 
-<form id="advance-form" method="POST" action="{{ url_for('advance') }}" class="section space-y-4">
+<div class="section space-y-4">
+
     <!-- Date -->
-    <label class="form-label">दिनांक</label>
-    <input type="date" name="date" value="{{ today_date }}" required class="form-input max-w-xs">
-
-    <!-- Search -->
-    <input type="text" id="vendorSearch" placeholder="ग्राहक आयडी किंवा नाव शोधा"
-           onkeyup="filterVendors()" class="form-input max-w-md">
-
-    <!-- Vendor Table -->
-    <div class="table-wrap mt-4">
-        <table class="table" id="vendorTable">
-            <thead>
-                <tr>
-                    <th>आयडी</th>
-                    <th>नाव</th>
-                    <th>ॲडव्हान्स (₹)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for v in vendors %}
-                <tr>
-                    <td>{{ v.vendor_id }}</td>
-                    <td>{{ v.name }}</td>
-                    <td>
-                        <input type="number" step="0.01" name="advance_{{ v.vendor_id }}" class="form-input">
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div>
+        <label class="form-label">दिनांक</label>
+        <input
+            type="date"
+            id="advanceDate"
+            value="{{ today_date }}"
+            required
+            class="form-input max-w-xs"
+        >
     </div>
 
-    <button type="submit" class="btn btn-primary mt-4">सेव्ह करा</button>
-</form>
+    <!-- Vendor Search -->
+    <div class="relative">
+
+        <label class="form-label">
+            ग्राहक शोधा
+        </label>
+
+        <input
+            type="text"
+            id="vendorSearch"
+            placeholder="ग्राहक आयडी किंवा नाव शोधा..."
+            autocomplete="off"
+            class="form-input max-w-md"
+        >
+
+        <!-- Search results -->
+        <div
+            id="vendorResults"
+            class="mt-2 max-w-md hidden"
+        ></div>
+
+    </div>
+
+    <!-- Selected Vendor -->
+    <div
+        id="vendorPanel"
+        class="hidden mt-6"
+    >
+
+        <!-- Vendor Header -->
+        <div class="section">
+
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+
+                <div>
+                    <div class="text-sm opacity-70">
+                        ग्राहक
+                    </div>
+
+                    <div
+                        id="selectedVendorName"
+                        class="text-xl font-semibold"
+                    >
+                        -
+                    </div>
+
+                    <div
+                        id="selectedVendorId"
+                        class="text-sm opacity-70"
+                    >
+                        ID: -
+                    </div>
+                </div>
+
+                <!-- Balance -->
+                <div class="text-right">
+
+                    <div class="text-sm opacity-70">
+                        उपलब्ध शिल्लक ॲडव्हान्स
+                    </div>
+
+                    <div
+                        id="vendorBalance"
+                        class="text-2xl font-bold"
+                    >
+                        ₹0.00
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Transaction Actions -->
+        <div class="section mt-4">
+
+            <div class="grid gap-4 md:grid-cols-3">
+
+                <!-- Amount -->
+                <div>
+                    <label class="form-label">
+                        रक्कम (₹)
+                    </label>
+
+                    <input
+                        type="number"
+                        id="transactionAmount"
+                        min="0.01"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="उदा. 500"
+                        class="form-input"
+                    >
+                </div>
+
+
+                <!-- Transaction Date -->
+                <div>
+                    <label class="form-label">
+                        दिनांक
+                    </label>
+
+                    <input
+                        type="date"
+                        id="transactionDate"
+                        value="{{ today_date }}"
+                        class="form-input"
+                    >
+                </div>
+
+
+                <!-- Buttons -->
+                <div class="flex items-end gap-2 flex-wrap">
+
+                    <button
+                        type="button"
+                        id="addAdvanceBtn"
+                        class="btn btn-primary"
+                    >
+                        ➕ ॲडव्हान्स
+                    </button>
+
+                    <button
+                        type="button"
+                        id="deductAdvanceBtn"
+                        class="btn btn-danger"
+                    >
+                        ➖ वजा करा
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Transaction History -->
+        <div class="section mt-4">
+
+            <div class="flex items-center justify-between mb-4">
+
+                <h3 class="text-lg font-semibold">
+                    व्यवहार इतिहास
+                </h3>
+
+                <button
+                    type="button"
+                    id="refreshVendorBtn"
+                    class="btn"
+                >
+                    ↻ Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+                            <th>दिनांक</th>
+                            <th>प्रकार</th>
+                            <th>रक्कम</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="transactionBody">
+
+                        <tr>
+                            <td
+                                colspan="4"
+                                class="text-center opacity-70"
+                            >
+                                ग्राहक निवडा
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Edit Transaction Modal -->
+<div
+    id="editModal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+
+    <div
+        class="absolute inset-0 bg-black/50"
+        id="editModalBackdrop"
+    ></div>
+
+    <div
+        class="relative section w-full max-w-md"
+    >
+
+        <div class="flex items-center justify-between mb-4">
+
+            <h3 class="text-lg font-semibold">
+                व्यवहार Edit करा
+            </h3>
+
+            <button
+                type="button"
+                id="closeEditModal"
+                class="btn"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+        <input
+            type="hidden"
+            id="editTransactionId"
+        >
+
+
+        <div class="space-y-4">
+
+            <div>
+
+                <label class="form-label">
+                    रक्कम (₹)
+                </label>
+
+                <input
+                    type="number"
+                    id="editAmount"
+                    min="0.01"
+                    step="0.01"
+                    class="form-input"
+                >
+
+            </div>
+
+
+            <div>
+
+                <label class="form-label">
+                    दिनांक
+                </label>
+
+                <input
+                    type="date"
+                    id="editDate"
+                    class="form-input"
+                >
+
+            </div>
+
+
+            <div class="flex justify-end gap-2">
+
+                <button
+                    type="button"
+                    id="cancelEditBtn"
+                    class="btn"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    id="saveEditBtn"
+                    class="btn btn-primary"
+                >
+                    Save
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 <script>
 
-function filterVendors() {
+(function () {
 
-    const input = document.getElementById("vendorSearch").value.toLowerCase();
-    const rows = document.querySelectorAll("#vendorTable tbody tr");
+    "use strict";
 
-    rows.forEach(row => {
 
-        const id = row.cells[0].textContent.toLowerCase();
-        const name = row.cells[1].textContent.toLowerCase();
+    /* =========================================================
+       STATE
+       ========================================================= */
 
-        row.style.display =
-            id.includes(input) || name.includes(input) ? "" : "none";
+    let selectedVendorId = null;
+    let searchTimer = null;
+    let searchController = null;
+    let requestInProgress = false;
 
-    });
+
+    /* =========================================================
+       ELEMENTS
+       ========================================================= */
+
+    const searchInput =
+        document.getElementById("vendorSearch");
+
+    const vendorResults =
+        document.getElementById("vendorResults");
+
+    const vendorPanel =
+        document.getElementById("vendorPanel");
+
+    const selectedVendorName =
+        document.getElementById("selectedVendorName");
+
+    const selectedVendorIdElement =
+        document.getElementById("selectedVendorId");
+
+    const vendorBalance =
+        document.getElementById("vendorBalance");
+
+    const transactionAmount =
+        document.getElementById("transactionAmount");
+
+    const transactionDate =
+        document.getElementById("transactionDate");
+
+    const transactionBody =
+        document.getElementById("transactionBody");
+
+    const alertBox =
+        document.getElementById("ajax-alert");
+
+    const editModal =
+        document.getElementById("editModal");
+
+
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    function escapeHtml(value) {
+
+        const div = document.createElement("div");
+
+        div.textContent =
+            value === null || value === undefined
+                ? ""
+                : String(value);
+
+        return div.innerHTML;
+
+    }
+
+
+    function formatMoney(value) {
+
+        const number =
+            Number(value || 0);
+
+        return number.toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+    }
+
+
+    function showAlert(message, type = "ok") {
+
+        const className =
+            type === "danger"
+                ? "badge badge-danger"
+                : "badge badge-ok";
+
+        alertBox.innerHTML =
+            `<div class="${className}">${escapeHtml(message)}</div>`;
+
+        window.clearTimeout(showAlert.timer);
+
+        showAlert.timer =
+            window.setTimeout(() => {
+
+                alertBox.innerHTML = "";
+
+            }, 4000);
+
+    }
+
+
+    function setLoading(button, loading, text) {
+
+        if (!button) {
+            return;
+        }
+
+        if (loading) {
+
+            button.dataset.originalText =
+                button.innerHTML;
+
+            button.disabled = true;
+
+            button.innerHTML =
+                text || "Processing...";
+
+        } else {
+
+            button.disabled = false;
+
+            if (button.dataset.originalText) {
+
+                button.innerHTML =
+                    button.dataset.originalText;
+
+            }
+
+        }
+
+    }
+
+
+    async function fetchJson(url, options = {}) {
+
+        const response =
+            await fetch(url, {
+                credentials: "same-origin",
+                ...options
+            });
+
+        let data = null;
+
+        try {
+
+            data = await response.json();
+
+        } catch (e) {
+
+            throw new Error(
+                "Server returned an invalid response."
+            );
+
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                data.error ||
+                "Request failed."
+            );
+
+        }
+
+        return data;
+
+    }
+
+
+    /* =========================================================
+       VENDOR SEARCH
+       ========================================================= */
+
+    searchInput.addEventListener(
+        "input",
+        function () {
+
+            const query =
+                this.value.trim();
+
+            window.clearTimeout(searchTimer);
+
+
+            if (searchController) {
+
+                searchController.abort();
+
+                searchController = null;
+
+            }
+
+
+            if (query.length === 0) {
+
+                vendorResults.innerHTML = "";
+
+                vendorResults.classList.add("hidden");
+
+                return;
+
+            }
+
+
+            /*
+             * Small debounce prevents a request
+             * for every single keystroke.
+             */
+
+            searchTimer =
+                window.setTimeout(
+                    () => searchVendors(query),
+                    250
+                );
+
+        }
+    );
+
+
+    async function searchVendors(query) {
+
+        searchController =
+            new AbortController();
+
+        try {
+
+            vendorResults.classList.remove("hidden");
+
+            vendorResults.innerHTML =
+                `<div class="section">
+                    शोधत आहे...
+                 </div>`;
+
+
+            const response =
+                await fetch(
+                    `/advance/search?q=${encodeURIComponent(query)}`,
+                    {
+                        method: "GET",
+                        credentials: "same-origin",
+                        signal: searchController.signal,
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Vendor search failed."
+                );
+
+            }
+
+
+            renderVendorResults(
+                data.vendors || data.results || []
+            );
+
+
+        } catch (error) {
+
+            if (error.name === "AbortError") {
+                return;
+            }
+
+            console.error(error);
+
+            vendorResults.innerHTML =
+                `<div class="badge badge-danger">
+                    ग्राहक शोधता आला नाही.
+                 </div>`;
+
+        } finally {
+
+            searchController = null;
+
+        }
+
+    }
+
+
+    function renderVendorResults(vendors) {
+
+        if (!vendors.length) {
+
+            vendorResults.innerHTML =
+                `<div class="section opacity-70">
+                    कोणताही ग्राहक सापडला नाही.
+                 </div>`;
+
+            return;
+
+        }
+
+
+        vendorResults.innerHTML =
+            vendors.map(v => {
+
+                const id =
+                    v.vendor_id;
+
+                const name =
+                    v.name || "";
+
+
+                return `
+                    <button
+                        type="button"
+                        class="section w-full text-left mb-1"
+                        data-vendor-id="${escapeHtml(id)}"
+                        data-vendor-name="${escapeHtml(name)}"
+                    >
+
+                        <div class="font-semibold">
+                            ${escapeHtml(name)}
+                        </div>
+
+                        <div class="text-sm opacity-70">
+                            ग्राहक ID: ${escapeHtml(id)}
+                        </div>
+
+                    </button>
+                `;
+
+            }).join("");
+
+
+        vendorResults
+            .querySelectorAll("[data-vendor-id]")
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        selectVendor(
+                            this.dataset.vendorId,
+                            this.dataset.vendorName
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =========================================================
+       SELECT VENDOR
+       ========================================================= */
+
+    async function selectVendor(vendorId, vendorName) {
+
+        selectedVendorId =
+            vendorId;
+
+
+        selectedVendorName.textContent =
+            vendorName || "-";
+
+        selectedVendorIdElement.textContent =
+            `ID: ${vendorId}`;
+
+
+        vendorResults.innerHTML = "";
+
+        vendorResults.classList.add("hidden");
+
+        searchInput.value =
+            vendorName || "";
+
+
+        vendorPanel.classList.remove("hidden");
+
+
+        await loadVendorData();
+
+    }
+
+
+    /* =========================================================
+       LOAD VENDOR LEDGER
+       ========================================================= */
+
+    async function loadVendorData() {
+
+        if (!selectedVendorId) {
+            return;
+        }
+
+
+        transactionBody.innerHTML =
+            `<tr>
+                <td colspan="4" class="text-center">
+                    Loading...
+                </td>
+             </tr>`;
+
+
+        try {
+
+            const data =
+                await fetchJson(
+                    `/advance/vendor/${encodeURIComponent(selectedVendorId)}`
+                );
+
+
+            /*
+             * Backend response:
+             *
+             * {
+             *   summary: {
+             *       total_advance,
+             *       total_deduction,
+             *       remaining_advance
+             *   },
+             *   transactions: [...]
+             * }
+             *
+             * Keep fallbacks for compatibility.
+             */
+
+            const balance =
+                data.summary?.remaining_advance ??
+                data.balance ??
+                data.remaining_balance ??
+                data.remaining ??
+                0;
+
+
+            const transactions =
+                data.transactions ||
+                data.history ||
+                [];
+
+
+            vendorBalance.textContent =
+                `₹${formatMoney(balance)}`;
+
+
+            renderTransactions(
+                transactions
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            vendorBalance.textContent =
+                "₹0.00";
+
+            transactionBody.innerHTML =
+                `<tr>
+                    <td colspan="4"
+                        class="text-center">
+                        डेटा load करता आला नाही.
+                    </td>
+                 </tr>`;
+
+            showAlert(
+                error.message ||
+                "डेटा load करता आला नाही.",
+                "danger"
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       TRANSACTION TABLE
+       ========================================================= */
+
+    function renderTransactions(transactions) {
+
+        if (!transactions.length) {
+
+            transactionBody.innerHTML =
+                `<tr>
+                    <td colspan="4"
+                        class="text-center opacity-70">
+                        अजून कोणताही व्यवहार नाही.
+                    </td>
+                 </tr>`;
+
+            return;
+
+        }
+
+
+        transactionBody.innerHTML =
+            transactions.map(tx => {
+
+                const id =
+                    tx.id ??
+                    tx.transaction_id;
+
+                const type =
+                    String(
+                        tx.transaction_type ??
+                        tx.type ??
+                        ""
+                    ).toLowerCase();
+
+
+                const amount =
+                    tx.amount ?? 0;
+
+
+                /*
+                 * IMPORTANT:
+                 * Backend sends transaction_date.
+                 * Old tx.date caused "-" in history.
+                 */
+
+                const date =
+                    tx.transaction_date ??
+                    tx.date ??
+                    "-";
+
+
+                const isDeduction =
+                    type === "deduction" ||
+                    type === "deduct";
+
+
+                const typeText =
+                    isDeduction
+                        ? "वजा"
+                        : "ॲडव्हान्स";
+
+
+                return `
+                    <tr>
+
+                        <td>
+                            ${escapeHtml(date)}
+                        </td>
+
+                        <td>
+                            ${
+                                isDeduction
+                                    ? `<span class="badge badge-danger">
+                                            ${typeText}
+                                       </span>`
+                                    : `<span class="badge badge-ok">
+                                            ${typeText}
+                                       </span>`
+                            }
+                        </td>
+
+                        <td>
+                            ₹${formatMoney(amount)}
+                        </td>
+
+                        <td>
+
+                            <div class="flex gap-2 flex-wrap">
+
+                                <button
+                                    type="button"
+                                    class="btn"
+                                    data-edit-id="${escapeHtml(id)}"
+                                    data-edit-type="${escapeHtml(type)}"
+                                    data-edit-amount="${escapeHtml(amount)}"
+                                    data-edit-date="${escapeHtml(date)}"
+                                >
+                                    ✏️ Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-danger"
+                                    data-delete-id="${escapeHtml(id)}"
+                                >
+                                    🗑️ Delete
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }).join("");
+
+
+        bindTransactionButtons();
+
+    }
+
+
+    function bindTransactionButtons() {
+
+        transactionBody
+            .querySelectorAll("[data-edit-id]")
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        openEditModal({
+
+                            id:
+                                this.dataset.editId,
+
+                            type:
+                                this.dataset.editType,
+
+                            amount:
+                                this.dataset.editAmount,
+
+                            date:
+                                this.dataset.editDate
+
+                        });
+
+                    }
+                );
+
+            });
+
+
+        transactionBody
+            .querySelectorAll("[data-delete-id]")
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        deleteTransaction(
+                            this.dataset.deleteId
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =========================================================
+       ADD ADVANCE
+       ========================================================= */
+
+    document
+        .getElementById("addAdvanceBtn")
+        .addEventListener(
+            "click",
+            async function () {
+
+                if (!selectedVendorId) {
+
+                    showAlert(
+                        "कृपया ग्राहक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                const amount =
+                    transactionAmount.value.trim();
+
+                const date =
+                    transactionDate.value;
+
+
+                if (!amount || Number(amount) <= 0) {
+
+                    showAlert(
+                        "योग्य रक्कम भरा.",
+                        "danger"
+                    );
+
+                    transactionAmount.focus();
+
+                    return;
+
+                }
+
+
+                if (!date) {
+
+                    showAlert(
+                        "दिनांक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                if (requestInProgress) {
+                    return;
+                }
+
+
+                requestInProgress = true;
+
+                setLoading(
+                    this,
+                    true,
+                    "Saving..."
+                );
+
+
+                try {
+
+                    const data =
+                        await fetchJson(
+                            "/advance/add",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        vendor_id:
+                                            selectedVendorId,
+
+                                        amount:
+                                            amount,
+
+                                        date:
+                                            date
+                                    })
+                            }
+                        );
+
+
+                    showAlert(
+                        data.message ||
+                        "ॲडव्हान्स सेव्ह झाला."
+                    );
+
+
+                    transactionAmount.value =
+                        "";
+
+
+                    await loadVendorData();
+
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    showAlert(
+                        error.message ||
+                        "ॲडव्हान्स सेव्ह करता आला नाही.",
+                        "danger"
+                    );
+
+                } finally {
+
+                    requestInProgress = false;
+
+                    setLoading(
+                        this,
+                        false
+                    );
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       DEDUCT ADVANCE
+       ========================================================= */
+
+    document
+        .getElementById("deductAdvanceBtn")
+        .addEventListener(
+            "click",
+            async function () {
+
+                if (!selectedVendorId) {
+
+                    showAlert(
+                        "कृपया ग्राहक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                const amount =
+                    transactionAmount.value.trim();
+
+                const date =
+                    transactionDate.value;
+
+
+                if (!amount || Number(amount) <= 0) {
+
+                    showAlert(
+                        "योग्य रक्कम भरा.",
+                        "danger"
+                    );
+
+                    transactionAmount.focus();
+
+                    return;
+
+                }
+
+
+                if (!date) {
+
+                    showAlert(
+                        "दिनांक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                if (requestInProgress) {
+                    return;
+                }
+
+
+                requestInProgress = true;
+
+                setLoading(
+                    this,
+                    true,
+                    "Processing..."
+                );
+
+
+                try {
+
+                    const data =
+                        await fetchJson(
+                            "/advance/deduct",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        vendor_id:
+                                            selectedVendorId,
+
+                                        amount:
+                                            amount,
+
+                                        date:
+                                            date
+                                    })
+                            }
+                        );
+
+
+                    showAlert(
+                        data.message ||
+                        "ॲडव्हान्स वजा झाला."
+                    );
+
+
+                    transactionAmount.value =
+                        "";
+
+
+                    await loadVendorData();
+
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    showAlert(
+                        error.message ||
+                        "ॲडव्हान्स वजा करता आला नाही.",
+                        "danger"
+                    );
+
+                } finally {
+
+                    requestInProgress = false;
+
+                    setLoading(
+                        this,
+                        false
+                    );
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       EDIT MODAL
+       ========================================================= */
+
+    function openEditModal(tx) {
+
+        document
+            .getElementById("editTransactionId")
+            .value = tx.id;
+
+
+        document
+            .getElementById("editAmount")
+            .value = tx.amount;
+
+
+        document
+            .getElementById("editDate")
+            .value =
+                tx.date ??
+                tx.transaction_date ??
+                "";
+
+
+        /*
+         * Store type on modal itself.
+         */
+
+        editModal.dataset.transactionType =
+            tx.type;
+
+
+        editModal.classList.remove(
+            "hidden"
+        );
+
+    }
+
+
+    function closeEditModal() {
+
+        editModal.classList.add(
+            "hidden"
+        );
+
+    }
+
+
+    document
+        .getElementById("closeEditModal")
+        .addEventListener(
+            "click",
+            closeEditModal
+        );
+
+
+    document
+        .getElementById("cancelEditBtn")
+        .addEventListener(
+            "click",
+            closeEditModal
+        );
+
+
+    document
+        .getElementById("editModalBackdrop")
+        .addEventListener(
+            "click",
+            closeEditModal
+        );
+
+
+    /* =========================================================
+       SAVE EDIT
+       ========================================================= */
+
+    document
+        .getElementById("saveEditBtn")
+        .addEventListener(
+            "click",
+            async function () {
+
+                const id =
+                    document
+                        .getElementById(
+                            "editTransactionId"
+                        )
+                        .value;
+
+
+                const amount =
+                    document
+                        .getElementById(
+                            "editAmount"
+                        )
+                        .value
+                        .trim();
+
+
+                const date =
+                    document
+                        .getElementById(
+                            "editDate"
+                        )
+                        .value;
+
+
+                if (!id) {
+
+                    showAlert(
+                        "Invalid transaction.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                if (!amount || Number(amount) <= 0) {
+
+                    showAlert(
+                        "योग्य रक्कम भरा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                if (!date) {
+
+                    showAlert(
+                        "दिनांक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                setLoading(
+                    this,
+                    true,
+                    "Saving..."
+                );
+
+
+                try {
+
+                    const data =
+                        await fetchJson(
+                            `/advance/edit/${encodeURIComponent(id)}`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        amount:
+                                            amount,
+
+                                        date:
+                                            date
+                                    })
+                            }
+                        );
+
+
+                    showAlert(
+                        data.message ||
+                        "व्यवहार update झाला."
+                    );
+
+
+                    closeEditModal();
+
+
+                    await loadVendorData();
+
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    showAlert(
+                        error.message ||
+                        "Update करता आला नाही.",
+                        "danger"
+                    );
+
+                } finally {
+
+                    setLoading(
+                        this,
+                        false
+                    );
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       DELETE TRANSACTION
+       ========================================================= */
+
+    async function deleteTransaction(
+        transactionId
+    ) {
+
+        if (!transactionId) {
+            return;
+        }
+
+
+        const confirmed =
+            window.confirm(
+                "हा व्यवहार delete करायचा आहे का?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        try {
+
+            const data =
+                await fetchJson(
+                    `/advance/delete/${encodeURIComponent(transactionId)}`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            showAlert(
+                data.message ||
+                "व्यवहार delete झाला."
+            );
+
+
+            await loadVendorData();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showAlert(
+                error.message ||
+                "व्यवहार delete करता आला नाही.",
+                "danger"
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       REFRESH
+       ========================================================= */
+
+    document
+        .getElementById("refreshVendorBtn")
+        .addEventListener(
+            "click",
+            async function () {
+
+                if (!selectedVendorId) {
+
+                    showAlert(
+                        "कृपया ग्राहक निवडा.",
+                        "danger"
+                    );
+
+                    return;
+
+                }
+
+
+                setLoading(
+                    this,
+                    true,
+                    "Loading..."
+                );
+
+
+                try {
+
+                    await loadVendorData();
+
+                } finally {
+
+                    setLoading(
+                        this,
+                        false
+                    );
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       DATE SYNC
+       ========================================================= */
+
+    document
+        .getElementById("advanceDate")
+        .addEventListener(
+            "change",
+            function () {
+
+                transactionDate.value =
+                    this.value;
+
+            }
+        );
+
+
+    /* =========================================================
+       ENTER KEY
+       ========================================================= */
+
+    transactionAmount.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key !== "Enter") {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            document
+                .getElementById(
+                    "addAdvanceBtn"
+                )
+                .click();
+
+        }
+    );
+
+/* =========================================================
+   AUTO SELECT VENDOR FROM REPORT
+   URL:
+   /advance?vendor_id=123
+   ========================================================= */
+
+async function autoSelectVendorFromUrl() {
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const vendorId =
+        params.get("vendor_id");
+
+
+    if (!vendorId) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/advance/search?q=${encodeURIComponent(
+                    vendorId
+                )}`,
+                {
+                    method: "GET",
+
+                    credentials:
+                        "same-origin",
+
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !data.success
+        ) {
+            return;
+        }
+
+
+        const vendors =
+            data.vendors ||
+            data.results ||
+            [];
+
+
+        const vendor =
+            vendors.find(
+                v =>
+                    String(v.vendor_id) ===
+                    String(vendorId)
+            );
+
+
+        if (!vendor) {
+            return;
+        }
+
+
+        await selectVendor(
+            vendor.vendor_id,
+            vendor.name
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Auto vendor selection failed:",
+            error
+        );
+
+    }
 
 }
 
 
-document.getElementById("advance-form").addEventListener("submit", function(e){
+/* ---------------------------------------------------------
+   RUN AUTO SELECTION
+   --------------------------------------------------------- */
 
-    e.preventDefault();
+autoSelectVendorFromUrl();   
 
-    // show loader (base.html function)
-    if(typeof showLoader === "function"){
-        showLoader();
-    }
 
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const payload = {};
-
-    formData.forEach((value,key)=>{
-        payload[key] = value;
-    });
-
-    fetch(form.action,{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify(payload)
-    })
-
-    .then(res => res.json())
-
-    .then(data => {
-
-        // hide loader
-        if(typeof hideLoader === "function"){
-            hideLoader();
-        }
-
-        const alertBox = document.getElementById("ajax-alert");
-
-        if(data.success){
-
-            alertBox.innerHTML =
-            `<div class="badge badge-ok">${data.message}</div>`;
-
-            // clear inputs
-            form.querySelectorAll('input[type="number"]').forEach(inp=>{
-                inp.value="";
-            });
-
-        }else{
-
-            alertBox.innerHTML =
-            `<div class="badge badge-danger">
-            ॲडव्हान्स सेव्ह करताना त्रुटी ⚠️
-            </div>`;
-
-        }
-
-    })
-
-    .catch(err => {
-
-        console.error(err);
-
-        // hide loader
-        if(typeof hideLoader === "function"){
-            hideLoader();
-        }
-
-        document.getElementById("ajax-alert").innerHTML =
-        `<div class="badge badge-danger">
-        Server error. Please try again.
-        </div>`;
-
-    });
-
-});
+})();
 
 </script>
+
 {% endblock %}

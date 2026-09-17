@@ -1,110 +1,492 @@
-/* ===============================
-   ABOUT PAGE – CLEAN PROFESSIONAL
-================================ */
+/* =====================================================
+   DAIRY MITR — ABOUT PAGE
+   Authentication + Security matched premium theme
+===================================================== */
 
 .max-w-4xl{
-  max-width:900px;
-  margin:auto;
-  background:var(--card);
-  border-radius:var(--radius-lg);
-  padding:36px !important;
-  box-shadow:var(--shadow-sm);
-  border:1px solid var(--border);
+    position:relative;
+    max-width:900px;
+    margin:auto;
+
+    padding:38px !important;
+
+    background:rgba(255,255,255,.90);
+
+    border:1px solid rgba(87,48,187,.11);
+    border-radius:22px;
+
+    box-shadow:
+        0 18px 45px rgba(53,20,127,.10);
+
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+
+    overflow:hidden;
+
+    animation:aboutCardIn .55s cubic-bezier(.2,.8,.2,1);
 }
 
-/* MAIN TITLE */
+/* Premium top gradient */
+.max-w-4xl::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+
+    height:4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #35147f,
+            #5730bb,
+            #7655d6,
+            #4f46e5
+        );
+}
+
+@keyframes aboutCardIn{
+    from{
+        opacity:0;
+        transform:translateY(15px) scale(.985);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+/* =====================================================
+   MAIN TITLE
+===================================================== */
+
 .max-w-4xl h1{
-  font-size:28px;
-  font-weight:700;
-  margin-bottom:14px;
-  color:var(--text);
+    position:relative;
+
+    font-size:30px;
+    line-height:1.25;
+
+    font-weight:750;
+
+    margin-bottom:14px;
+
+    color:#35147f;
+
+    letter-spacing:-.5px;
 }
 
-/* SECTION HEADINGS */
+/* Small decorative line */
+.max-w-4xl h1::after{
+    content:"";
+
+    display:block;
+
+    width:58px;
+    height:4px;
+
+    margin-top:10px;
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #5730bb,
+            #7655d6
+        );
+}
+
+/* =====================================================
+   SECTION HEADINGS
+===================================================== */
+
 .max-w-4xl h2{
-  font-size:18px;
-  font-weight:700;
-  margin-top:30px;
-  margin-bottom:10px;
-  color:var(--text);
+    font-size:19px;
+    line-height:1.35;
+
+    font-weight:700;
+
+    margin-top:32px;
+    margin-bottom:11px;
+
+    color:#35147f;
+
+    position:relative;
 }
 
-/* TEXT */
+.max-w-4xl h2::before{
+    content:"";
+
+    display:inline-block;
+
+    width:4px;
+    height:19px;
+
+    margin-right:9px;
+
+    vertical-align:-3px;
+
+    border-radius:8px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #7655d6,
+            #35147f
+        );
+}
+
+/* =====================================================
+   TEXT
+===================================================== */
+
 .max-w-4xl p{
-  font-size:15px;
-  line-height:1.7;
-  color:var(--muted);
+    font-size:15px;
+    line-height:1.75;
+
+    color:#756f88;
+
+    margin-bottom:10px;
 }
 
-/* LISTS */
+/* =====================================================
+   LISTS
+===================================================== */
+
 .max-w-4xl ul{
-  list-style:none;
-  margin-top:14px;
+    list-style:none;
+
+    margin-top:15px;
+    padding:0;
 }
 
 .max-w-4xl ul li{
-  background:#f8fafc;
-  border:1px solid var(--border);
-  padding:12px 14px;
-  border-radius:10px;
-  margin-bottom:8px;
-  font-size:14px;
-  display:flex;
-  align-items:center;
-  gap:8px;
+    position:relative;
+
+    background:
+        linear-gradient(
+            145deg,
+            #faf9ff,
+            #f3f0ff
+        );
+
+    border:1px solid #e4def1;
+
+    padding:13px 15px 13px 40px;
+
+    border-radius:12px;
+
+    margin-bottom:9px;
+
+    font-size:14px;
+    line-height:1.5;
+
+    color:#41394f;
+
+    display:flex;
+    align-items:center;
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease,
+        background .22s ease;
+}
+
+.max-w-4xl ul li:hover{
+    transform:translateX(4px);
+
+    border-color:#cfc2e8;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f7f3ff,
+            #eee9ff
+        );
+
+    box-shadow:
+        0 7px 18px rgba(87,48,187,.09);
 }
 
 /* Bullet icon */
 .max-w-4xl ul li::before{
-  content:"✔";
-  color:var(--primary);
-  font-weight:700;
+    content:"✓";
+
+    position:absolute;
+    left:14px;
+
+    width:18px;
+    height:18px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7655d6,
+            #5730bb
+        );
+
+    color:#fff;
+
+    font-size:10px;
+    font-weight:800;
 }
 
-/* QUICK LINKS */
+/* =====================================================
+   QUICK LINKS
+===================================================== */
+
 .max-w-4xl a{
-  color:var(--primary);
-  font-weight:600;
-  text-decoration:none;
+    color:#5730bb;
+
+    font-weight:650;
+
+    text-decoration:none;
+
+    transition:
+        color .2s ease,
+        opacity .2s ease;
 }
 
 .max-w-4xl a:hover{
-  text-decoration:underline;
+    color:#35147f;
+    text-decoration:none;
 }
 
-/* FEEDBACK FORM */
+/* =====================================================
+   FEEDBACK FORM
+===================================================== */
+
 .max-w-4xl form{
-  margin-top:18px;
-  background:#f8fafc;
-  border:1px solid var(--border);
-  padding:20px;
-  border-radius:var(--radius);
+    margin-top:20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(250,249,255,.96),
+            rgba(242,238,255,.92)
+        );
+
+    border:1px solid #e1daef;
+
+    padding:22px;
+
+    border-radius:16px;
+
+    box-shadow:
+        0 8px 22px rgba(53,20,127,.06);
 }
 
 .max-w-4xl form input,
 .max-w-4xl form textarea{
-  width:100%;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:10px 12px;
-  margin-bottom:10px;
+    width:100%;
+
+    border:1px solid #ddd6eb;
+
+    border-radius:12px;
+
+    padding:11px 13px;
+
+    margin-bottom:11px;
+
+    background:#fff;
+
+    color:#17142b;
+
+    font-family:inherit;
+    font-size:14px;
+
+    outline:none;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        transform .2s ease;
+}
+
+.max-w-4xl form textarea{
+    min-height:120px;
+    resize:vertical;
+}
+
+.max-w-4xl form input::placeholder,
+.max-w-4xl form textarea::placeholder{
+    color:#aaa3b7;
+}
+
+.max-w-4xl form input:hover,
+.max-w-4xl form textarea:hover{
+    border-color:#cfc5e3;
 }
 
 .max-w-4xl form input:focus,
 .max-w-4xl form textarea:focus{
-  outline:none;
-  border-color:var(--primary);
+    outline:none;
+
+    border-color:#7655d6;
+
+    box-shadow:
+        0 0 0 4px rgba(118,85,214,.12);
+
+    transform:translateY(-1px);
 }
 
-/* MOBILE */
-@media (max-width:768px){
+/* Feedback submit buttons */
+.max-w-4xl form button,
+.max-w-4xl form .btn-primary{
+    background:
+        linear-gradient(
+            135deg,
+            #7655d6,
+            #35147f
+        );
 
-  .max-w-4xl{
-    padding:24px !important;
-  }
+    color:#fff;
 
-  .max-w-4xl h1{
-    font-size:22px;
-  }
+    border:none;
+    border-radius:12px;
 
+    min-height:44px;
+
+    padding:0 20px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 8px 18px rgba(87,48,187,.20);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.max-w-4xl form button:hover,
+.max-w-4xl form .btn-primary:hover{
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 12px 25px rgba(87,48,187,.28);
+}
+
+.max-w-4xl form button:active,
+.max-w-4xl form .btn-primary:active{
+    transform:scale(.98);
+}
+
+/* =====================================================
+   OPTIONAL HORIZONTAL DIVIDER
+===================================================== */
+
+.max-w-4xl hr{
+    border:0;
+
+    height:1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #ddd5ec,
+            transparent
+        );
+
+    margin:26px 0;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:768px){
+
+    .max-w-4xl{
+        width:calc(100% - 20px);
+        padding:25px 20px !important;
+
+        border-radius:18px;
+    }
+
+    .max-w-4xl h1{
+        font-size:23px;
+    }
+
+    .max-w-4xl h2{
+        font-size:17px;
+        margin-top:27px;
+    }
+
+    .max-w-4xl p{
+        font-size:14px;
+        line-height:1.7;
+    }
+
+    .max-w-4xl ul li{
+        padding:12px 12px 12px 38px;
+        font-size:13.5px;
+    }
+
+    .max-w-4xl form{
+        padding:17px;
+    }
+}
+
+/* =====================================================
+   SMALL PHONES
+===================================================== */
+
+@media(max-width:400px){
+
+    .max-w-4xl{
+        width:calc(100% - 12px);
+        padding:22px 16px !important;
+        border-radius:16px;
+    }
+
+    .max-w-4xl h1{
+        font-size:21px;
+    }
+
+    .max-w-4xl h2{
+        font-size:16px;
+    }
+
+    .max-w-4xl p{
+        font-size:13.5px;
+    }
+
+    .max-w-4xl ul li{
+        font-size:13px;
+    }
+
+    .max-w-4xl form{
+        padding:15px;
+        border-radius:14px;
+    }
+}
+
+/* =====================================================
+   REDUCED MOTION
+===================================================== */
+
+@media(prefers-reduced-motion:reduce){
+
+    .max-w-4xl{
+        animation:none;
+    }
+
+    .max-w-4xl ul li,
+    .max-w-4xl form input,
+    .max-w-4xl form textarea,
+    .max-w-4xl form button{
+        transition:none;
+    }
 }

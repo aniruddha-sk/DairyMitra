@@ -1,59 +1,210 @@
 {% extends "base.html" %}
+
 {% block title %}अंतिम पेमेंट{% endblock %}
 
 {% block content %}
-<h2 class="page-title">💰 अंतिम पेमेंट</h2>
 
-<form method="POST" class="grid gap-4 md:grid-cols-3 mb-6 section">
+<h2 class="page-title">
+    💰 अंतिम पेमेंट
+</h2>
+
+
+<!-- ================= DATE FORM ================= -->
+
+<form method="POST"
+      class="grid gap-4 md:grid-cols-3 mb-6 section">
+
     <div>
-        <label class="form-label">पासून तारीख</label>
-        <input type="date" name="start_date" required class="form-input">
+
+        <label class="form-label">
+            पासून तारीख
+        </label>
+
+        <input
+            type="date"
+            name="start_date"
+            required
+            class="form-input"
+        >
+
     </div>
+
+
     <div>
-        <label class="form-label">पर्यंत तारीख</label>
-        <input type="date" name="end_date" required class="form-input">
+
+        <label class="form-label">
+            पर्यंत तारीख
+        </label>
+
+        <input
+            type="date"
+            name="end_date"
+            required
+            class="form-input"
+        >
+
     </div>
+
+
     <div class="flex items-end">
-        <button type="submit" class="btn btn-primary w-full">पेमेंट मिळवा</button>
+
+        <button
+            type="submit"
+            class="btn btn-primary w-full"
+        >
+            पेमेंट मिळवा
+        </button>
+
     </div>
+
 </form>
 
+
+<!-- ================= VENDOR SEARCH ================= -->
+
 <div class="mb-4">
-    <input type="text" id="vendorSearch" class="form-input max-w-md" 
-           placeholder="विक्रेता आयडी किंवा नावाने शोधा" onkeyup="filterVendors()">
+
+    <input
+        type="text"
+        id="vendorSearch"
+        class="form-input max-w-md"
+        placeholder="विक्रेता आयडी किंवा नावाने शोधा"
+        onkeyup="filterVendors()"
+        autocomplete="off"
+    >
+
 </div>
+
+
+<!-- ================= PAYMENT DATA ================= -->
 
 {% if data %}
+
 <div class="table-wrap">
+
     <table class="table">
+
         <thead>
+
             <tr>
-                <th>विक्रेता आयडी</th>
-                <th>नाव</th>
-                <th>एकूण रक्कम</th>
+
+                <th>
+                    विक्रेता आयडी
+                </th>
+
+                <th>
+                    नाव
+                </th>
+
+                <th>
+                    ॲडव्हान्स वजा
+                </th>
+
+                <th>
+                    अंतिम पेमेंट
+                </th>
+
+                <th>
+                    बाकी रक्कम
+                </th>
+
             </tr>
+
         </thead>
-        <tbody>
+
+
+        <tbody id="vendorTableBody">
+
             {% for d in data %}
+
             <tr>
-                <td>{{ d.vendor_id }}</td>
-                <td>{{ d.vendor_name }}</td>
-                <td style="color: red;"><b>₹{{ d.total_payment|int }}</b></td>
+
+                <td>
+                    {{ d.vendor_id }}
+                </td>
+
+
+                <td>
+                    {{ d.vendor_name }}
+                </td>
+
+
+                <!-- CURRENT PERIOD DEDUCTION -->
+
+                <td>
+                    ₹{{ d.total_deduction | int }}
+                </td>
+
+
+                <!-- FINAL PAYMENT -->
+
+                <td style="color: red;">
+
+                    <b>
+                        ₹{{ d.total_payment | int }}
+                    </b>
+
+                </td>
+
+
+                <!-- REMAINING ADVANCE -->
+
+                <td>
+                    ₹{{ d.remaining_advance | int }}
+                </td>
+
             </tr>
+
             {% endfor %}
+
         </tbody>
+
     </table>
+
 </div>
+
 {% endif %}
 
+
+<!-- ================= SEARCH SCRIPT ================= -->
+
 <script>
+
 function filterVendors() {
-    const input = document.getElementById("vendorSearch").value.toLowerCase();
-    const rows = document.querySelectorAll("tbody tr");
+
+    const input = document
+        .getElementById("vendorSearch")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const tbody =
+        document.getElementById(
+            "vendorTableBody"
+        );
+
+    if (!tbody) {
+        return;
+    }
+
+    const rows =
+        tbody.querySelectorAll("tr");
+
     rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(input) ? "" : "none";
+
+        const text =
+            row.innerText.toLowerCase();
+
+        row.style.display =
+            text.includes(input)
+                ? ""
+                : "none";
+
     });
+
 }
+
 </script>
+
+
 {% endblock %}
