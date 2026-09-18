@@ -16,12 +16,15 @@
         rel="stylesheet" />
 
   <!-- CSS -->
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}" />
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/receipt.css') }}" />
-  <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/about.css') }}" />
+<!-- CSS -->
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}?v=20260918" />
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/receipt.css') }}?v=20260918" />
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/about.css') }}?v=20260918" />
 
   <!-- ===== PWA SETUP ===== -->
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -90,15 +93,36 @@
   <!-- Iconify -->
   <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
 
-  <!-- ===== Service Worker Register ===== -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("{{ url_for('static', filename='service-worker.js') }}")
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.log("SW Error:", err));
-    }
-  </script>
+<!-- ===== Service Worker Register ===== -->
+<script>
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker
+        .register(
+            "{{ url_for('static', filename='service-worker.js') }}?v=23",
+            {
+                updateViaCache: "none"
+            }
+        )
+        .then((registration) => {
+
+            console.log("DairyMitr Service Worker Registered");
+
+            // नवीन Service Worker साठी लगेच check
+            registration.update();
+
+        })
+        .catch((error) => {
+
+            console.error(
+                "Service Worker Error:",
+                error
+            );
+
+        });
+
+}
+</script>
 
   <!-- ===== Online / Offline Banner ===== -->
   <script>

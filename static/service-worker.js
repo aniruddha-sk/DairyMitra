@@ -1,20 +1,23 @@
 /* =====================================
    DairyMitr Service Worker
-   Production Ready v22
+   Production Ready v23
 ===================================== */
 
-const CACHE_NAME = "dairy-mitr-cache-v22";
+const CACHE_NAME = "dairy-mitr-cache-v23";
 
-/* Cache ONLY static files */
+
+/* =====================================
+   APP SHELL
+===================================== */
+
 const APP_SHELL = [
 
-  "/static/css/style.css",
-  "/static/css/receipt.css",
-  "/static/css/about.css",
+    "/static/css/style.css",
+    "/static/css/receipt.css",
+    "/static/css/about.css",
+    "/static/manifest.json",
 
-  "/static/manifest.json",
-
-  "/static/images/logo.png"
+    "/static/images/logo.png"
 
 ];
 
@@ -27,23 +30,39 @@ self.addEventListener("install", (event) => {
 
     event.waitUntil(
 
-        caches.open(CACHE_NAME).then(async (cache) => {
+        caches.open(CACHE_NAME)
 
-            for (const file of APP_SHELL) {
+            .then(async (cache) => {
 
-                try {
-                    await cache.add(file);
-                    console.log("Cached:", file);
-                } catch (err) {
-                    console.log("Skipped:", file);
+                for (const file of APP_SHELL) {
+
+                    try {
+
+                        await cache.add(file);
+
+                        console.log(
+                            "Cached:",
+                            file
+                        );
+
+                    } catch (err) {
+
+                        console.log(
+                            "Skipped:",
+                            file
+                        );
+
+                    }
+
                 }
 
-            }
-
-        })
+            })
 
     );
 
+    /*
+     * Activate new SW immediately
+     */
     self.skipWaiting();
 
 });
@@ -57,25 +76,47 @@ self.addEventListener("activate", (event) => {
 
     event.waitUntil(
 
-        caches.keys().then((keys) => {
+        caches.keys()
 
-            return Promise.all(
+            .then((keys) => {
 
-                keys.map((key) => {
+                return Promise.all(
 
-                    if (key !== CACHE_NAME) {
-                        return caches.delete(key);
-                    }
+                    keys.map((key) => {
 
-                })
+                        /*
+                         * Delete all old DairyMitr caches
+                         */
+                        if (
+                            key.startsWith("dairy-mitr-cache-") &&
+                            key !== CACHE_NAME
+                        ) {
 
-            );
+                            console.log(
+                                "Deleting old cache:",
+                                key
+                            );
 
-        })
+                            return caches.delete(key);
+
+                        }
+
+                    })
+
+                );
+
+            })
+
+            .then(() => {
+
+                /*
+                 * Take control of all open tabs
+                 */
+                return self.clients.claim();
+
+            })
 
     );
-
-    self.clients.claim();
 
 });
 
@@ -88,21 +129,41 @@ self.addEventListener("fetch", (event) => {
 
     const request = event.request;
 
-    // Only cache GET requests
+
+    /*
+     * Only GET requests
+     */
     if (request.method !== "GET") {
         return;
     }
 
-    // NEVER cache HTML pages
+
+    const url = new URL(request.url);
+
+
+    /* =================================
+       HTML / PAGE REQUESTS
+    ================================= */
+
+    /*
+     * NEVER cache HTML pages.
+     *
+     * Always get latest version
+     * from server.
+     */
     if (request.mode === "navigate") {
 
         event.respondWith(
 
-            fetch(request).catch(() => {
+            fetch(request)
 
-                return caches.match("/");
+                .catch(() => {
 
-            })
+                    return caches.match(
+                        "/"
+                    );
+
+                })
 
         );
 
@@ -110,23 +171,37 @@ self.addEventListener("fetch", (event) => {
 
     }
 
-    const url = new URL(request.url);
 
-    // Never cache authentication/API routes
+    /* =================================
+       LOGIN / API / DYNAMIC ROUTES
+    ================================= */
+
     if (
+
         url.pathname.startsWith("/login") ||
         url.pathname.startsWith("/logout") ||
         url.pathname.startsWith("/customer") ||
         url.pathname.startsWith("/staff") ||
-        url.pathname.startsWith("/subscribe")
+        url.pathname.startsWith("/subscribe") ||
+        url.pathname.startsWith("/advance") ||
+        url.pathname.startsWith("/milk") ||
+        url.pathname.startsWith("/payment")
+
     ) {
 
-        event.respondWith(fetch(request));
+        event.respondWith(
+            fetch(request)
+        );
+
         return;
 
     }
 
-    // Cache static assets only
+
+    /* =================================
+       STATIC FILES
+    ================================= */
+
     if (
 
         request.destination === "style" ||
@@ -138,31 +213,85 @@ self.addEventListener("fetch", (event) => {
 
         event.respondWith(
 
-            caches.match(request).then((cached) => {
+            caches.match(request)
 
-                if (cached) {
-                    return cached;
-                }
+                .then((cached) => {
 
-                return fetch(request).then((response) => {
+                    /*
+                     * If cached version exists,
+                     * return it immediately.
+                     */
+                    if (cached) {
 
-                    if (response && response.status === 200) {
+                        /*
+                         * Background update
+                         *
+                         * Fetch latest file in background.
+                         */
+                        fetch(request)
 
-                        const copy = response.clone();
+                            .then((response) => {
 
-                        caches.open(CACHE_NAME).then((cache) => {
+                                if (
+                                    response &&
+                                    response.status === 200
+                                ) {
 
-                            cache.put(request, copy);
+                                    caches.open(
+                                        CACHE_NAME
+                                    ).then((cache) => {
 
-                        });
+                                        cache.put(
+                                            request,
+                                            response.clone()
+                                        );
+
+                                    });
+
+                                }
+
+                            })
+                            .catch(() => {});
+
+                        return cached;
 
                     }
 
-                    return response;
 
-                });
+                    /*
+                     * Not cached:
+                     * fetch from server.
+                     */
+                    return fetch(request)
 
-            })
+                        .then((response) => {
+
+                            if (
+                                response &&
+                                response.status === 200
+                            ) {
+
+                                const copy =
+                                    response.clone();
+
+                                caches.open(
+                                    CACHE_NAME
+                                ).then((cache) => {
+
+                                    cache.put(
+                                        request,
+                                        copy
+                                    );
+
+                                });
+
+                            }
+
+                            return response;
+
+                        });
+
+                })
 
         );
 
@@ -172,14 +301,18 @@ self.addEventListener("fetch", (event) => {
 
 
 /* =====================================
-   PUSH
+   PUSH NOTIFICATION
 ===================================== */
 
 self.addEventListener("push", (event) => {
 
-    if (!event.data) return;
+    if (!event.data) {
+        return;
+    }
+
 
     let data;
+
 
     try {
 
@@ -188,11 +321,15 @@ self.addEventListener("push", (event) => {
     } catch {
 
         data = {
+
             title: "DairyMitr",
+
             body: event.data.text()
+
         };
 
     }
+
 
     event.waitUntil(
 
@@ -202,16 +339,24 @@ self.addEventListener("push", (event) => {
 
             {
 
-                body: data.body || "",
+                body:
+                    data.body || "",
 
-                icon: "/static/images/logo.png",
+                icon:
+                    "/static/images/logo.png",
 
-                badge: "/static/images/logo.png",
+                badge:
+                    "/static/images/logo.png",
 
-                vibrate: [200, 100, 200],
+                vibrate:
+                    [200, 100, 200],
 
                 data: {
-                    url: data.url || "/customer/dashboard"
+
+                    url:
+                        data.url ||
+                        "/customer/dashboard"
+
                 }
 
             }
@@ -227,33 +372,53 @@ self.addEventListener("push", (event) => {
    NOTIFICATION CLICK
 ===================================== */
 
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener(
+    "notificationclick",
+    (event) => {
 
-    event.notification.close();
+        event.notification.close();
 
-    const url = event.notification.data.url || "/customer/dashboard";
 
-    event.waitUntil(
+        const url =
+            event.notification.data.url ||
+            "/customer/dashboard";
 
-        clients.matchAll({
 
-            type: "window",
-            includeUncontrolled: true
+        event.waitUntil(
 
-        }).then((windowClients) => {
+            clients.matchAll({
 
-            for (const client of windowClients) {
+                type: "window",
 
-                if (client.url.includes(url)) {
-                    return client.focus();
+                includeUncontrolled: true
+
+            })
+
+            .then((windowClients) => {
+
+                for (
+                    const client
+                    of windowClients
+                ) {
+
+                    if (
+                        client.url.includes(url)
+                    ) {
+
+                        return client.focus();
+
+                    }
+
                 }
 
-            }
 
-            return clients.openWindow(url);
+                return clients.openWindow(
+                    url
+                );
 
-        })
+            })
 
-    );
+        );
 
-});
+    }
+);

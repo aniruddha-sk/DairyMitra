@@ -1393,26 +1393,700 @@ body.auth-body {
     .auth-title {
         font-size: 24px;
     }
+/* =========================================================
+   DAIRY MITR
+   FINAL MOBILE AUTH LAYOUT
+   ========================================================= */
 
-    .auth-subtitle {
+@media (max-width: 760px) {
+
+    /* =====================================================
+       PAGE
+       ===================================================== */
+
+    body.auth-body {
+        min-height: 100svh;
+        height: auto;
+        padding: 6px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+
+    .auth-page-wrapper {
+        width: 100%;
+        max-width: 430px;
+        margin: 0 auto;
+    }
+
+
+    /* =====================================================
+       MAIN CARD
+       ===================================================== */
+
+    .auth-animated-container,
+    .auth-container {
+
+        width: 100%;
+        max-width: 430px;
+
+        /*
+         * IMPORTANT
+         * Do not use fixed 560px / 620px height.
+         */
+        height: min(680px, calc(100svh - 12px));
+
+        min-height: 0;
+
+        position: relative;
+
+        overflow: hidden;
+
+        border-radius: 20px;
+
+        background: #fff;
+    }
+
+
+    /* =====================================================
+       FORM PANELS
+       ===================================================== */
+
+    .auth-form-panel,
+    .form-section {
+
+        position: absolute;
+
+        left: 0;
+
+        width: 100%;
+
+        /*
+         * Form gets 60% of card.
+         */
+        height: 60%;
+
+        background: #fff;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: flex-start;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        padding: 18px 16px 25px;
+
+        scrollbar-width: none;
+
+        -webkit-overflow-scrolling: touch;
+
+        transition:
+            opacity .6s ease,
+            transform .6s ease;
+    }
+
+
+    .auth-form-panel::-webkit-scrollbar,
+    .form-section::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    /* =====================================================
+       LOGIN FORM
+       ===================================================== */
+
+    .auth-login-panel,
+    .login-section {
+
+        top: 40%;
+
+        left: 0;
+
+        z-index: 2;
+
+        opacity: 1;
+
+        transform: none;
+    }
+
+
+    /* =====================================================
+       SIGNUP FORM
+       ===================================================== */
+
+    .auth-signup-panel,
+    .signup-section {
+
+        top: 0;
+
+        right: auto;
+        left: 0;
+
+        z-index: 2;
+
+        opacity: 0;
+
+        transform: none;
+
+        pointer-events: none;
+    }
+
+
+    /* =====================================================
+       FORM CARD
+       ===================================================== */
+
+    .auth-form-panel > .auth-card,
+    .auth-form {
+
+        width: min(380px, 94%);
+
+        max-width: 380px;
+
+        margin: 0 auto;
+
+        padding: 0;
+
+        background: transparent;
+
+        border: 0;
+
+        box-shadow: none;
+
+        overflow: visible;
+
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       LOGO
+       ===================================================== */
+
+    .auth-form-panel .auth-logo {
+
+        width: 52px;
+        height: 52px;
+
+        margin: 0 auto 7px;
+    }
+
+
+    /* =====================================================
+       TITLE
+       ===================================================== */
+
+    .auth-form-panel .auth-title {
+
+        font-size: 22px;
+
+        line-height: 1.2;
+
+        margin: 0 0 4px;
+
+        letter-spacing: -.3px;
+    }
+
+
+    /* =====================================================
+       SUBTITLE
+       ===================================================== */
+
+    .auth-form-panel .auth-subtitle {
+
+        max-width: 320px;
+
+        font-size: 8.5px;
+
+        line-height: 1.45;
+
+        margin: 0 auto 12px;
+    }
+
+
+    /* =====================================================
+       INPUTS
+       ===================================================== */
+
+    .form-floating {
+
+        width: 100%;
+
+        margin-bottom: 9px;
+    }
+
+
+    .form-floating > .form-control {
+
+        width: 100%;
+
+        height: 48px;
+
+        min-height: 48px;
+
+        padding: 17px 42px 5px 40px;
+
+        border-radius: 9px;
+
+        font-size: 11px;
+    }
+
+
+    .form-floating > label {
+
+        left: 40px;
+
+        top: 15px;
+
+        font-size: 9px;
+    }
+
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+
+        top: 4px;
+
+        font-size: 7px;
+    }
+
+
+    /* =====================================================
+       PASSWORD ICON
+       ===================================================== */
+
+    .toggle-password,
+    .password-toggle {
+
+        right: 9px;
+
+        width: 30px;
+        height: 30px;
+    }
+
+
+    /* =====================================================
+       BUTTON
+       ===================================================== */
+
+    .auth-body .btn-primary,
+    .auth-body .btn-auth,
+    .primary-btn {
+
+        width: 100%;
+
+        min-height: 42px;
+
+        border-radius: 9px;
+
         font-size: 10px;
     }
 
-    .otp-boxes,
-    .reset-otp-boxes,
-    .staff-otp-boxes {
-        gap: 4px;
+
+    /* =====================================================
+       LINKS
+       ===================================================== */
+
+    .auth-links {
+
+        margin-top: 7px;
+
+        font-size: 8.5px;
+
+        line-height: 1.4;
     }
 
-    .otp-input,
-    .reset-otp-input,
-    .staff-otp-input {
-        width: 39px;
-        height: 47px;
-        font-size: 17px;
+
+    .mobile-switch {
+        display: block;
+    }
+
+
+    /* =====================================================
+       PURPLE OVERLAY
+       ===================================================== */
+
+    .auth-overlay,
+    .overlay {
+
+        position: absolute;
+
+        left: 0;
+
+        width: 100%;
+
+        height: 40%;
+
+        z-index: 10;
+
+        overflow: hidden;
+
+        transition:
+            top .7s cubic-bezier(.77,0,.18,1),
+            bottom .7s cubic-bezier(.77,0,.18,1),
+            border-radius .7s ease;
+    }
+
+
+    /* =====================================================
+       LOGIN MODE
+       
+       PURPLE = TOP
+       FORM   = BOTTOM
+       ===================================================== */
+
+    .auth-overlay,
+    .overlay {
+
+        top: 0;
+
+        bottom: auto;
+
+        border-radius:
+            20px
+            20px
+            70px
+            70px;
+    }
+
+
+    /* Login visible */
+    .auth-login-panel,
+    .login-section {
+
+        top: 40%;
+
+        opacity: 1;
+
+        pointer-events: auto;
+
+        transform: none;
+    }
+
+
+    /* Signup hidden */
+    .auth-signup-panel,
+    .signup-section {
+
+        top: 0;
+
+        opacity: 0;
+
+        pointer-events: none;
+
+        transform: none;
+    }
+
+
+    /* Purple signup content */
+    .auth-overlay-signup,
+    .overlay-signup {
+
+        transform: translateY(0);
+    }
+
+
+    .auth-overlay-login,
+    .overlay-login {
+
+        transform: translateY(-100%);
+    }
+
+
+    /* =====================================================
+       SIGNUP MODE
+       
+       FORM   = TOP 60%
+       PURPLE = BOTTOM 40%
+       ===================================================== */
+
+    .auth-animated-container.signup-mode .auth-overlay,
+    .auth-container.signup-mode .overlay {
+
+        top: auto;
+
+        bottom: 0;
+
+        left: 0;
+
+        height: 40%;
+
+        border-radius:
+            70px
+            70px
+            20px
+            20px;
+    }
+
+
+    /* Signup form becomes visible */
+
+    .auth-animated-container.signup-mode .auth-signup-panel,
+    .auth-container.signup-mode .signup-section {
+
+        top: 0;
+
+        opacity: 1;
+
+        pointer-events: auto;
+
+        transform: none;
+
+        z-index: 3;
+    }
+
+
+    /* Login form disappears */
+
+    .auth-animated-container.signup-mode .auth-login-panel,
+    .auth-container.signup-mode .login-section {
+
+        top: 40%;
+
+        opacity: 0;
+
+        pointer-events: none;
+
+        transform: none;
+    }
+
+
+    /* =====================================================
+       PURPLE CONTENT — MOBILE
+       ===================================================== */
+
+    .auth-overlay-content,
+    .overlay-content {
+
+        width: 84%;
+
+        max-width: 310px;
+
+        position: relative;
+
+        z-index: 20;
+
+        text-align: center;
+    }
+
+
+    .auth-overlay-content h2,
+    .overlay-content h2 {
+
+        margin: 5px 0 5px;
+
+        font-size: 21px;
+
+        line-height: 1.15;
+    }
+
+
+    .auth-overlay-content p,
+    .overlay-content p {
+
+        max-width: 280px;
+
+        margin: 0 auto 11px;
+
+        font-size: 8px;
+
+        line-height: 1.4;
+    }
+
+
+    .auth-outline-btn,
+    .outline-btn {
+
+        min-width: 110px;
+
+        min-height: 35px;
+
+        padding: 0 12px;
+
+        border-radius: 8px;
+
+        font-size: 9px;
+    }
+
+
+    /* =====================================================
+       DECORATIVE CIRCLES
+       ===================================================== */
+
+    .auth-shape-one,
+    .shape-one {
+
+        width: 150px;
+        height: 150px;
+
+        right: -70px;
+        top: -65px;
+    }
+
+
+    .auth-shape-two,
+    .shape-two {
+
+        width: 90px;
+        height: 90px;
+
+        left: -45px;
+        bottom: -40px;
+    }
+
+
+    .auth-shape-three,
+    .shape-three {
+
+        width: 130px;
+        height: 130px;
+
+        left: -60px;
+        top: -55px;
+    }
+
+
+    .auth-shape-four,
+    .shape-four {
+
+        width: 100px;
+        height: 100px;
+
+        right: -50px;
+        bottom: -40px;
     }
 }
 
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+    body.auth-body {
+        padding: 4px;
+    }
+
+
+    .auth-animated-container,
+    .auth-container {
+
+        height: calc(100svh - 8px);
+
+        border-radius: 17px;
+    }
+
+
+    .auth-form-panel,
+    .form-section {
+
+        padding:
+            15px
+            12px
+            20px;
+    }
+
+
+    .auth-form-panel > .auth-card,
+    .auth-form {
+
+        width: 94%;
+    }
+
+
+    .auth-form-panel .auth-logo {
+
+        width: 48px;
+        height: 48px;
+
+        margin-bottom: 5px;
+    }
+
+
+    .auth-form-panel .auth-title {
+
+        font-size: 20px;
+    }
+
+
+    .auth-form-panel .auth-subtitle {
+
+        font-size: 8px;
+
+        margin-bottom: 9px;
+    }
+
+
+    .form-floating {
+
+        margin-bottom: 7px;
+    }
+
+
+    .form-floating > .form-control {
+
+        height: 46px;
+
+        min-height: 46px;
+
+        font-size: 10.5px;
+    }
+
+
+    .auth-body .btn-primary,
+    .auth-body .btn-auth,
+    .primary-btn {
+
+        min-height: 40px;
+
+        font-size: 9.5px;
+    }
+
+
+    .auth-links {
+
+        font-size: 8px;
+
+        margin-top: 6px;
+    }
+
+
+    .auth-overlay-content h2,
+    .overlay-content h2 {
+
+        font-size: 19px;
+    }
+
+
+    .auth-overlay-content p,
+    .overlay-content p {
+
+        font-size: 7.5px;
+
+        margin-bottom: 9px;
+    }
+
+
+    .auth-outline-btn,
+    .outline-btn {
+
+        min-width: 105px;
+
+        min-height: 33px;
+
+        font-size: 8.5px;
+    }
+}
 /* =========================================================
    ACCESSIBILITY
    ========================================================= */
