@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}🧾 दूध दर व्यवस्थापन{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="page-title">🧾 दूध दर व्यवस्थापन</h2>
+
+    <!-- ➕ नवीन दर जोडा -->
+    <div class="card mb-4">
+        <div class="card-header fw-bold">➕ नवीन दर जोडा</div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">पासून तारीख</label>
+                    <input type="date" name="date" required class="form-input">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">प्राणी</label>
+                    <select name="animal" required class="form-select">
+                        <option value="cow">गायीचे दूध</option>
+                        <option value="buffalo">म्हशीचे दूध</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">दर (₹/लिटर)</label>
+                    <input type="number" name="rate" step="0.01" required placeholder="दर (₹/लिटर)" class="form-input">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">दर जोडा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 📋 दर यादी -->
+    <div class="card">
+        <div class="card-header fw-bold">📋 विद्यमान दर</div>
+        <div class="card-body">
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>प्राणी</th>
+                            <th>दर (₹/लिटर)</th>
+                            <th>पासून तारीख</th>
+                            <th>कृती</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rates %}
+                        <tr>
+                            <td>
+                                {% if r.animal == 'cow' %}गायीचे दूध
+                                {% elif r.animal == 'buffalo' %}म्हशीचे दूध
+                                {% else %}{{ r.animal }}
+                                {% endif %}
+                            </td>
+                            <td>₹{{ r.rate }}</td>
+                            <td>{{ r.date_from }}</td>
+                            <td>
+                                <form action="{{ url_for('delete_milk_rate', rate_id=r.id) }}" method="POST"
+                                      onsubmit="return confirm('तुम्हाला हा दर खरोखर हटवायचा आहे का?');">
+                                    <!-- confirm hidden field -->
+                                    <input type="hidden" name="confirm" value="1">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">⛔ अजून कोणतेही दर नोंदलेले नाहीत.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

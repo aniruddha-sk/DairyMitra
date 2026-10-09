@@ -1,0 +1,141 @@
+{% extends "customer/customer_base.html" %}
+
+{% block title %}Milk History{% endblock %}
+
+{% block content %}
+
+<div id="app-content">
+
+    <h1 class="page-title">🥛 Milk History</h1>
+
+    <!-- FILTER -->
+
+    <div class="section">
+
+        <form method="GET" class="grid-2">
+<div class="section">
+
+    <form method="GET" class="grid-2">
+
+ <div class="section">
+
+    <form method="GET" class="grid-2">
+
+        <div>
+
+            <label class="form-label">पासून:</label>
+
+            <input
+                type="date"
+                name="from_date"
+                value="{{ request.values.get('from_date', today) }}"
+                required
+                class="form-input">
+
+        </div>
+
+        <div>
+
+            <label class="form-label">पर्यंत:</label>
+
+            <input
+                type="date"
+                name="to_date"
+                value="{{ request.values.get('to_date', today) }}"
+                required
+                class="form-input">
+
+        </div>
+
+        <div style="display:flex;align-items:end;">
+
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="search"></i>
+                शोधा
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+    <!-- TABLE -->
+
+    <div class="section">
+
+        <div class="table-wrap">
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Morning Cow</th>
+                        <th>Evening Cow</th>
+                        <th>Morning Buffalo</th>
+                        
+                        <th>Evening Buffalo</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for row in records %}
+
+                    <tr>
+
+                        <td>{{ row.date.strftime("%d-%m-%Y") }}</td>
+
+                        <td>{{ row.cow_morning }}</td>
+                        <td>{{ row.cow_evening }}</td>
+
+                        <td>{{ row.buffalo_morning }}</td>
+
+                        
+
+                        <td>{{ row.buffalo_evening }}</td>
+
+                        <td>
+
+                            <strong>
+
+                            {{ row.total }}
+
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6"
+                            style="text-align:center">
+
+                            No Milk Records Found
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

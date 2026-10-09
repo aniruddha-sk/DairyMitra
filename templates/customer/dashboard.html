@@ -1,0 +1,150 @@
+{% extends "customer/customer_base.html" %}
+
+{% block content %}
+
+<div id="app-content">
+
+    <h1 class="page-title">Customer Dashboard</h1>
+
+    <!-- ================= WELCOME ================= -->
+
+    <div class="section">
+
+        <h2>👋 नमस्कार {{ session.customer_name }}</h2>
+
+        <p class="text-muted" style="margin-top:8px;">
+            {{ session.dairy_name }}
+        </p>
+
+    </div>
+
+    <!-- ================= TODAY'S MILK ================= -->
+
+    <div class="section">
+
+        <h2 style="margin-bottom:18px;">🍼 आजचे दूध</h2>
+
+        <div class="table-wrap">
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th></th>
+
+                        <th style="text-align:center;">🐄 गाय</th>
+
+                        <th style="text-align:center;">🐃 म्हैस</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <tr>
+
+                        <td><strong>सकाळ</strong></td>
+
+                        <td style="text-align:center;">
+                            {{ today.cow_morning if today else 0 }}
+                        </td>
+
+                        <td style="text-align:center;">
+                            {{ today.buffalo_morning if today else 0 }}
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td><strong>संध्याकाळ</strong></td>
+
+                        <td style="text-align:center;">
+                            {{ today.cow_evening if today else 0 }}
+                        </td>
+
+                        <td style="text-align:center;">
+                            {{ today.buffalo_evening if today else 0 }}
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td><strong>एकूण</strong></td>
+
+                        <td style="text-align:center;font-weight:bold;">
+                            {{ today.cow_total if today else 0 }}
+                        </td>
+
+                        <td style="text-align:center;font-weight:bold;">
+                            {{ today.buffalo_total if today else 0 }}
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- ================= MENU ================= -->
+
+    <div class="grid-cards">
+
+        <a href="{{ url_for('customer_milk_history') }}" class="card card-action">
+
+            <span class="iconify icon-blue"
+                  data-icon="solar:cup-hot-bold"></span>
+
+            <div>Milk History</div>
+
+        </a>
+
+        <a href="{{ url_for('customer_payment_history') }}" class="card card-action">
+
+            <span class="iconify icon-green"
+                  data-icon="solar:wallet-money-bold"></span>
+
+            <div>Payment History</div>
+
+        </a>
+
+        <a href="{{ url_for('customer_receipts') }}" class="card card-action">
+
+            <span class="iconify icon-purple"
+                  data-icon="solar:file-text-bold"></span>
+
+            <div>Receipts</div>
+
+        </a>
+
+        <a href="{{ url_for('customer_food_sack') }}" class="card card-action">
+
+            <span class="iconify icon-amber"
+                  data-icon="solar:box-bold"></span>
+
+            <div>Food Sack</div>
+
+        </a>
+
+        <a href="{{ url_for('customer_advance') }}" class="card card-action">
+
+            <span class="iconify icon-teal"
+                  data-icon="solar:hand-money-bold"></span>
+
+            <div>Advance</div>
+
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

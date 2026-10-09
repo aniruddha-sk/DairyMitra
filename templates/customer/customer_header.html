@@ -1,0 +1,30 @@
+<div style="height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
+
+  <div style="display:flex;align-items:center;gap:10px">
+
+    <button id="sidebar-toggle" class="btn btn-muted">☰</button>
+
+    <strong>Customer Portal</strong>
+
+  </div>
+
+  <div>
+
+    <a href="{{ url_for('customer_dashboard') }}" class="header-logo-link">
+      <img src="{{ url_for('static', filename='images/Logo2.png') }}"
+           alt="DairyMitr Logo"
+           class="header-logo">
+    </a>
+ <a href="{{ url_for('customer_notifications') }}" class="position-relative">
+    🔔
+
+    {% if unread_count > 0 %}
+    <span class="badge bg-danger rounded-pill">
+        {{ unread_count }}
+    </span>
+    {% endif %}
+</a>
+
+  </div>
+
+</div>

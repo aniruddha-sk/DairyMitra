@@ -1,0 +1,47 @@
+{% extends "customer/customer_base.html" %}
+
+{% block title %}
+Notifications
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3>🔔 Notifications</h3>
+
+    {% if notifications %}
+
+        {% for n in notifications %}
+
+        <div class="card mb-3 shadow-sm">
+
+            <div class="card-body">
+
+                <h5>{{ n.title }}</h5>
+
+                <pre style="white-space:pre-wrap;border:0;background:white;">
+{{ n.message }}
+                </pre>
+
+                <small class="text-muted">
+                    {{ n.created_at }}
+                </small>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="alert alert-info">
+            No notifications found.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

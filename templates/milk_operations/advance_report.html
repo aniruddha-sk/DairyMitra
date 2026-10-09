@@ -1,0 +1,1327 @@
+{% extends "base.html" %}
+
+{% block title %}
+ॲडव्हान्स रिपोर्ट
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* =========================================================
+   ADVANCE REPORT
+   ========================================================= */
+
+.advance-report-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.report-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.report-title-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(
+        135deg,
+        #6366f1,
+        #8b5cf6
+    );
+
+    color: white;
+
+    box-shadow:
+        0 8px 20px rgba(99, 102, 241, 0.25);
+}
+
+.report-title {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.report-subtitle {
+    font-size: 13px;
+    opacity: 0.65;
+    margin-top: 3px;
+}
+
+
+/* =========================================================
+   FILTER CARD
+   ========================================================= */
+
+.filter-card {
+    padding: 24px;
+    border-radius: 18px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    box-shadow: var(--shadow-sm);
+
+    margin-bottom: 20px;
+}
+
+.filter-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+
+    align-items: end;
+}
+
+.filter-field label {
+    display: block;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    margin-bottom: 7px;
+}
+
+.filter-field input {
+    width: 100%;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+   ========================================================= */
+
+.summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 100px;
+    height: 100px;
+
+    right: -35px;
+    top: -35px;
+
+    border-radius: 50%;
+
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.summary-label {
+    font-size: 13px;
+
+    opacity: 0.65;
+
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 26px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   TABLE CARD
+   ========================================================= */
+
+.table-card {
+    background: var(--card);
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow: var(--shadow-sm);
+
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 18px 20px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
+}
+
+.table-title {
+    font-size: 18px;
+
+    font-weight: 800;
+}
+
+.table-info {
+    font-size: 13px;
+
+    opacity: 0.65;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.report-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 1050px;
+}
+
+.report-table th {
+    padding: 14px 12px;
+
+    text-align: left;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+    background: rgba(
+        127,
+        127,
+        127,
+        0.06
+    );
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.report-table td {
+    padding: 14px 12px;
+
+    font-size: 13px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.report-table tbody tr {
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.report-table tbody tr:hover {
+    background:
+        rgba(99, 102, 241, 0.04);
+}
+
+.vendor-name {
+    font-weight: 800;
+}
+
+.vendor-id {
+    font-size: 11px;
+
+    opacity: 0.55;
+
+    margin-top: 3px;
+}
+
+.amount {
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.total-amount {
+    font-weight: 800;
+
+    color: #16a34a;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty-state {
+    padding: 60px 20px;
+
+    text-align: center;
+
+    opacity: 0.7;
+}
+
+.empty-icon {
+    font-size: 42px;
+
+    margin-bottom: 12px;
+}
+
+.empty-title {
+    font-size: 18px;
+
+    font-weight: 700;
+
+    margin-bottom: 5px;
+}
+
+.empty-text {
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.loading-state {
+    padding: 45px;
+
+    text-align: center;
+}
+
+.spinner {
+    width: 35px;
+    height: 35px;
+
+    border-radius: 50%;
+
+    border: 3px solid
+        rgba(99, 102, 241, 0.15);
+
+    border-top-color:
+        #6366f1;
+
+    animation:
+        spin 0.8s linear infinite;
+
+    margin: 0 auto 14px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .report-title {
+        font-size: 22px;
+    }
+
+    .filter-card {
+        padding: 16px;
+    }
+
+}
+
+</style>
+
+
+<div class="advance-report-container">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="report-header">
+
+        <div class="report-title-wrap">
+
+            <div class="report-title-icon">
+                <div
+                    data-lucide="file-chart-column"
+                    style="width:24px;height:24px;"
+                ></div>
+            </div>
+
+            <div>
+
+                <h2 class="report-title">
+                    ॲडव्हान्स रिपोर्ट
+                </h2>
+
+                <div class="report-subtitle">
+                    निवडलेल्या दिनांकामध्ये घेतलेल्या ॲडव्हान्सचा संपूर्ण रिपोर्ट
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('advance') }}"
+            class="btn"
+        >
+            ← ॲडव्हान्स पेज
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         ALERT
+         ===================================================== -->
+
+    <div
+        id="reportAlert"
+        class="mb-4"
+    ></div>
+
+
+    <!-- =====================================================
+         FILTER
+         ===================================================== -->
+
+    <div class="filter-card">
+
+        <div class="filter-grid">
+
+            <!-- FROM DATE -->
+
+            <div class="filter-field">
+
+                <label>
+                    From Date
+                </label>
+
+                <input
+                    type="date"
+                    id="fromDate"
+                    value="{{ today_date }}"
+                    class="form-input"
+                >
+
+            </div>
+
+
+            <!-- TO DATE -->
+
+            <div class="filter-field">
+
+                <label>
+                    To Date
+                </label>
+
+                <input
+                    type="date"
+                    id="toDate"
+                    value="{{ today_date }}"
+                    class="form-input"
+                >
+
+            </div>
+
+
+            <!-- SEARCH -->
+
+            <div>
+
+                <button
+                    type="button"
+                    id="generateReportBtn"
+                    class="btn btn-primary w-full"
+                >
+
+                    <span
+                        data-lucide="search"
+                        style="width:18px;height:18px;"
+                    ></span>
+
+                    रिपोर्ट दाखवा
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+
+    <div
+        id="summarySection"
+        class="summary-grid hidden"
+    >
+
+        <!-- TOTAL VENDORS -->
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                ॲडव्हान्स घेणारे ग्राहक
+            </div>
+
+            <div
+                id="totalVendors"
+                class="summary-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL TRANSACTIONS -->
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                एकूण ॲडव्हान्स व्यवहार
+            </div>
+
+            <div
+                id="totalTransactions"
+                class="summary-value"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL AMOUNT -->
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                एकूण ॲडव्हान्स रक्कम
+            </div>
+
+            <div
+                id="totalAdvance"
+                class="summary-value"
+            >
+                ₹0.00
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         REPORT TABLE
+         ===================================================== -->
+
+    <div class="table-card">
+
+        <div class="table-header">
+
+            <div>
+
+                <div class="table-title">
+                    ॲडव्हान्स व्यवहार
+                </div>
+
+                <div
+                    id="reportPeriod"
+                    class="table-info"
+                >
+                    Date range निवडा
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="refreshReportBtn"
+                class="btn"
+            >
+                ↻ Refresh
+            </button>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table class="report-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            ग्राहक
+                        </th>
+
+                        <th>
+                            मोबाईल
+                        </th>
+
+                        <th>
+                            पत्ता
+                        </th>
+
+                        <th>
+                            ॲडव्हान्स दिनांक
+                        </th>
+
+                        <th>
+                            ॲडव्हान्स रक्कम
+                        </th>
+
+                        <th>
+                            Period Total
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="reportBody">
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center"
+                        >
+
+                            <div class="empty-state">
+
+                                <div class="empty-icon">
+                                    📊
+                                </div>
+
+                                <div class="empty-title">
+                                    रिपोर्ट तयार करा
+                                </div>
+
+                                <div class="empty-text">
+                                    From Date आणि To Date निवडा आणि
+                                    रिपोर्ट दाखवा.
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    /* =========================================================
+       ELEMENTS
+       ========================================================= */
+
+    const fromDate =
+        document.getElementById("fromDate");
+
+    const toDate =
+        document.getElementById("toDate");
+
+    const generateBtn =
+        document.getElementById(
+            "generateReportBtn"
+        );
+
+    const refreshBtn =
+        document.getElementById(
+            "refreshReportBtn"
+        );
+
+    const reportBody =
+        document.getElementById(
+            "reportBody"
+        );
+
+    const reportAlert =
+        document.getElementById(
+            "reportAlert"
+        );
+
+    const summarySection =
+        document.getElementById(
+            "summarySection"
+        );
+
+    const totalVendors =
+        document.getElementById(
+            "totalVendors"
+        );
+
+    const totalTransactions =
+        document.getElementById(
+            "totalTransactions"
+        );
+
+    const totalAdvance =
+        document.getElementById(
+            "totalAdvance"
+        );
+
+    const reportPeriod =
+        document.getElementById(
+            "reportPeriod"
+        );
+
+
+    /* =========================================================
+       HELPERS
+       ========================================================= */
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            value === null ||
+            value === undefined
+                ? ""
+                : String(value);
+
+        return div.innerHTML;
+
+    }
+
+
+    function formatMoney(value) {
+
+        return Number(
+            value || 0
+        ).toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    }
+
+
+    function showAlert(
+        message,
+        type = "danger"
+    ) {
+
+        const className =
+            type === "ok"
+                ? "badge badge-ok"
+                : "badge badge-danger";
+
+        reportAlert.innerHTML =
+            `
+            <div class="${className}">
+                ${escapeHtml(message)}
+            </div>
+            `;
+
+        window.clearTimeout(
+            showAlert.timer
+        );
+
+        showAlert.timer =
+            window.setTimeout(
+                () => {
+                    reportAlert.innerHTML = "";
+                },
+                4000
+            );
+
+    }
+
+
+    function setLoading(
+        loading
+    ) {
+
+        if (loading) {
+
+            generateBtn.disabled =
+                true;
+
+            generateBtn.innerHTML =
+                `
+                <span
+                    class="spinner"
+                    style="
+                        width:16px;
+                        height:16px;
+                        border-width:2px;
+                        display:inline-block;
+                        margin:0 8px 0 0;
+                    "
+                ></span>
+
+                रिपोर्ट तयार होत आहे...
+                `;
+
+        } else {
+
+            generateBtn.disabled =
+                false;
+
+            generateBtn.innerHTML =
+                `
+                <span
+                    data-lucide="search"
+                    style="
+                        width:18px;
+                        height:18px;
+                    "
+                ></span>
+
+                रिपोर्ट दाखवा
+                `;
+
+            if (
+                window.lucide &&
+                window.lucide.createIcons
+            ) {
+                window.lucide.createIcons();
+            }
+
+        }
+
+    }
+
+
+    /* =========================================================
+       LOAD REPORT
+       ========================================================= */
+
+    async function loadReport() {
+
+        const from =
+            fromDate.value;
+
+        const to =
+            toDate.value;
+
+
+        /* -----------------------------------------------------
+           VALIDATION
+           ----------------------------------------------------- */
+
+        if (!from || !to) {
+
+            showAlert(
+                "कृपया From Date आणि To Date निवडा."
+            );
+
+            return;
+
+        }
+
+
+        if (from > to) {
+
+            showAlert(
+                "From Date ही To Date पेक्षा मोठी असू शकत नाही."
+            );
+
+            return;
+
+        }
+
+
+        setLoading(true);
+
+
+        reportBody.innerHTML =
+            `
+            <tr>
+
+                <td
+                    colspan="8"
+                >
+
+                    <div class="loading-state">
+
+                        <div class="spinner"></div>
+
+                        <div>
+                            रिपोर्ट तयार होत आहे...
+                        </div>
+
+                    </div>
+
+                </td>
+
+            </tr>
+            `;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/advance/report/data?from_date=${encodeURIComponent(from)}&to_date=${encodeURIComponent(to)}`,
+                    {
+                        method: "GET",
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Report load failed."
+                );
+
+            }
+
+
+            renderReport(data);
+
+
+        } catch (error) {
+
+            console.error(error);
+
+
+            reportBody.innerHTML =
+                `
+                <tr>
+
+                    <td
+                        colspan="8"
+                    >
+
+                        <div class="empty-state">
+
+                            <div class="empty-icon">
+                                ⚠️
+                            </div>
+
+                            <div class="empty-title">
+                                रिपोर्ट load झाला नाही
+                            </div>
+
+                            <div class="empty-text">
+                                ${escapeHtml(
+                                    error.message
+                                )}
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+                `;
+
+
+            showAlert(
+                error.message ||
+                "Report load करता आला नाही."
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    }
+
+
+    /* =========================================================
+       RENDER REPORT
+       ========================================================= */
+
+    function renderReport(data) {
+
+        const transactions =
+            data.transactions || [];
+
+
+        /* -----------------------------------------------------
+           SUMMARY
+           ----------------------------------------------------- */
+
+        totalVendors.textContent =
+            data.total_vendors || 0;
+
+
+        totalTransactions.textContent =
+            data.total_transactions || 0;
+
+
+        totalAdvance.textContent =
+            `₹${formatMoney(
+                data.total_advance
+            )}`;
+
+
+        summarySection.classList.remove(
+            "hidden"
+        );
+
+
+        reportPeriod.textContent =
+            `${data.from_date} ते ${data.to_date}`;
+
+
+        /* -----------------------------------------------------
+           EMPTY
+           ----------------------------------------------------- */
+
+        if (!transactions.length) {
+
+            reportBody.innerHTML =
+                `
+                <tr>
+
+                    <td
+                        colspan="8"
+                    >
+
+                        <div class="empty-state">
+
+                            <div class="empty-icon">
+                                🔎
+                            </div>
+
+                            <div class="empty-title">
+                                कोणताही ॲडव्हान्स सापडला नाही
+                            </div>
+
+                            <div class="empty-text">
+                                निवडलेल्या date range मध्ये
+                                कोणत्याही ग्राहकाने advance घेतलेला नाही.
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+                `;
+
+            return;
+
+        }
+
+
+        /* -----------------------------------------------------
+           TABLE
+           ----------------------------------------------------- */
+
+        reportBody.innerHTML =
+            transactions.map(
+                (item, index) => {
+
+                    const editUrl =
+                        `/advance?vendor_id=${encodeURIComponent(
+                            item.vendor_id
+                        )}`;
+
+
+                    return `
+                    <tr>
+
+                        <!-- NUMBER -->
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+
+                        <!-- VENDOR -->
+
+                        <td>
+
+                            <div class="vendor-name">
+                                ${escapeHtml(
+                                    item.vendor_name
+                                )}
+                            </div>
+
+                            <div class="vendor-id">
+                                ग्राहक ID:
+                                ${escapeHtml(
+                                    item.vendor_id
+                                )}
+                            </div>
+
+                        </td>
+
+
+                        <!-- PHONE -->
+
+                        <td>
+
+                            ${
+                                item.phone
+                                    ? escapeHtml(
+                                        item.phone
+                                    )
+                                    : "-"
+                            }
+
+                        </td>
+
+
+                        <!-- ADDRESS -->
+
+                        <td>
+
+                            ${
+                                item.address
+                                    ? escapeHtml(
+                                        item.address
+                                    )
+                                    : "-"
+                            }
+
+                        </td>
+
+
+                        <!-- DATE -->
+
+                        <td>
+
+                            ${
+                                item.transaction_date
+                                    ? escapeHtml(
+                                        item.transaction_date
+                                    )
+                                    : "-"
+                            }
+
+                        </td>
+
+
+                        <!-- ADVANCE -->
+
+                        <td>
+
+                            <span class="amount">
+                                ₹${formatMoney(
+                                    item.advance_amount
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <!-- VENDOR TOTAL -->
+
+                        <td>
+
+                            <span class="total-amount">
+                                ₹${formatMoney(
+                                    item.vendor_total_advance
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <!-- ACTION -->
+
+                        <td>
+
+                            <a
+                                href="${editUrl}"
+                                class="btn btn-primary"
+                                title="या ग्राहकाचा Advance Edit करा"
+                            >
+
+                                ✏️ Edit
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+                    `;
+
+                }
+            ).join("");
+
+    }
+
+
+    /* =========================================================
+       EVENTS
+       ========================================================= */
+
+    generateBtn.addEventListener(
+        "click",
+        loadReport
+    );
+
+
+    refreshBtn.addEventListener(
+        "click",
+        loadReport
+    );
+
+
+    fromDate.addEventListener(
+        "change",
+        function () {
+
+            if (toDate.value < this.value) {
+
+                toDate.value =
+                    this.value;
+
+            }
+
+        }
+    );
+
+
+    /* ---------------------------------------------------------
+       ENTER KEY
+       --------------------------------------------------------- */
+
+    [
+        fromDate,
+        toDate
+    ].forEach(
+        element => {
+
+            element.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (
+                        event.key === "Enter"
+                    ) {
+
+                        event.preventDefault();
+
+                        loadReport();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+})();
+
+</script>
+
+{% endblock %}

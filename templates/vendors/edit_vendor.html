@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}विक्रेता संपादित करा{% endblock %}
+
+{% block content %}
+<h2 class="page-title">✏️ विक्रेता संपादित करा</h2>
+
+<form method="POST" class="section grid gap-4 max-w-lg">
+
+    <div>
+        <label class="form-label">नाव</label>
+        <input type="text" name="name" id="name" value="{{ vendor.name }}" placeholder="नाव" required class="form-input" autocomplete="off">
+    </div>
+
+    <div>
+        <label class="form-label">English Name</label>
+        <input type="text" name="name_en" id="name_en"
+               value="{{ vendor.name_en if vendor.name_en else '' }}"
+               placeholder="Auto-generated, you can edit"
+               class="form-input" autocomplete="off">
+    </div>
+
+    <div>
+        <label class="form-label">पत्ता</label>
+        <input type="text" name="address" value="{{ vendor.address }}" placeholder="पत्ता" required class="form-input">
+    </div>
+
+    <div>
+        <label class="form-label">दूध प्रकार</label>
+        <select name="milk_type" class="form-select">
+            <option value="cow" {% if vendor.milk_type=='cow' %}selected{% endif %}>🐄 गायीचे दूध</option>
+            <option value="buffalo" {% if vendor.milk_type=='buffalo' %}selected{% endif %}>🐃 म्हशीचे दूध</option>
+            <option value="both" {% if vendor.milk_type=='both' %}selected{% endif %}>दोन्ही</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="form-label">फोन नंबर</label>
+        <input type="text" name="phone" value="{{ vendor.phone }}" placeholder="फोन नंबर" class="form-input">
+    </div>
+
+    <div>
+        <label class="form-label">IFSC Code</label>
+        <input type="text" name="ifsc_code" value="{{ vendor.ifsc_code if vendor.ifsc_code else '' }}"
+            placeholder="SBIN0001234" class="form-input">
+    </div>
+
+    <div>
+        <label class="form-label">Bank Account Number</label>
+        <input type="text" name="account_no" value="{{ vendor.account_no if vendor.account_no else '' }}"
+            placeholder="123456789012" class="form-input">
+    </div>
+
+    <button type="submit" class="btn btn-primary">विक्रेता अपडेट करा</button>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+
+    var maName = document.getElementById("name");
+    var enName = document.getElementById("name_en");
+
+    if (!maName || !enName) return;
+
+    var userEditedEnglish = enName.value.trim().length > 0;
+
+    enName.addEventListener("input", function () {
+        userEditedEnglish = true;
+    });
+
+    var consonants = {
+        "क": "ka", "ख": "kha", "ग": "ga", "घ": "gha", "ङ": "nga",
+        "च": "cha", "छ": "chha", "ज": "ja", "झ": "jha", "ञ": "nya",
+        "ट": "ta", "ठ": "tha", "ड": "da", "ढ": "dha", "ण": "na",
+        "त": "ta", "थ": "tha", "द": "da", "ध": "dha", "न": "na",
+        "प": "pa", "फ": "pha", "ब": "ba", "भ": "bha", "म": "ma",
+        "य": "ya", "र": "ra", "ल": "la", "व": "va",
+        "श": "sha", "ष": "sha", "स": "sa", "ह": "ha",
+        "ळ": "la", "क्ष": "ksha", "ज्ञ": "dnya"
+    };
+
+    var vowels = {
+        "अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo",
+        "ऋ": "ri", "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au",
+        "अं": "an", "अः": "aha"
+    };
+
+    var matras = {
+        "ा": "a", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo",
+        "ृ": "ri", "े": "e", "ै": "ai", "ो": "o", "ौ": "au",
+        "ं": "n", "ः": "h", "ँ": "n"
+    };
+
+    var virama = "्";
+
+    function transliterateWord(word) {
+        var result = "";
+        var i = 0;
+        var len = word.length;
+
+        while (i < len) {
+            var ch = word[i];
+            var twoChar = word.substr(i, 2);
+
+            if (consonants[twoChar]) {
+                var base = consonants[twoChar].slice(0, -1);
+                var next = word[i + 2];
+
+                if (next === virama) {
+                    result += base;
+                    i += 3;
+                    continue;
+                } else if (matras[next]) {
+                    result += base + matras[next];
+                    i += 3;
+                    continue;
+                } else {
+                    var isWordFinal2 = (i + 2 >= len);
+                    result += isWordFinal2 ? base : consonants[twoChar];
+                    i += 2;
+                    continue;
+                }
+            }
+
+            if (consonants[ch]) {
+                var baseC = consonants[ch].slice(0, -1);
+                var nextCh = word[i + 1];
+
+                if (nextCh === virama) {
+                    result += baseC;
+                    i += 2;
+                    continue;
+                } else if (matras[nextCh]) {
+                    result += baseC + matras[nextCh];
+                    i += 2;
+                    continue;
+                } else {
+                    var isWordFinal1 = (i + 1 >= len);
+                    result += isWordFinal1 ? baseC : consonants[ch];
+                    i += 1;
+                    continue;
+                }
+            }
+
+            if (vowels[ch]) {
+                result += vowels[ch];
+                i += 1;
+                continue;
+            }
+
+            result += ch;
+            i += 1;
+        }
+
+        return result;
+    }
+
+    function toTitleCase(str) {
+        return str.replace(/\S+/g, function (w) {
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        });
+    }
+
+    function updateEnglishName() {
+        if (userEditedEnglish) return;
+
+        var marathi = maName.value;
+        if (!marathi.trim()) {
+            enName.value = "";
+            return;
+        }
+
+        var words = marathi.split(" ");
+        var transliterated = words.map(transliterateWord).join(" ");
+
+        enName.value = toTitleCase(transliterated);
+    }
+
+    maName.addEventListener("input", updateEnglishName);
+
+    if (!userEditedEnglish) {
+        updateEnglishName();
+    }
+
+})();
+</script>
+{% endblock %}
+

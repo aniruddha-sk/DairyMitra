@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}खाद्य पोती नोंदी संपादित करा{% endblock %}
+
+{% block content %}
+<div class="action-bar mb-4">
+  <a href="{{ url_for('edit_entry') }}" class="btn-pro btn-pro-back">
+    Back
+  </a>
+
+  <a href="{{ url_for('food_sack') }}" class="btn-pro btn-pro-add">
+    नवीन पोती नोंद जोडा
+  </a>
+</div>
+
+
+    <!-- Vendor select -->
+    <form method="POST" class="row g-2 align-items-end mb-4">
+        <div class="col-md-6">
+            <label class="form-label">विक्रेता निवडा</label>
+            <select name="vendor_id" class="form-select" required>
+                <option value="" disabled {% if not selected_vendor_id %}selected{% endif %}>विक्रेता निवडा</option>
+                {% for v in vendors %}
+                <option value="{{ v.vendor_id }}" {% if selected_vendor_id == v.vendor_id %}selected{% endif %}>
+                    {{ v.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-success w-100">डेटा आणा</button>
+        </div>
+    </form>
+
+    <div id="ajax-alert" class="mb-3"></div>
+
+    {% if sacks %}
+    <div class="table-wrap">
+        <table class="table table-bordered table-striped" id="sackTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>तारीख</th>
+                    <th>कंपनीचे नाव</th>
+                    <th>पोती संख्या</th>
+                    <th>दर (₹)</th>
+                    <th>एकूण रक्कम (₹)</th>
+                    <th>क्रिया</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sacks %}
+                <tr data-sack-id="{{ s.id }}">
+                    <td>
+                        {% if s.date is string %}
+                            {{ s.date }}
+                        {% else %}
+                            {{ s.date.strftime('%d/%m/%Y') }}
+                        {% endif %}
+                    </td>
+                    <td>{{ s.company_name }}</td>
+                    <td>{{ s.sack_qty }}</td>
+                    <td>{{ s.rate }}</td>
+                    <td>{{ s.total }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm delete-sack" 
+                                data-url="{{ url_for('delete_food_sack', sack_id=s.id) }}">
+                        <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif selected_vendor_id %}
+    <div class="alert alert-warning">⛔ कोणतीही नोंद आढळली नाही.</div>
+    {% endif %}
+</div>
+
+<script>
+// AJAX delete handler
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("delete-sack")) {
+        e.preventDefault();
+        if (!confirm("तुम्हाला खात्री आहे का?")) return;
+
+        const btn = e.target;
+        const row = btn.closest("tr");
+        const url = btn.getAttribute("data-url");
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            },
+            body: "confirm=1"
+        })
+        .then(async res => {
+            let data;
+            try {
+                data = await res.json();
+            } catch {
+                location.reload();
+                return;
+            }
+
+            const alertBox = document.getElementById("ajax-alert");
+            alertBox.innerHTML = "";
+            if (res.ok) {
+                row.remove();
+                alertBox.innerHTML = `<div class="alert alert-success">${data.message || "Deleted successfully."}</div>`;
+            } else {
+                alertBox.innerHTML = `<div class="alert alert-danger">${data.message || "Error deleting entry."}</div>`;
+            }
+        })
+        .catch(err => {
+            document.getElementById("ajax-alert").innerHTML =
+                `<div class="alert alert-danger">Network error. Please try again.</div>`;
+            console.error(err);
+        });
+    }
+});
+</script>
+{% endblock %}

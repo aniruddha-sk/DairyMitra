@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+
+backups/
+audit.log
+
+token.pickle
+client_secret.json
+dairymitr-backup-*.json
+
+tempCodeRunnerFile.py

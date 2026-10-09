@@ -1,0 +1,134 @@
+<aside id="sidebar">
+  <nav>
+
+    <!-- HOME -->
+    <a href="{{ url_for('dashboard') }}" class="sidebar-link">
+      <i data-lucide="home"></i>
+      <span>HOME</span>
+    </a>
+
+    <!-- ✅ STAFF MENU (NOW FOR BOTH) -->
+    <div class="sidebar-section">
+      <span class="section-title">MENU</span>
+
+      <a href="{{ url_for('milk_collection') }}" class="sidebar-link">
+        <i data-lucide="milk"></i>
+        <span>दूध जमा</span>
+      </a>
+
+      <a href="{{ url_for('milk_summary') }}" class="sidebar-link">
+        <i data-lucide="bar-chart-3"></i>
+        <span>दूध सारांश</span>
+      </a>
+
+      <a href="{{ url_for('vendor_range_summary') }}" class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>ग्राहक Report</span>
+      </a>
+
+      <a href="{{ url_for('food_sack') }}" class="sidebar-link">
+        <i data-lucide="wheat"></i>
+        <span>पेंड</span>
+      </a>
+
+      <a href="{{ url_for('edit_entry') }}" class="sidebar-link">
+        <i data-lucide="file-pen-line"></i>
+        <span>नोंदी बदला</span>
+      </a>
+    </div>
+
+    {% if session.get("role") != "staff" %}
+
+    <!-- OWNER EXTRA FEATURES -->
+
+    <!-- OPERATIONS -->
+    <div class="sidebar-section">
+      <span class="section-title">OPERATIONS</span>
+
+      <a href="{{ url_for('advance') }}" class="sidebar-link">
+        <i data-lucide="hand-coins"></i>
+        <span>ॲडव्हान्स</span>
+      </a>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="sidebar-section">
+      <span class="section-title">CUSTOMERS</span>
+
+      <a href="{{ url_for('add_vendor') }}" class="sidebar-link">
+        <i data-lucide="user-plus"></i>
+        <span>नवीन ग्राहक</span>
+      </a>
+
+      <a href="{{ url_for('vendor_list') }}" class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>ग्राहक यादी</span>
+      </a>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="sidebar-section">
+      <span class="section-title">FINANCE</span>
+
+      <a href="{{ url_for('calculation') }}" class="sidebar-link">
+        <i data-lucide="calculator"></i>
+        <span>हिशोब</span>
+      </a>
+
+      <a href="{{ url_for('payment') }}" class="sidebar-link">
+        <i data-lucide="credit-card"></i>
+        <span>पेमेंट</span>
+      </a>
+
+      <a href="{{ url_for('receipt_all_vendors') }}" class="sidebar-link">
+        <i data-lucide="receipt"></i>
+        <span>पावती</span>
+      </a>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="sidebar-section">
+      <span class="section-title">SYSTEM</span>
+
+      <a href="{{ url_for('milk_rate') }}" class="sidebar-link">
+        <i data-lucide="tag"></i>
+        <span>दूध दर</span>
+      </a>
+
+      <a href="{{ url_for('food_sack_rate') }}" class="sidebar-link">
+        <i data-lucide="leaf"></i>
+        <span>खाद्य दर</span>
+      </a>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div class="sidebar-section">
+      <span class="section-title">ANALYSIS</span>
+
+      <a href="{{ url_for('milk_prediction_page') }}" class="sidebar-link">
+        <span>🧠 Milk Prediction</span>
+      </a>
+
+      <a href="{{ url_for('vendor_performance') }}" class="sidebar-link">
+        <span>📊 Vendor Performance</span>
+      </a>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="sidebar-section">
+      <a href="{{ url_for('settings') }}" class="sidebar-link">
+        <i data-lucide="settings"></i>
+        <span>Setting</span>
+      </a>
+    </div>
+
+    {% endif %}
+
+    <!-- LOGOUT -->
+    <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+      <i data-lucide="log-out"></i>
+      <span>Logout</span>
+    </a>
+
+  </nav>
+</aside>

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}बँक सेटिंग्स - Dairy Mitr{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title flex items-center gap-2">
+    <div data-lucide="landmark"></div>
+    बँक सेटिंग्स
+</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="table-wrap">
+
+    <form method="POST">
+
+        <div class="grid grid-cols-2 gap-4">
+
+            <div>
+                <label class="form-label">खातेदाराचे नाव</label>
+                <input type="text"
+                       name="account_holder_name"
+                       class="form-input"
+                       value="{{ bank.account_holder_name if bank else '' }}"
+                       required>
+            </div>
+
+            <div>
+                <label class="form-label">बँकेचे नाव</label>
+                <input type="text"
+                       name="bank_name"
+                       class="form-input"
+                       value="{{ bank.bank_name if bank else '' }}"
+                       required>
+            </div>
+
+            <div>
+                <label class="form-label">शाखा</label>
+                <input type="text"
+                       name="branch_name"
+                       class="form-input"
+                       value="{{ bank.branch_name if bank else '' }}">
+            </div>
+
+            <div>
+                <label class="form-label">खाते क्रमांक</label>
+                <input type="text"
+                       name="account_no"
+                       class="form-input"
+                       value="{{ bank.account_no if bank else '' }}"
+                       required>
+            </div>
+
+            <div>
+                <label class="form-label">IFSC Code</label>
+                <input type="text"
+                       name="ifsc_code"
+                       class="form-input"
+                       value="{{ bank.ifsc_code if bank else '' }}"
+                       style="text-transform:uppercase"
+                       required>
+            </div>
+
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-primary">
+                {% if bank %}
+                    Update Bank Details
+                {% else %}
+                    Save Bank Details
+                {% endif %}
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

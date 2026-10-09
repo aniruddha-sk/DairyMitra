@@ -1,0 +1,214 @@
+{% extends "customer/customer_base.html" %}
+
+{% block title %}Milk Payment Receipt{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <h1 class="page-title">Milk Payment Receipt</h1>
+
+    <!-- ================= Receipt Filter Form ================= -->
+    <section class="section">
+        <form method="POST" action="{{ url_for('generate_receipt', vendor_id=vendor.vendor_id) }}" class="receipt-form">
+
+            <div>
+                <label class="form-label" for="from_date">From Date</label>
+                <input
+                    type="date"
+                    id="from_date"
+                    name="from_date"
+                    class="form-input"
+                    value="{{ from_date or '' }}"
+                    required
+                >
+            </div>
+
+            <div>
+                <label class="form-label" for="to_date">To Date</label>
+                <input
+                    type="date"
+                    id="to_date"
+                    name="to_date"
+                    class="form-input"
+                    value="{{ to_date or '' }}"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary">Generate Receipt</button>
+
+        </form>
+    </section>
+
+    {% if receipt %}
+    <div class="no-print">
+        <button type="button" class="btn print-btn" onclick="window.print()">Print</button>
+        <a href="{{ url_for('vendor_list') }}" class="btn btn-secondary">Back</a>
+    </div>
+    {% endif %}
+
+    <!-- ================= Receipt ================= -->
+    <div class="receipt-wrapper">
+
+        {% if receipt %}
+        <div class="receipt-box">
+
+            <!-- Header -->
+            <div class="receipt-header">
+                <div class="receipt-dairy-name">DairyMitr</div>
+                <div class="receipt-title">Milk Collection Receipt</div>
+                <p>Dairy Name: {{ session.get('dairy_name', '') }}</p>
+                <p>Receipt Period: {{ receipt.from_date }} To {{ receipt.to_date }}</p>
+                <p>Print Date: {{ receipt.print_date }}</p>
+            </div>
+
+            <!-- Vendor Information -->
+            <div class="receipt-vendor">
+                <table class="table">
+                    <tr>
+                        <td>Vendor ID</td>
+                        <td>{{ vendor.vendor_id }}</td>
+                        <td>Vendor Name</td>
+                        <td>{{ vendor.name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td>{{ vendor.address }}</td>
+                        <td>Phone Number</td>
+                        <td>{{ vendor.phone }}</td>
+                    </tr>
+                    <tr>
+                        <td>Milk Type</td>
+                        <td>{{ vendor.milk_type }}</td>
+                        <td>Account Number</td>
+                        <td>{{ vendor.account_no }}</td>
+                    </tr>
+                    <tr>
+                        <td>IFSC Code</td>
+                        <td>{{ vendor.ifsc_code }}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Milk Collection Table -->
+            <h3 class="receipt-section-title">Milk Collection Details</h3>
+            <table class="table receipt-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Cow Morning</th>
+                        <th>Cow Evening</th>
+                        <th>Buffalo Morning</th>
+                        <th>Buffalo Evening</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in receipt.daily_rows %}
+                    <tr>
+                        <td>{{ row.display_date }}</td>
+                        <td>{{ row.cow_morning }}</td>
+                        <td>{{ row.cow_evening }}</td>
+                        <td>{{ row.buffalo_morning }}</td>
+                        <td>{{ row.buffalo_evening }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td><strong>{{ receipt.total_cow_morning }}</strong></td>
+                        <td><strong>{{ receipt.total_cow_evening }}</strong></td>
+                        <td><strong>{{ receipt.total_buffalo_morning }}</strong></td>
+                        <td><strong>{{ receipt.total_buffalo_evening }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>Total Cow Milk: {{ receipt.total_cow_milk }} L</p>
+            <p>Total Buffalo Milk: {{ receipt.total_buffalo_milk }} L</p>
+
+            <!-- Rate Table -->
+            <table class="table rate-table">
+                <tr>
+                    <td>Cow Rate</td>
+                    <td>{{ receipt.cow_rate }}</td>
+                    <td>Cow Amount</td>
+                    <td>{{ receipt.cow_amount }}</td>
+                </tr>
+                <tr>
+                    <td>Buffalo Rate</td>
+                    <td>{{ receipt.buffalo_rate }}</td>
+                    <td>Buffalo Amount</td>
+                    <td>{{ receipt.buffalo_amount }}</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Total Milk Amount</strong></td>
+                    <td><strong>{{ receipt.total_milk_amount }}</strong></td>
+                </tr>
+            </table>
+
+            <!-- Food Sack Table -->
+            <h3 class="receipt-section-title">Food Sack Details</h3>
+            <table class="table receipt-table">
+                <thead>
+                    <tr>
+                        <th>Feed Name</th>
+                        <th>Rate</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fs in receipt.food_sack_rows %}
+                    <tr>
+                        <td>{{ fs.name }}</td>
+                        <td>{{ fs.sack_rate }}</td>
+                        <td>{{ fs.sack_qty }}</td>
+                        <td>{{ fs.total_cost }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3"><strong>Total Food Sack Amount</strong></td>
+                        <td><strong>{{ receipt.total_food_sack }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Advance -->
+            <p>Advance Amount: {{ receipt.total_advance }}</p>
+
+            <!-- Final Summary -->
+            <table class="table summary-table">
+                <tr>
+                    <td>Milk Amount</td>
+                    <td>{{ receipt.total_milk_amount }}</td>
+                </tr>
+                <tr>
+                    <td>Food Sack Amount</td>
+                    <td>{{ receipt.total_food_sack }}</td>
+                </tr>
+                <tr>
+                    <td>Advance Amount</td>
+                    <td>{{ receipt.total_advance }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Net Payable</strong></td>
+                    <td><strong>{{ receipt.net_payable }}</strong></td>
+                </tr>
+            </table>
+
+            <!-- Signatures -->
+            <div class="receipt-signatures">
+                <div class="receipt-sign-left">Farmer Signature</div>
+                <div class="receipt-sign-right">Authorized Signature</div>
+            </div>
+
+        </div>
+        {% else %}
+        <p class="receipt-empty">Please select From Date and To Date, then click Generate Receipt.</p>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

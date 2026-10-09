@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}एकूण दूध संकलन{% endblock %}
+
+{% block content %}
+<h2 class="page-title">🥛 एकूण दूध संकलन</h2>
+
+<form method="POST" action="{{ url_for('milk_summary') }}" class="grid gap-4 md:grid-cols-3 mb-6">
+    <div>
+        <label class="form-label">पासून तारीख</label>
+        <input type="date" name="from_date" required value="{{ from_date }}" class="form-input">
+    </div>
+    <div>
+        <label class="form-label">पर्यंत तारीख</label>
+        <input type="date" name="to_date" required value="{{ to_date }}" class="form-input">
+    </div>
+    <div class="flex items-end">
+        <button type="submit" class="btn btn-primary w-full">सारांश पहा</button>
+    </div>
+</form>
+
+{% if from_date and to_date %}
+<div class="grid-cards">
+    <!-- सकाळी/संध्याकाळी -->
+    <div class="card">
+        <h5>सकाळी गाय दूध</h5>
+        <p class="text-xl font-bold">{{ totals.cow_morning | round(1) }} लि</p>
+    </div>
+    <div class="card">
+        <h5>संध्याकाळी गाय दूध</h5>
+        <p class="text-xl font-bold">{{ totals.cow_evening | round(1) }} लि</p>
+    </div>
+    <div class="card">
+        <h5>सकाळी म्हैस दूध</h5>
+        <p class="text-xl font-bold">{{ totals.buffalo_morning | round(1) }} लि</p>
+    </div>
+    <div class="card">
+        <h5>संध्याकाळी म्हैस दूध</h5>
+        <p class="text-xl font-bold">{{ totals.buffalo_evening | round(1) }} लि</p>
+    </div>
+</div>
+
+<div class="grid-cards mt-6">
+    <!-- एकूण सारांश -->
+    <div class="card bg-slate-50">
+        <h5>एकूण गाय दूध</h5>
+        <p class="text-2xl font-bold text-green-600">{{ totals.cow_total | round(1) }} लि</p>
+    </div>
+    <div class="card bg-slate-50">
+        <h5>एकूण म्हैस दूध</h5>
+        <p class="text-2xl font-bold text-green-600">{{ totals.buffalo_total | round(1) }} लि</p>
+    </div>
+    <div class="card bg-indigo-50">
+        <h5>एकूण दूध (गाय + म्हैस)</h5>
+        <p class="text-2xl font-bold text-indigo-600">{{ totals.grand_total | round(1) }} लि</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

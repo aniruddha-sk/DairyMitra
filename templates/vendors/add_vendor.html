@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}ग्राहक जोडा{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title flex items-center gap-2">
+  <div class="icon-user-plus" data-lucide="user-plus"></div>
+  ग्राहक जोडा
+</h2>
+
+<!-- FLASH MESSAGE -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+        <div style="
+            padding:12px;
+            margin-bottom:15px;
+            border-radius:8px;
+            background:#ffebee;
+            color:#b71c1c;
+            font-weight:600;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="POST"
+      class="section grid gap-4 max-w-lg">
+
+    <!-- Vendor Name (Marathi) -->
+    <div>
+        <label class="form-label">ग्राहकाचे नाव</label>
+        <input type="text"
+               name="name"
+               id="name"
+               placeholder="ग्राहकाचे नाव"
+               value="{{ name if name else '' }}"
+               required
+               class="form-input"
+               autocomplete="off">
+    </div>
+
+    <!-- Vendor Name (English) - auto transliterated, editable -->
+    <div>
+        <label class="form-label">English Name</label>
+        <input type="text"
+               name="name_en"
+               id="name_en"
+               placeholder="Auto-generated, you can edit"
+               value="{{ name_en if name_en else '' }}"
+               class="form-input"
+               autocomplete="off">
+    </div>
+
+    <!-- Vendor ID -->
+    <div>
+        <label class="form-label">ग्राहक ID</label>
+
+        <input type="number"
+               name="vendor_id"
+               value="{{ vendor_id if vendor_id else next_vendor_id }}"
+               required
+               class="form-input">
+
+        <small style="color:gray">
+            (हा ID auto आहे, पण तुम्ही बदलू शकता)
+        </small>
+    </div>
+
+    <!-- Address -->
+    <div>
+        <label class="form-label">गाव</label>
+        <input type="text"
+               name="address"
+               value="{{ address if address else '' }}"
+               placeholder="गाव"
+               required
+               class="form-input">
+    </div>
+
+    <!-- Milk Type -->
+    <div>
+        <label class="form-label">दूध प्रकार</label>
+
+        <select name="milk_type" required class="form-select">
+
+            <option value="cow"
+            {% if milk_type == 'cow' %}selected{% endif %}>
+            गायीचे दूध
+            </option>
+
+            <option value="buffalo"
+            {% if milk_type == 'buffalo' %}selected{% endif %}>
+            म्हशीचे दूध
+            </option>
+
+            <option value="both"
+            {% if milk_type == 'both' %}selected{% endif %}>
+            गाय - म्हैस
+            </option>
+
+        </select>
+    </div>
+
+    <!-- Phone -->
+    <div>
+        <label class="form-label">फोन नंबर</label>
+
+        <input type="text"
+               name="phone"
+               value="{{ phone if phone else '' }}"
+               placeholder="फोन नंबर"
+               class="form-input">
+    </div>
+
+
+    <div>
+    <label class="form-label">IFSC Code</label>
+    <input
+        type="text"
+        name="ifsc_code"
+        value="{{ ifsc_code if ifsc_code else '' }}"
+        class="form-input"
+        placeholder="SBIN0001234">
+</div>
+
+<div>
+    <label class="form-label">Bank Account Number</label>
+    <input
+        type="text"
+        name="account_no"
+        value="{{ account_no if account_no else '' }}"
+        class="form-input"
+        placeholder="123456789012">
+</div>
+
+    <!-- Submit -->
+    <button type="submit"
+            class="btn btn-primary">
+        ग्राहक जोडा
+    </button>
+
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+
+    var maName = document.getElementById("name");
+    var enName = document.getElementById("name_en");
+
+    if (!maName || !enName) return;
+
+    var userEditedEnglish = enName.value.trim().length > 0;
+
+    enName.addEventListener("input", function () {
+        userEditedEnglish = true;
+    });
+
+    var consonants = {
+        "क": "ka", "ख": "kha", "ग": "ga", "घ": "gha", "ङ": "nga",
+        "च": "cha", "छ": "chha", "ज": "ja", "झ": "jha", "ञ": "nya",
+        "ट": "ta", "ठ": "tha", "ड": "da", "ढ": "dha", "ण": "na",
+        "त": "ta", "थ": "tha", "द": "da", "ध": "dha", "न": "na",
+        "प": "pa", "फ": "pha", "ब": "ba", "भ": "bha", "म": "ma",
+        "य": "ya", "र": "ra", "ल": "la", "व": "va",
+        "श": "sha", "ष": "sha", "स": "sa", "ह": "ha",
+        "ळ": "la", "क्ष": "ksha", "ज्ञ": "dnya"
+    };
+
+    var vowels = {
+        "अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo",
+        "ऋ": "ri", "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au",
+        "अं": "an", "अः": "aha"
+    };
+
+    var matras = {
+        "ा": "a", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo",
+        "ृ": "ri", "े": "e", "ै": "ai", "ो": "o", "ौ": "au",
+        "ं": "n", "ः": "h", "ँ": "n"
+    };
+
+    var virama = "्";
+
+    function transliterateWord(word) {
+        var result = "";
+        var i = 0;
+        var len = word.length;
+
+        while (i < len) {
+            var ch = word[i];
+            var twoChar = word.substr(i, 2);
+
+            if (consonants[twoChar]) {
+                var base = consonants[twoChar].slice(0, -1);
+                var next = word[i + 2];
+
+                if (next === virama) {
+                    result += base;
+                    i += 3;
+                    continue;
+                } else if (matras[next]) {
+                    result += base + matras[next];
+                    i += 3;
+                    continue;
+                } else {
+                    var isWordFinal2 = (i + 2 >= len);
+                    result += isWordFinal2 ? base : consonants[twoChar];
+                    i += 2;
+                    continue;
+                }
+            }
+
+            if (consonants[ch]) {
+                var baseC = consonants[ch].slice(0, -1);
+                var nextCh = word[i + 1];
+
+                if (nextCh === virama) {
+                    result += baseC;
+                    i += 2;
+                    continue;
+                } else if (matras[nextCh]) {
+                    result += baseC + matras[nextCh];
+                    i += 2;
+                    continue;
+                } else {
+                    var isWordFinal1 = (i + 1 >= len);
+                    result += isWordFinal1 ? baseC : consonants[ch];
+                    i += 1;
+                    continue;
+                }
+            }
+
+            if (vowels[ch]) {
+                result += vowels[ch];
+                i += 1;
+                continue;
+            }
+
+            result += ch;
+            i += 1;
+        }
+
+        return result;
+    }
+
+    function toTitleCase(str) {
+        return str.replace(/\S+/g, function (w) {
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        });
+    }
+
+    function updateEnglishName() {
+        if (userEditedEnglish) return;
+
+        var marathi = maName.value;
+        if (!marathi.trim()) {
+            enName.value = "";
+            return;
+        }
+
+        var words = marathi.split(" ");
+        var transliterated = words.map(transliterateWord).join(" ");
+
+        enName.value = toTitleCase(transliterated);
+    }
+
+    maName.addEventListener("input", updateEnglishName);
+
+    if (!userEditedEnglish) {
+        updateEnglishName();
+    }
+
+})();
+</script>
+{% endblock %}

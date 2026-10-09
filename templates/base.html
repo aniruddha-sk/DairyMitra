@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="mr">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <title>{% block title %}Dairy Mitr{% endblock %}</title>
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- =====================================================
+       FONTS
+  ====================================================== -->
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+  <!-- =====================================================
+       FONT AWESOME
+  ====================================================== -->
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        rel="stylesheet" />
+
+  <!-- =====================================================
+       CSS
+  ====================================================== -->
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}?v=20260918" />
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/receipt.css') }}?v=20260918" />
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/about.css') }}?v=20260918" />
+
+  <!-- =====================================================
+       PWA SETUP
+  ====================================================== -->
+
+  <link rel="manifest"
+        href="{{ url_for('static', filename='manifest.json') }}">
+
+  <meta name="theme-color"
+        content="#16a34a" />
+
+  <meta name="mobile-web-app-capable"
+        content="yes" />
+
+  <!-- App Icons -->
+
+  <link rel="apple-touch-icon"
+        href="{{ url_for('static', filename='images/Logo2.png') }}">
+
+  <link rel="icon"
+        href="{{ url_for('static', filename='images/Logo2.png') }}">
+
+  {% block head %}{% endblock %}
+
+</head>
+
+
+<body>
+
+  <!-- =====================================================
+       OFFLINE BANNER
+  ====================================================== -->
+
+  <div id="offline-banner">
+    You are offline
+  </div>
+
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <header>
+    {% include "header.html" %}
+  </header>
+
+
+  <!-- =====================================================
+       OVERLAY
+  ====================================================== -->
+
+  <div id="overlay"></div>
+
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  {% include "sidebar.html" %}
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <main id="app-content">
+
+    {% block content %}{% endblock %}
+
+  </main>
+
+
+  <!-- =====================================================
+       GLOBAL LOADER
+  ====================================================== -->
+
+  <div id="global-loader">
+
+    <div class="loader-box">
+
+      <div class="spinner"></div>
+
+      Processing...
+
+    </div>
+
+  </div>
+
+
+  {% block scripts %}{% endblock %}
+
+
+  <!-- =====================================================
+       SIDEBAR SCRIPT
+  ====================================================== -->
+
+  <script>
+
+    const btn =
+      document.getElementById("sidebar-toggle");
+
+    const sidebar =
+      document.getElementById("sidebar");
+
+    const overlay =
+      document.getElementById("overlay");
+
+
+    if (btn) {
+
+      btn.onclick = () => {
+
+        sidebar.classList.add("sidebar-open");
+
+        overlay.classList.add("active");
+
+      };
+
+    }
+
+
+    if (overlay) {
+
+      overlay.onclick = () => {
+
+        sidebar.classList.remove("sidebar-open");
+
+        overlay.classList.remove("active");
+
+      };
+
+    }
+
+  </script>
+
+
+  <!-- =====================================================
+       LUCIDE ICONS
+  ====================================================== -->
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+
+    lucide.createIcons();
+
+  </script>
+
+
+  <!-- =====================================================
+       ICONIFY
+  ====================================================== -->
+
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+
+
+
+  <!-- =====================================================
+     DAIRYMITR AI CHATBOT
+===================================================== -->
+
+<style>
+  #dairyAiButton{
+    position:fixed;
+    right:24px;
+    bottom:24px;
+    width:62px;
+    height:62px;
+    border:0;
+    border-radius:50%;
+    cursor:pointer;
+    z-index:9999;
+    background:linear-gradient(135deg,#16a34a,#15803d);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:27px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    transition:transform .25s ease,box-shadow .25s ease;
+  }
+
+  #dairyAiButton:hover{
+    transform:scale(1.08);
+    box-shadow:0 10px 35px rgba(22,163,74,.45);
+  }
+
+  #dairyAiButton::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border:2px solid #22c55e;
+    border-radius:50%;
+    animation:dairyAiPulse 2s infinite;
+    opacity:0;
+  }
+
+  @keyframes dairyAiPulse{
+    0%{transform:scale(1);opacity:.7}
+    100%{transform:scale(1.5);opacity:0}
+  }
+
+  #dairyAiChat{
+    position:fixed;
+    right:24px;
+    bottom:98px;
+    width:390px;
+    height:560px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:20px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+    overflow:hidden;
+    z-index:9998;
+    display:none;
+    flex-direction:column;
+    animation:dairyAiOpen .25s ease;
+  }
+
+  #dairyAiChat.active{display:flex}
+
+  @keyframes dairyAiOpen{
+    from{opacity:0;transform:translateY(15px) scale(.97)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+
+  .dairy-ai-header{
+    min-height:72px;
+    padding:12px 16px;
+    background:linear-gradient(135deg,#15803d,#16a34a);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .dairy-ai-header-left{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+
+  .dairy-ai-avatar{
+    width:43px;
+    height:43px;
+    border-radius:50%;
+    background:rgba(255,255,255,.18);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+  }
+
+  .dairy-ai-title{
+    font-size:16px;
+    font-weight:700;
+    line-height:1.2;
+  }
+
+  .dairy-ai-status{
+    font-size:11px;
+    opacity:.9;
+    margin-top:3px;
+  }
+
+  .dairy-ai-status-dot{
+    display:inline-block;
+    width:7px;
+    height:7px;
+    background:#86efac;
+    border-radius:50%;
+    margin-right:4px;
+  }
+
+  .dairy-ai-close{
+    width:34px;
+    height:34px;
+    border:0;
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .dairy-ai-close:hover{background:rgba(255,255,255,.22)}
+
+  .dairy-ai-messages{
+    flex:1;
+    padding:18px 14px;
+    overflow-y:auto;
+    background:#f8fafc;
+    scroll-behavior:smooth;
+  }
+
+  .dairy-ai-message{
+    display:flex;
+    margin-bottom:14px;
+  }
+
+  .dairy-ai-message.user-message{justify-content:flex-end}
+  .dairy-ai-message.ai-message{justify-content:flex-start}
+
+  .dairy-ai-bubble{
+    max-width:82%;
+    padding:10px 13px;
+    border-radius:15px;
+    font-size:14px;
+    line-height:1.5;
+    word-wrap:break-word;
+    white-space:pre-wrap;
+  }
+
+  .dairy-ai-message.ai-message .dairy-ai-bubble{
+    background:#fff;
+    color:#1f2937;
+    border:1px solid #e5e7eb;
+    border-bottom-left-radius:5px;
+  }
+
+  .dairy-ai-message.user-message .dairy-ai-bubble{
+    background:#16a34a;
+    color:#fff;
+    border-bottom-right-radius:5px;
+  }
+
+  .dairy-ai-input-area{
+    padding:11px;
+    background:#fff;
+    border-top:1px solid #e5e7eb;
+    display:flex;
+    gap:8px;
+  }
+
+  #dairyAiInput{
+    flex:1;
+    min-width:0;
+    height:44px;
+    border:1px solid #d1d5db;
+    border-radius:13px;
+    padding:0 13px;
+    outline:none;
+    font-size:14px;
+    background:#f9fafb;
+  }
+
+  #dairyAiInput:focus{
+    border-color:#16a34a;
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(22,163,74,.1);
+  }
+
+  #dairyAiSend{
+    width:44px;
+    height:44px;
+    border:0;
+    border-radius:13px;
+    background:#16a34a;
+    color:#fff;
+    cursor:pointer;
+    font-size:18px;
+    flex-shrink:0;
+  }
+
+  #dairyAiSend:hover{background:#15803d}
+  #dairyAiSend:disabled{opacity:.5;cursor:not-allowed}
+
+  .dairy-ai-typing{
+    display:none;
+    padding:10px 13px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:15px;
+    width:fit-content;
+  }
+
+  .dairy-ai-typing span{
+    display:inline-block;
+    width:6px;
+    height:6px;
+    margin:0 2px;
+    background:#16a34a;
+    border-radius:50%;
+    animation:dairyTyping 1.2s infinite;
+  }
+
+  .dairy-ai-typing span:nth-child(2){animation-delay:.15s}
+  .dairy-ai-typing span:nth-child(3){animation-delay:.3s}
+
+  @keyframes dairyTyping{
+    0%,60%,100%{transform:translateY(0)}
+    30%{transform:translateY(-5px)}
+  }
+
+  @media(max-width:600px){
+    #dairyAiChat{
+      right:10px;
+      bottom:85px;
+      width:calc(100vw - 20px);
+      height:min(600px,calc(100vh - 110px));
+      border-radius:18px;
+    }
+
+    #dairyAiButton{
+      right:16px;
+      bottom:16px;
+      width:58px;
+      height:58px;
+    }
+  }
+</style>
+
+<!-- AI FLOATING BUTTON -->
+<button
+  id="dairyAiButton"
+  type="button"
+  aria-label="Open DairyMitr AI"
+  title="DairyMitr AI">
+  🤖
+</button>
+
+<!-- AI CHAT WINDOW -->
+<div id="dairyAiChat">
+
+  <!-- HEADER -->
+  <div class="dairy-ai-header">
+
+    <div class="dairy-ai-header-left">
+      <div class="dairy-ai-avatar">🤖</div>
+
+      <div>
+        <div class="dairy-ai-title">DairyMitr AI</div>
+
+        <div class="dairy-ai-status">
+          <span class="dairy-ai-status-dot"></span>
+          Online
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="dairy-ai-close"
+      id="dairyAiClose"
+      type="button"
+      aria-label="Close">
+      ×
+    </button>
+
+  </div>
+
+  <!-- MESSAGES -->
+  <div
+    id="dairyAiMessages"
+    class="dairy-ai-messages">
+
+    <div class="dairy-ai-message ai-message">
+      <div class="dairy-ai-bubble">
+        नमस्कार! 👋 मी <b>DairyMitr AI</b> आहे.
+        <br><br>
+        तुम्ही मला दूध संकलन, vendor, payment, advance,
+        food sack किंवा DairyMitr बद्दल काहीही विचारू शकता. 🥛
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TYPING INDICATOR -->
+  <div style="padding:0 14px 10px;">
+    <div id="dairyAiTyping" class="dairy-ai-typing">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="dairy-ai-input-area">
+
+    <input
+      type="text"
+      id="dairyAiInput"
+      placeholder="काहीतरी विचारा..."
+      autocomplete="off"
+      maxlength="2000">
+
+    <button
+      id="dairyAiSend"
+      type="button"
+      aria-label="Send">
+      ➤
+    </button>
+
+  </div>
+
+</div>
+
+<!-- AI JAVASCRIPT -->
+<script>
+(function(){
+
+  "use strict";
+
+  const aiButton = document.getElementById("dairyAiButton");
+  const aiChat = document.getElementById("dairyAiChat");
+  const aiClose = document.getElementById("dairyAiClose");
+  const input = document.getElementById("dairyAiInput");
+  const sendButton = document.getElementById("dairyAiSend");
+  const messages = document.getElementById("dairyAiMessages");
+  const typing = document.getElementById("dairyAiTyping");
+
+  if(
+    !aiButton ||
+    !aiChat ||
+    !aiClose ||
+    !input ||
+    !sendButton ||
+    !messages ||
+    !typing
+  ){
+    console.error("DairyMitr AI: required elements not found.");
+    return;
+  }
+
+  /* ==========================================================
+     OPEN CHAT
+  ========================================================== */
+
+  function openDairyAI(){
+
+    aiChat.classList.add("active");
+
+    setTimeout(function(){
+      input.focus();
+      scrollMessages();
+    },100);
+  }
+
+
+  /* ==========================================================
+     CLOSE CHAT
+  ========================================================== */
+
+  function closeDairyAI(){
+
+    aiChat.classList.remove("active");
+  }
+
+
+  /* ==========================================================
+     SCROLL
+  ========================================================== */
+
+  function scrollMessages(){
+
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+
+  /* ==========================================================
+     ESCAPE HTML
+  ========================================================== */
+
+  function escapeDairyAI(text){
+
+    const div = document.createElement("div");
+
+    div.textContent = String(text ?? "");
+
+    return div.innerHTML;
+  }
+
+
+  /* ==========================================================
+     FORMAT AI RESPONSE
+  ========================================================== */
+
+  function formatDairyAIResponse(text){
+
+    if(!text){
+
+      return "माफ करा, AI response मिळाला नाही.";
+    }
+
+    return escapeDairyAI(text)
+      .replace(/\n/g,"<br>");
+  }
+
+
+  /* ==========================================================
+     ADD MESSAGE
+  ========================================================== */
+
+  function addDairyAIMessage(message,type){
+
+    const div = document.createElement("div");
+
+    div.className =
+      "dairy-ai-message " +
+      (type === "user"
+        ? "user-message"
+        : "ai-message");
+
+    const bubble = document.createElement("div");
+
+    bubble.className = "dairy-ai-bubble";
+
+    bubble.innerHTML = message;
+
+    div.appendChild(bubble);
+
+    messages.appendChild(div);
+
+    scrollMessages();
+  }
+
+
+  /* ==========================================================
+     TYPING
+  ========================================================== */
+
+  function showDairyAITyping(){
+
+    typing.style.display = "block";
+
+    scrollMessages();
+  }
+
+
+  function hideDairyAITyping(){
+
+    typing.style.display = "none";
+  }
+
+
+  /* ==========================================================
+     SEND MESSAGE
+  ========================================================== */
+
+  async function sendDairyAIMessage(){
+
+    const message = input.value.trim();
+
+    if(!message){
+      return;
+    }
+
+    /* USER MESSAGE */
+    addDairyAIMessage(
+      escapeDairyAI(message),
+      "user"
+    );
+
+    input.value = "";
+
+    /* DISABLE */
+    sendButton.disabled = true;
+    input.disabled = true;
+
+    /* TYPING */
+    showDairyAITyping();
+
+    try{
+
+      const response = await fetch(
+        "/api/chat",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":"application/json",
+            "Accept":"application/json"
+          },
+
+          credentials:"same-origin",
+
+          body:JSON.stringify({
+            message:message
+          })
+        }
+      );
+
+
+      /* RESPONSE JSON */
+      let data = {};
+
+      try{
+        data = await response.json();
+      }
+      catch(jsonError){
+
+        throw new Error(
+          "Server returned an invalid response."
+        );
+      }
+
+
+      hideDairyAITyping();
+
+
+      /* HTTP ERROR */
+      if(!response.ok){
+
+        addDairyAIMessage(
+          "❌ " +
+          escapeDairyAI(
+            data.error ||
+            data.message ||
+            "Something went wrong."
+          ),
+          "ai"
+        );
+
+        return;
+      }
+
+
+      /* SUCCESS */
+      if(data.success === false){
+
+        addDairyAIMessage(
+          "⚠️ " +
+          escapeDairyAI(
+            data.error ||
+            "AI response मिळाला नाही."
+          ),
+          "ai"
+        );
+
+        return;
+      }
+
+
+      /*
+        Backend may return either:
+        data.response
+        OR
+        data.reply
+      */
+
+      const aiResponse =
+        data.response ??
+        data.reply ??
+        data.message ??
+        "";
+
+
+      addDairyAIMessage(
+        formatDairyAIResponse(aiResponse),
+        "ai"
+      );
+
+    }
+    catch(error){
+
+      hideDairyAITyping();
+
+      console.error(
+        "DairyMitr AI Error:",
+        error
+      );
+
+      addDairyAIMessage(
+        "❌ Server शी connection होऊ शकले नाही. " +
+        "कृपया पुन्हा try करा.",
+        "ai"
+      );
+
+    }
+    finally{
+
+      sendButton.disabled = false;
+      input.disabled = false;
+
+      input.focus();
+    }
+  }
+
+
+  /* ==========================================================
+     EVENTS
+  ========================================================== */
+
+  aiButton.addEventListener(
+    "click",
+    openDairyAI
+  );
+
+
+  aiClose.addEventListener(
+    "click",
+    closeDairyAI
+  );
+
+
+  sendButton.addEventListener(
+    "click",
+    sendDairyAIMessage
+  );
+
+
+  input.addEventListener(
+    "keydown",
+    function(event){
+
+      if(event.key === "Enter"){
+
+        event.preventDefault();
+
+        sendDairyAIMessage();
+      }
+    }
+  );
+
+
+  document.addEventListener(
+    "keydown",
+    function(event){
+
+      if(
+        event.key === "Escape" &&
+        aiChat.classList.contains("active")
+      ){
+
+        closeDairyAI();
+      }
+    }
+  );
+
+
+  /* ==========================================================
+     GLOBAL FUNCTIONS
+     ==========================================================
+     Keeps compatibility with the original inline
+     onclick="openDairyAI()" / closeDairyAI() approach.
+  ========================================================== */
+
+  window.openDairyAI = openDairyAI;
+  window.closeDairyAI = closeDairyAI;
+  window.sendDairyAIMessage = sendDairyAIMessage;
+
+})();
+</script>
+
+<!-- =====================================================
+       SERVICE WORKER REGISTER
+  ====================================================== -->
+
+  <script>
+
+  if ("serviceWorker" in navigator) {
+
+
+      navigator.serviceWorker
+
+          .register(
+
+              "{{ url_for(
+                  'static',
+                  filename='service-worker.js'
+              ) }}?v=23",
+
+              {
+                  updateViaCache: "none"
+              }
+
+          )
+
+
+          .then(
+              (registration) => {
+
+
+                  console.log(
+                      "DairyMitr Service Worker Registered"
+                  );
+
+
+                  registration.update();
+
+
+              }
+          )
+
+
+          .catch(
+              (error) => {
+
+
+                  console.error(
+                      "Service Worker Error:",
+                      error
+                  );
+
+
+              }
+          );
+
+
+  }
+
+  </script>
+
+
+
+  <!-- =====================================================
+       ONLINE / OFFLINE BANNER
+  ====================================================== -->
+
+  <script>
+
+    function updateOnlineStatus() {
+
+
+      const banner =
+          document.getElementById(
+              "offline-banner"
+          );
+
+
+      if (!navigator.onLine) {
+
+          banner.style.display =
+              "block";
+
+      }
+
+      else {
+
+          banner.style.display =
+              "none";
+
+      }
+
+    }
+
+
+    window.addEventListener(
+        "load",
+        updateOnlineStatus
+    );
+
+
+    window.addEventListener(
+        "online",
+        updateOnlineStatus
+    );
+
+
+    window.addEventListener(
+        "offline",
+        updateOnlineStatus
+    );
+
+  </script>
+
+
+
+  <!-- =====================================================
+       INSTALL PWA BUTTON
+  ====================================================== -->
+
+  <script>
+
+  let deferredPrompt;
+
+
+  window.addEventListener(
+      "beforeinstallprompt",
+      (e) => {
+
+
+          if (
+              localStorage.getItem(
+                  "installDismissed"
+              ) === "true"
+          ) {
+
+              return;
+
+          }
+
+
+          e.preventDefault();
+
+          deferredPrompt = e;
+
+
+          const banner =
+              document.createElement(
+                  "div"
+              );
+
+
+          banner.innerHTML = `
+
+          <div
+            id="installBanner"
+            style="
+
+              position:fixed;
+
+              bottom:20px;
+
+              left:50%;
+
+              transform:
+                translateX(-50%);
+
+              width:92%;
+
+              max-width:420px;
+
+              background:white;
+
+              border-radius:16px;
+
+              box-shadow:
+                0 10px 30px
+                rgba(0,0,0,0.2);
+
+              padding:16px;
+
+              display:flex;
+
+              align-items:center;
+
+              gap:14px;
+
+              z-index:9999;
+
+              font-family:Inter,sans-serif;
+
+            ">
+
+
+            <img
+              src="{{ url_for(
+                  'static',
+                  filename='images/Logo2.png'
+              ) }}"
+
+              style="
+                width:55px;
+                height:55px;
+                border-radius:12px
+              "
+            >
+
+
+            <div style="flex:1">
+
+
+              <div
+                style="
+                  font-weight:600;
+                  font-size:15px
+                "
+              >
+
+                DairyMitr
+
+              </div>
+
+
+              <div
+                style="
+                  font-size:12px;
+                  color:#666
+                "
+              >
+
+                Fast Dairy Collection Management
+
+              </div>
+
+
+            </div>
+
+
+            <button
+              id="installBtn"
+              style="
+
+                background:#16a34a;
+
+                border:none;
+
+                color:white;
+
+                padding:8px 14px;
+
+                border-radius:8px;
+
+                font-weight:600;
+
+                cursor:pointer;
+
+              "
+            >
+
+              Install
+
+            </button>
+
+
+            <button
+              id="closeInstall"
+              style="
+
+                background:none;
+
+                border:none;
+
+                font-size:18px;
+
+                cursor:pointer;
+
+                color:#888;
+
+              "
+            >
+
+              ✕
+
+            </button>
+
+
+          </div>
+
+          `;
+
+
+          document.body.appendChild(
+              banner
+          );
+
+
+          document.getElementById(
+              "installBtn"
+          ).onclick = async () => {
+
+
+              banner.remove();
+
+
+              deferredPrompt.prompt();
+
+
+              await deferredPrompt.userChoice;
+
+
+              deferredPrompt = null;
+
+
+          };
+
+
+          document.getElementById(
+              "closeInstall"
+          ).onclick = () => {
+
+
+              localStorage.setItem(
+                  "installDismissed",
+                  "true"
+              );
+
+
+              banner.remove();
+
+          };
+
+
+      }
+  );
+
+  </script>
+
+
+
+  <!-- =====================================================
+       DARK THEME
+  ====================================================== -->
+
+  <script>
+
+    const savedTheme =
+        localStorage.getItem(
+            "theme"
+        );
+
+
+    if (
+        savedTheme === "dark"
+    ) {
+
+        document.documentElement.setAttribute(
+            "data-theme",
+            "dark"
+        );
+
+    }
+
+  </script>
+
+
+
+  <!-- =====================================================
+       GLOBAL LOADER
+  ====================================================== -->
+
+  <script>
+
+
+  function showLoader() {
+
+
+      const loader =
+          document.getElementById(
+              "global-loader"
+          );
+
+
+      if (loader) {
+
+          loader.style.display =
+              "flex";
+
+      }
+
+  }
+
+
+
+  function hideLoader() {
+
+
+      const loader =
+          document.getElementById(
+              "global-loader"
+          );
+
+
+      if (loader) {
+
+          loader.style.display =
+              "none";
+
+      }
+
+  }
+
+
+
+  /* All forms */
+
+  document
+      .querySelectorAll("form")
+      .forEach(
+          form => {
+
+
+              form.addEventListener(
+                  "submit",
+                  function () {
+
+
+                      /*
+                       * Bank Report form skip
+                       */
+
+                      if (
+                          this.id ===
+                          "bankReportForm"
+                      ) {
+
+                          return;
+
+                      }
+
+
+                      showLoader();
+
+
+                  }
+              );
+
+
+          }
+      );
+
+
+
+  /* Page load */
+
+  window.addEventListener(
+      "load",
+      hideLoader
+  );
+
+
+
+  /* Browser back/forward */
+
+  window.addEventListener(
+      "pageshow",
+      hideLoader
+  );
+
+
+  </script>
+
+
+</body>
+
+</html>

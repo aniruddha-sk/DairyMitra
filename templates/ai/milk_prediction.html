@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="page-title">Milk Prediction</h2>
+
+<div class="section max-w-md">
+
+<label class="form-label">Select Vendor</label>
+
+<select id="vendor" class="form-select mb-4">
+<option value="">Select Vendor</option>
+
+{% for v in vendors %}
+<option value="{{ v.id }}">{{ v.name }}</option>
+{% endfor %}
+
+</select>
+
+<button onclick="predict()" class="btn btn-primary w-full">
+Predict Tomorrow Milk
+</button>
+
+<h3 id="result" class="mt-4 text-center"></h3>
+
+</div>
+
+<script>
+
+function predict(){
+
+    const vendor = document.getElementById("vendor").value
+
+    if(!vendor){
+        alert("Select vendor")
+        return
+    }
+
+    fetch("/api/predict_milk/" + vendor)
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.morning_prediction){
+
+            document.getElementById("result").innerText =
+            "Tomorrow Prediction\n" +
+            "Morning : " + data.morning_prediction + " L\n" +
+            "Evening : " + data.evening_prediction + " L"
+
+        }else{
+
+            document.getElementById("result").innerText =
+            "Not enough data"
+
+        }
+
+    })
+
+}
+
+</script>
+
+{% endblock %}

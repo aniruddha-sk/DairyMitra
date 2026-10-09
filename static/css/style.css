@@ -1,0 +1,1462 @@
+/* =====================================================
+   THEME VARIABLES
+===================================================== */
+:root{
+  --primary:#5730bb;
+  --primary-dark:#35147f;
+  --accent:#7655d6;
+
+  --bg:#f6f7ff;
+  --card:#ffffff;
+  --text:#17142b;
+  --muted:#756f88;
+  --border:#e6e1f2;
+
+  --radius:14px;
+  --radius-lg:20px;
+  --shadow-sm:0 6px 18px rgba(53,20,127,.08);
+  --shadow:0 16px 40px rgba(53,20,127,.12);
+}
+
+/* =====================================================
+   RESET
+===================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(118,85,214,.10), transparent 32%),
+    radial-gradient(circle at 90% 90%, rgba(87,48,187,.08), transparent 34%),
+    var(--bg);
+  color:var(--text);
+  line-height:1.5;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+#sidebar{
+  position:fixed;
+  top:0;
+  left:-260px;
+  width:260px;
+  height:100%;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  z-index:60;
+  transition:.25s ease;
+}
+#sidebar.sidebar-open{left:0}
+
+#sidebar nav{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+#sidebar small{
+  margin:16px 0 6px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+}
+
+.sidebar-link{
+  padding:10px 12px;
+  border-radius:10px;
+  color:var(--text);
+  text-decoration:none;
+}
+.sidebar-link:hover{background:#f1f5f9}
+
+/* Overlay */
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  opacity:0;
+  pointer-events:none;
+}
+#overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+#app-content{
+  padding:16px;
+  max-width:1200px;
+  margin:0 auto;
+}
+
+/* =====================================================
+   TITLES & SECTIONS
+===================================================== */
+.page-title{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:20px;
+}
+
+.section{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  box-shadow:var(--shadow-sm);
+  margin-bottom:24px;
+}
+
+/* =====================================================
+   CARDS / GRID
+===================================================== */
+.grid-cards{
+  display:grid;
+  gap:16px;
+}
+
+/* ---------- MOBILE: 2 cards per row ---------- */
+@media (max-width: 640px){
+  .grid-cards{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- TABLET & DESKTOP ---------- */
+@media (min-width: 641px){
+  .grid-cards{
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow-sm);
+  text-align:center;
+  font-weight:600;
+  text-decoration:none;
+  color:var(--text);
+  border:0.05px solid black;
+}
+
+/* =====================================================
+   FORMS
+===================================================== */
+form{width:100%}
+
+.form-label{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:6px;
+  display:block;
+}
+
+.form-input,
+.form-select{
+  width:100%;
+  height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+}
+.form-input:focus,
+.form-select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+.btn{
+  height:44px;
+  padding:0 16px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:#e5e7eb}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-warning{background:#f59e0b;color:#fff}
+.btn-muted{background:#f1f5f9}
+
+/* =====================================================
+   TABLES
+===================================================== */
+.table-wrap{overflow-x:auto}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+.table th,
+.table td{
+  padding:14px;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+}
+.table thead th{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* =====================================================
+   AUTH
+===================================================== */
+.auth-body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg);
+}
+.auth-card{
+  background:#fff;
+  padding:32px;
+  border-radius:var(--radius-lg);
+  width:100%;
+  max-width:420px;
+  box-shadow:var(--shadow);
+}
+.btn-auth{width:100%}
+
+/* =====================================================
+   🔥 UTILITY CLASSES (MOST IMPORTANT FIX)
+===================================================== */
+
+/* FLEX */
+.flex{display:flex}
+.inline-flex{display:inline-flex}
+.flex-wrap{flex-wrap:wrap}
+.flex-col{flex-direction:column}
+.items-center{align-items:center}
+.items-end{align-items:flex-end}
+.justify-between{justify-content:space-between}
+.justify-end{justify-content:flex-end}
+.justify-center{justify-content:center}
+
+/* GRID */
+.grid{display:grid}
+.grid-cols-1{grid-template-columns:1fr}
+.md\:grid-cols-3{grid-template-columns:repeat(3,1fr)}
+
+/* GAP */
+.gap-2{gap:8px}
+.gap-3{gap:12px}
+.gap-4{gap:16px}
+.gap-6{gap:24px}
+
+/* WIDTH */
+.w-full{width:100%}
+.max-w-lg{max-width:520px}
+.max-w-md{max-width:420px}
+.max-w-xs{max-width:280px}
+
+/* MARGIN / PADDING */
+.mt-4{margin-top:16px}
+.mb-4{margin-bottom:16px}
+.mb-6{margin-bottom:24px}
+.pt-6{padding-top:24px}
+
+/* TEXT */
+.text-center{text-align:center}
+.text-muted{color:var(--muted)}
+
+/* POSITION */
+.fixed{position:fixed}
+.inset-0{top:0;right:0;bottom:0;left:0}
+.hidden{display:none}
+.z-50{z-index:50}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+@media(max-width:768px){
+  .btn{width:100%}
+  .table th,.table td{font-size:13px}
+}
+/* ===============================
+   MILK COLLECTION – FIELD WIDTH FIX
+=============================== */
+/* ===============================
+   ✅ MILK COLLECTION – COMPACT WIDTH FIX
+=============================== */
+
+/* Default (Desktop Safe) */
+.table .form-select{
+  width: 120px;
+}
+
+.table .form-input{
+  width: 110px;
+}
+
+/* 📱 MOBILE VIEW */
+@media (max-width: 768px){
+
+  /* Milk Type */
+  .table .form-select{
+    width: 70px;      /* 🔥 Compact */
+    height: 40px;
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+
+  /* Quantity */
+  .table .form-input{
+    width: 40px;      /* 🔥 Compact */
+    height: 40px;
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+
+  /* Table spacing tighter */
+  .table td{
+    padding: 10px 6px;
+  }
+
+}
+/* ===============================
+   SUBMIT BUTTON – DEAD LOOK FIX
+=============================== */
+
+/* Table मधील submit button */
+.table .btn{
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  opacity: 1;
+  transition: all .2s ease;
+}
+
+/* Hover effect */
+.table .btn:hover{
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(87,48,187,.25);
+}
+
+/* Active (click) feel */
+.table .btn:active{
+  transform: scale(.96);
+}
+
+/* Remove disabled-like styles */
+.table .btn[disabled],
+.table .btn.disabled{
+  opacity: 1;
+  pointer-events: auto;
+}
+/* HEADER LOGO */
+.header-logo-link{
+  display:flex;
+  align-items:center;
+}
+
+.header-logo{
+  height:32px;          /* mobile */
+  width:auto;
+}
+
+@media (min-width:768px){
+  .header-logo{
+    height:38px;        /* desktop */
+  }
+}
+/* ===============================
+   PAYMENT PAGE – MOBILE FIX
+=============================== */
+
+/* Form wrapper inside card */
+.payment-form{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* Vendor full width */
+.payment-form .vendor-select{
+  width: 100%;
+}
+
+/* Date row (पासून – पर्यंत) */
+.payment-dates{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Inputs uniform */
+.payment-form select,
+.payment-form input{
+  height: 44px;
+  border-radius: 12px;
+}
+
+/* Calculate button */
+.payment-form .btn-primary{
+  width: 100%;
+  height: 46px;
+  margin-top: 10px;
+}
+
+/* ===============================
+   DESKTOP REFINEMENT
+=============================== */
+@media (min-width:768px){
+  .payment-form{
+    grid-template-columns: 2fr 1fr;
+    align-items: end;
+  }
+
+  .payment-dates{
+    grid-column: span 2;
+    max-width: 420px;
+  }
+
+  .payment-form .btn-primary{
+    width: auto;
+    padding: 0 28px;
+  }
+}
+/* ===============================
+   ADVANCE ENTRY – FIX (NO HTML CHANGE)
+=============================== */
+
+/* Form spacing */
+#advance-form{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Date & search input */
+#advance-form input[type="date"],
+#advance-form input[type="text"]{
+  width: 100%;
+  max-width: 100% !important;
+}
+
+/* Table adjustments */
+#vendorTable{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#vendorTable thead th{
+  font-size: 12px;
+  color: var(--muted);
+  padding: 10px 6px;
+  text-align: left;
+}
+
+#vendorTable tbody td{
+  padding: 14px 6px;
+  vertical-align: middle;
+}
+
+/* Vendor name column */
+#vendorTable tbody td:nth-child(2){
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Advance input (₹) */
+#vendorTable input[type="number"]{
+  width: 100%;
+  min-width: 120px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* Row separation */
+#vendorTable tbody tr:not(:last-child){
+  border-bottom: 1px solid var(--border);
+}
+
+/* Submit button – NOT DEAD ANYMORE */
+#advance-form button[type="submit"]{
+  width: 100%;
+  height: 50px;
+  margin-top: 18px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--primary);
+  box-shadow: 0 8px 18px rgba(87,48,187,.35);
+}
+
+/* Button active feel */
+#advance-form button[type="submit"]:active{
+  transform: scale(.98);
+}
+
+/* Alert spacing */
+#ajax-alert{
+  margin-bottom: 12px;
+}
+/* =========================================
+   PEND ENTRY – SEARCH BAR FIX (CSS ONLY)
+========================================= */
+
+/* Force grid to single column */
+.section > .grid{
+  grid-template-columns: 1fr !important;
+}
+
+/* Search input full width */
+#vendorSearch{
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+}
+
+/* Remove side alignment */
+.section .flex{
+  align-items: stretch !important;
+}
+
+/* Small spacing polish */
+#vendorSearch{
+  margin-top: 8px;
+}
+/* =====================================
+   GLOBAL DATE FORM STACK – MOBILE ONLY
+   Applies to ALL pages with date inputs
+===================================== */
+@media (max-width: 767px) {
+
+  /* Any form section that uses grid/flex for date ranges */
+  .section form,
+  form.section,
+  form.grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* All direct children full width */
+  .section form > div,
+  form.section > div,
+  form.grid > div {
+    width: 100% !important;
+  }
+
+  /* Date inputs full width */
+  input[type="date"] {
+    width: 100% !important;
+  }
+
+  /* Buttons always below dates */
+  form button,
+  form .btn {
+    width: 100% !important;
+    margin-top: 8px;
+  }
+}
+/* =====================================
+   DATE RANGE FORM – PERFECT ALIGNMENT
+   Mobile: stacked
+   Desktop: inline & aligned
+===================================== */
+
+/* ---------- DESKTOP (default) ---------- */
+form.grid,
+form.section.grid,
+.section form.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 20px;
+}
+
+/* Date inputs same height */
+input[type="date"]{
+  height: 46px;
+}
+
+/* Button aligned with date inputs */
+form.grid button,
+form.section.grid button,
+.section form.grid button{
+  height: 46px;
+  padding: 0 26px;
+  white-space: nowrap;
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 767px){
+
+  form.grid,
+  form.section.grid,
+  .section form.grid{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px;
+  }
+
+  form.grid > div,
+  form.section.grid > div{
+    width: 100%;
+  }
+
+  form.grid button{
+    width: 100%;
+  }
+}
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.form-label .icon {
+  font-size: 14px;
+  color: #64748b; /* slate gray */
+}
+/* =====================================
+   PROFESSIONAL ACTION BUTTONS (ONLY)
+   Back | Add New | Edit Food Sack
+===================================== */
+
+.action-bar{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Base professional button */
+.btn-pro{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all .18s ease;
+  white-space: nowrap;
+}
+
+/* Back button – neutral */
+.btn-pro-back{
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+.btn-pro-back:hover{
+  background: #e5e7eb;
+}
+
+/* Add new – primary action */
+.btn-pro-add{
+  background: var(--primary);
+  color: #fff;
+}
+.btn-pro-add:hover{
+  background: var(--primary-dark);
+  box-shadow: 0 6px 14px rgba(87,48,187,.25);
+}
+
+/* Edit / Manage – outline professional */
+.btn-pro-edit{
+  background: #fff;
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+.btn-pro-edit:hover{
+  background: #f5f2ff;
+}
+
+/* Icon style (NO EMOJI FEEL) */
+.btn-pro i{
+  font-size: 15px;
+  opacity: .9;
+}
+
+/* Active click feel */
+.btn-pro:active{
+  transform: scale(.97);
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 640px){
+  .action-bar{
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-pro{
+    width: 100%;
+    justify-content: center;
+  }
+}
+/* =========================================
+   🔥 FORCE GLOBAL DELETE BUTTON (OVERRIDE)
+   Works with Bootstrap + Custom CSS
+========================================= */
+
+/* ALL delete buttons */
+button.btn-danger,
+a.btn-danger,
+input.btn-danger,
+.btn.btn-danger,
+.table button.btn-danger,
+form button.btn-danger,
+button.delete-sack,
+button[class*="delete"],
+button[title*="हटवा"],
+button[title*="Delete"]{
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Hover */
+button.btn-danger:hover,
+a.btn-danger:hover{
+  background-color: #b91c1c !important;
+  box-shadow: 0 6px 14px rgba(220,38,38,.35) !important;
+}
+
+/* Active */
+button.btn-danger:active{
+  transform: scale(.96);
+}
+
+/* Small delete buttons */
+.btn-danger.btn-sm{
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+/* Prevent disabled / grey look */
+.btn-danger:disabled,
+.btn-danger.disabled{
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+/* Sidebar Lucide icons */
+.sidebar-link{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-link i[data-lucide]{
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+  color: var(--text);
+}
+
+
+/* Dashboard cards – Iconify icons */
+.card-action{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-action .iconify{
+  font-size: 30px;
+}
+
+/* Professional color palette */
+.icon-blue{ color:#2563eb; }
+.icon-teal{ color:#0f766e; }
+.icon-purple{ color:#7c3aed; }
+.icon-sky{ color:#0ea5e9; }
+.icon-amber{ color:#f59e0b; }
+.icon-green{ color:#35147f; }
+.icon-emerald{ color:#5730bb; }
+.icon-indigo{ color:#4f46e5; }
+.icon-violet{ color:#9333ea; }
+
+/* Hover feel */
+.card-action:hover .iconify{
+  transform: scale(1.08);
+  transition: transform .2s ease;
+}
+
+.account-label{
+  font-weight: bold;
+}
+
+#offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #dc2626;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 14px;
+  display: none;
+  z-index: 9999;
+}
+#sidebar{
+  position:fixed;
+  top:0;
+  left:-260px;
+  width:260px;
+  height:100%;
+  background:var(--card);
+  box-shadow:var(--shadow);
+  z-index:60;
+  transition:.25s ease;
+
+  overflow-y: auto;              /* 🔥 THIS FIXES SCROLL */
+  -webkit-overflow-scrolling: touch; /* smooth mobile scroll */
+}
+/* ===============================
+   PREMIUM SIDEBAR SCROLLBAR
+=============================== */
+
+/* Works in Chrome / Edge / Brave */
+#sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+  background: transparent;   /* clean look */
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--primary),
+    var(--primary-dark)
+  );
+  border-radius: 20px;
+  transition: background .3s ease;
+}
+
+/* Hover effect */
+#sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    var(--primary-dark),
+    var(--primary)
+  );
+}
+
+/* Firefox Support */
+#sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+/* ===============================
+   PROFESSIONAL FILTER PANEL
+================================ */
+
+.filter-card{
+  background: linear-gradient(145deg,#faf9ff,#f0edff);
+  border-radius: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(87,48,187,0.15);
+}
+
+.filter-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+
+/* Toggle Button */
+.filter-card .btn-secondary{
+  background: linear-gradient(135deg,#6366f1,#4f46e5);
+  color: white;
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.filter-card .btn-secondary:hover{
+  background: linear-gradient(135deg,#4f46e5,#4338ca);
+}
+
+/* Filter Panel Animation */
+#filterPanel{
+  overflow: hidden;
+  transition: all 0.4s ease;
+  max-height: 0;
+  opacity: 0;
+}
+
+#filterPanel.show{
+  max-height: 200px;
+  opacity: 1;
+}
+
+/* Input Styling */
+#rangeInput{
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+  transition: all 0.3s ease;
+}
+
+#rangeInput:focus{
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+  outline: none;
+}
+
+/* Select Button Styling */
+#selectToggleBtn{
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: all 0.3s ease;
+}
+
+#selectToggleBtn.btn-primary{
+  background: linear-gradient(135deg,#7655d6,#5730bb);
+  border: none;
+}
+
+#selectToggleBtn.btn-danger{
+  background: linear-gradient(135deg,#ef4444,#dc2626);
+  border: none;
+}
+
+#selectToggleBtn:hover{
+  transform: scale(1.05);
+}
+
+/* Apply Button */
+.filter-card .btn-secondary:last-child{
+  background: linear-gradient(135deg,#0ea5e9,#0284c7);
+}
+
+.filter-card .btn-secondary:last-child:hover{
+  background: linear-gradient(135deg,#0284c7,#0369a1);
+}
+
+
+.milk-type-fixed{
+    display: inline-block;
+    width: 65px;              /* same width as dropdown */
+    padding: 10px 12px;
+    border: 1px solid #d1d5db; /* same border */
+    border-radius: 10px;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    text-align: left;
+}
+
+/* =====================================
+   🔥 FORCE MILK COLLECTION COMPACT WIDTH
+   (Nothing can override this)
+===================================== */
+
+@media (max-width: 768px){
+
+  /* Milk Type Dropdown */
+  #vendorTable .form-select{
+    width: 65px !important;
+    min-width: 65px !important;
+    max-width: 65px !important;
+
+    height: 38px !important;
+    padding: 4px 6px !important;
+    font-size: 13px !important;
+  }
+
+  /* Quantity Input */
+  #vendorTable .form-input{
+    width: 55px !important;
+    min-width: 55px !important;
+    max-width: 55px !important;
+
+    height: 38px !important;
+    padding: 4px 6px !important;
+    font-size: 13px !important;
+  }
+
+  /* Row spacing tighter */
+  #vendorTable td{
+    padding: 8px 4px !important;
+  }
+
+}
+
+/* ===================================
+   Disabled Milk Input Styling
+=================================== */
+
+input:disabled,
+.form-input:disabled {
+
+  background: linear-gradient(145deg, #f1f5f9, #e5e7eb);
+  border: 1px solid #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+
+  opacity: 0.9;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Slight inner shadow for professional look */
+input:disabled:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Optional: grey entire cell if needed */
+.edit-table td:has(input:disabled) {
+  background-color: #f9fafb;
+}
+
+/* =====================================
+   🔥 MILK ENTRY – MOBILE UI IMPROVEMENT
+===================================== */
+@media (max-width: 768px){
+
+  /* 🔹 Submit Button Smaller */
+  #vendorTable .btn.btn-secondary{
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+
+    height: 34px !important;
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+
+  /* 🔹 Quantity Input Bigger */
+  #vendorTable .form-input{
+    width: 85px !important;
+    min-width: 85px !important;
+    max-width: 85px !important;
+
+    height: 42px !important;
+    padding: 6px 8px !important;
+
+    font-size: 18px !important;   /* 🔥 Bigger text */
+    font-weight: 700 !important;  /* 🔥 Bold */
+    text-align: center !important;
+  }
+
+  /* 🔹 Make decimal point clearly visible */
+  #vendorTable .form-input::placeholder{
+    font-size: 16px;
+  }
+
+  #vendorTable .form-input{
+    letter-spacing: 0.5px;  /* improves decimal visibility */
+  }
+
+}
+
+
+
+/* =================================================
+   GLOBAL COMPONENTS (style.css)
+================================================= */
+
+/* ---------- Progress Bar ---------- */
+.progress-bar{
+  width:100%;
+  height:14px;
+  background:#e2e8f0;
+  border-radius:10px;
+  margin-top:12px;
+  overflow:hidden;
+}
+
+#progressFill{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg,#7655d6,#5730bb);
+  transition:width .3s ease;
+}
+
+/* ---------- Layout Utilities ---------- */
+.max-w-md{
+  max-width:500px;
+  margin:auto;
+}
+
+.container {
+  padding: 20px;
+}
+
+.page-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+/* ---------- Action Buttons & Sidebar ---------- */
+.action-buttons{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.action-buttons .btn{
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  padding:0;
+}
+
+.sidebar-link.active{
+  background:#f1edff;
+  color:var(--primary);
+  font-weight:600;
+}
+
+/* ---------- Global Loader & Spinner ---------- */
+#global-loader{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+.loader-box{
+  background:#fff;
+  padding:25px 35px;
+  border-radius:12px;
+  font-weight:600;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+.spinner{
+  width:35px;
+  height:35px;
+  border:4px solid #e5e7eb;
+  border-top:4px solid #5730bb;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+
+@keyframes spin{
+  0%{transform:rotate(0deg)}
+  100%{transform:rotate(360deg)}
+}
+
+
+/* =====================================================
+   DAIRY MITR — AUTH-MATCHED PREMIUM APP SYSTEM
+   Same visual language as authentication:
+   purple + indigo + soft glass + rounded surfaces
+===================================================== */
+
+:root{
+  --dm-purple:#5730bb;
+  --dm-purple-dark:#35147f;
+  --dm-purple-light:#7655d6;
+  --dm-indigo:#4f46e5;
+  --dm-blue:#6366f1;
+  --dm-soft:#f4f1ff;
+  --dm-glass:rgba(255,255,255,.82);
+}
+
+/* Premium page atmosphere */
+body{
+  background:
+    radial-gradient(circle at 8% 8%, rgba(118,85,214,.12), transparent 28%),
+    radial-gradient(circle at 92% 88%, rgba(79,70,229,.10), transparent 30%),
+    linear-gradient(135deg,#f8f9ff 0%,#f3f0ff 48%,#eef2ff 100%);
+}
+
+/* Header */
+header{
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(87,48,187,.10);
+  box-shadow:0 6px 24px rgba(53,20,127,.06);
+}
+
+/* Sidebar */
+#sidebar{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.97),rgba(248,246,255,.98));
+  border-right:1px solid rgba(87,48,187,.10);
+  box-shadow:12px 0 35px rgba(53,20,127,.10);
+}
+
+.sidebar-link{
+  transition:background .22s ease,color .22s ease,transform .22s ease,box-shadow .22s ease;
+}
+
+.sidebar-link:hover{
+  background:linear-gradient(90deg,#f3efff,#faf9ff);
+  color:var(--primary);
+  transform:translateX(3px);
+}
+
+.sidebar-link.active{
+  background:linear-gradient(135deg,#f0eaff,#e9e3ff);
+  color:var(--primary);
+  box-shadow:inset 3px 0 0 var(--primary),0 5px 14px rgba(87,48,187,.08);
+}
+
+/* Main sections */
+.section,
+.card,
+.filter-card{
+  border:1px solid rgba(87,48,187,.08);
+  box-shadow:0 10px 30px rgba(53,20,127,.07);
+}
+
+.section{
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+/* Dashboard cards */
+.card{
+  position:relative;
+  overflow:hidden;
+  transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:3px;
+  background:linear-gradient(90deg,var(--dm-purple-dark),var(--dm-purple-light),var(--dm-indigo));
+  opacity:.85;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 16px 34px rgba(53,20,127,.13);
+  border-color:rgba(87,48,187,.16);
+}
+
+/* Inputs */
+.form-input,
+.form-select,
+#rangeInput,
+#vendorTable input[type="number"]{
+  border-color:#ddd7ed;
+  background:rgba(255,255,255,.94);
+  color:var(--text);
+  transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+#rangeInput:focus,
+#vendorTable input[type="number"]:focus{
+  border-color:var(--dm-purple-light);
+  box-shadow:0 0 0 4px rgba(118,85,214,.12);
+  outline:none;
+}
+
+/* Primary buttons — same gradient family as auth */
+.btn-primary,
+.btn-pro-add{
+  background:linear-gradient(135deg,var(--dm-purple-light),var(--dm-purple-dark));
+  color:#fff;
+  box-shadow:0 8px 18px rgba(87,48,187,.20);
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+
+.btn-primary:hover,
+.btn-pro-add:hover{
+  background:linear-gradient(135deg,#6742c7,#35147f);
+  transform:translateY(-1px);
+  box-shadow:0 12px 24px rgba(87,48,187,.28);
+}
+
+/* Secondary buttons */
+.btn-secondary,
+.btn-muted,
+.btn-pro-back{
+  background:#f4f1fb;
+  color:#3c3650;
+  border-color:#e4def1;
+}
+
+.btn-secondary:hover,
+.btn-muted:hover,
+.btn-pro-back:hover{
+  background:#ebe5f8;
+}
+
+/* Professional edit button */
+.btn-pro-edit{
+  background:#fff;
+  color:var(--dm-purple-dark);
+  border-color:#b9a9e6;
+}
+
+.btn-pro-edit:hover{
+  background:#f5f1ff;
+  border-color:var(--dm-purple-light);
+}
+
+/* Tables */
+.table-wrap{
+  border-radius:16px;
+}
+
+.table{
+  background:rgba(255,255,255,.88);
+}
+
+.table thead th{
+  background:#f7f4ff;
+  color:#625a75;
+  border-bottom:1px solid #e6e0f1;
+}
+
+.table tbody tr{
+  transition:background .18s ease;
+}
+
+.table tbody tr:hover{
+  background:#faf8ff;
+}
+
+/* Filter panel */
+.filter-card{
+  background:linear-gradient(145deg,#faf9ff,#f0edff);
+  border-color:rgba(87,48,187,.12);
+}
+
+.filter-card .btn-secondary{
+  background:linear-gradient(135deg,#7655d6,#5730bb);
+  color:#fff;
+}
+
+.filter-card .btn-secondary:hover{
+  background:linear-gradient(135deg,#6742c7,#35147f);
+}
+
+/* Progress */
+.progress-bar{
+  background:#e9e4f3;
+}
+
+#progressFill{
+  background:linear-gradient(90deg,#7655d6,#5730bb,#4f46e5);
+}
+
+/* Auth standalone fallback */
+.auth-card{
+  border:1px solid rgba(87,48,187,.10);
+  box-shadow:0 18px 45px rgba(53,20,127,.13);
+}
+
+/* Offline banner */
+#offline-banner{
+  background:linear-gradient(90deg,#35147f,#5730bb);
+}
+
+/* Global loader */
+#global-loader{
+  background:rgba(35,20,70,.28);
+  backdrop-filter:blur(4px);
+}
+
+.loader-box{
+  border:1px solid rgba(87,48,187,.10);
+  box-shadow:0 18px 45px rgba(53,20,127,.18);
+}
+
+.spinner{
+  border-top-color:var(--dm-purple);
+}
+
+/* Purple icon system */
+.icon-blue{color:#4f46e5;}
+.icon-teal{color:#0f766e;}
+.icon-purple{color:#7c3aed;}
+.icon-sky{color:#6366f1;}
+.icon-amber{color:#d97706;}
+.icon-green{color:#5730bb;}
+.icon-emerald{color:#7655d6;}
+.icon-indigo{color:#4f46e5;}
+.icon-violet{color:#9333ea;}
+
+/* Mobile polish */
+@media (max-width:768px){
+  #app-content{
+    padding:12px;
+  }
+
+  .section{
+    padding:16px;
+    border-radius:16px;
+  }
+
+  .card{
+    border-radius:14px;
+  }
+
+  .page-title{
+    font-size:20px;
+  }
+}
+
+@media (max-width:420px){
+  #app-content{
+    padding:10px;
+  }
+
+  .section{
+    padding:14px;
+  }
+}

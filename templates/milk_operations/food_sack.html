@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}पेंड भर{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">पेंड भर</h2>
+
+<!-- DATE LOCK -->
+<form method="GET" class="mb-4 flex gap-4">
+    <input type="date" name="date" value="{{ selected_date }}" class="form-input" required>
+    <button class="btn btn-primary">तारीख सेट करा</button>
+</form>
+
+<input type="hidden" id="selected_date" value="{{ selected_date }}">
+
+<!-- SEARCH -->
+<input type="text" id="vendorSearch" class="form-input mb-3" placeholder="शोधा..." onkeyup="filterVendors()">
+
+<div class="table-wrap">
+<table class="table" id="vendorTable">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>नाव</th>
+<th>Qty</th>
+<th>पेंड</th>
+<th>Total</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+{% for v in vendors %}
+<tr>
+
+<td>
+{{ v.vendor_id }}
+<input type="hidden" id="vendor_{{ loop.index0 }}" value="{{ v.vendor_id }}">
+</td>
+
+<td>{{ v.name }}</td>
+
+<td>
+<input type="number" id="qty_{{ loop.index0 }}" class="form-input w-24"
+oninput="calc({{ loop.index0 }})">
+</td>
+
+<td>
+<select id="sack_{{ loop.index0 }}" class="form-select"
+onchange="calc({{ loop.index0 }})">
+
+<option value="">-- निवडा --</option>
+
+{% for s in sack_rates %}
+<option value="{{ s.id }}" data-rate="{{ s.rate }}">
+{{ s.name }} (₹{{ s.rate }})
+</option>
+{% endfor %}
+
+</select>
+</td>
+
+<td id="total_{{ loop.index0 }}">₹0</td>
+
+<td>
+<button type="button" class="btn btn-secondary"
+onclick="submitOne({{ loop.index0 }})">
+सबमिट
+</button>
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+</div>
+
+<!-- FINAL -->
+<button class="btn btn-primary mt-4" onclick="finalSubmit()">
+अंतिम सबमिट
+</button>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+function calc(i){
+    const qty = document.getElementById("qty_"+i).value || 0;
+    const sel = document.getElementById("sack_"+i);
+    const rate = sel.options[sel.selectedIndex]?.dataset.rate || 0;
+
+    document.getElementById("total_"+i).innerText = "₹" + (qty*rate);
+}
+
+function submitOne(i){
+
+    const vendor_id = document.getElementById("vendor_"+i).value;
+    const quantity = document.getElementById("qty_"+i).value;
+    const sack_id = document.getElementById("sack_"+i).value;
+    const date = document.getElementById("selected_date").value;
+
+    fetch("/submit_food_sack_ajax", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({vendor_id, quantity, sack_id, date})
+    })
+    .then(r=>r.json())
+    .then(d=>alert(d.message));
+
+}
+
+function finalSubmit(){
+
+    const rows = document.querySelectorAll("#vendorTable tbody tr");
+    const date = document.getElementById("selected_date").value;
+
+    let data = [];
+
+    rows.forEach((row,i)=>{
+
+        const vendor_id = document.getElementById("vendor_"+i).value;
+        const quantity = document.getElementById("qty_"+i).value;
+        const sack_id = document.getElementById("sack_"+i).value;
+
+        if(quantity && sack_id){
+            data.push({vendor_id, quantity, sack_id, date});
+        }
+
+    });
+
+    fetch("/submit_bulk_food_sack_ajax", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({entries:data})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        alert(d.message);
+        location.reload();
+    });
+
+}
+
+function filterVendors(){
+    const val = document.getElementById("vendorSearch").value.toLowerCase();
+    document.querySelectorAll("#vendorTable tbody tr").forEach(r=>{
+        r.style.display = r.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}

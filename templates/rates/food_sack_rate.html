@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}खाद्य पोती दर व्यवस्थापन{% endblock %}
+
+{% block content %}
+<h2 class="page-title">🥬 खाद्य पोती दर व्यवस्थापन</h2>
+
+<!-- ➕ नवीन खाद्य पोती जोडा -->
+<div class="section mb-6">
+    <h4 class="mb-3">➕ नवीन खाद्य पोती जोडा</h4>
+    <form method="POST" action="{{ url_for('add_food_sack') }}" class="grid gap-4 md:grid-cols-3">
+        <input type="text" name="name" class="form-input" placeholder="कंपनीचे नाव" required>
+        <input type="number" name="rate" step="0.01" class="form-input" placeholder="दर (₹)" required>
+        <button type="submit" class="btn btn-primary">जोडा</button>
+    </form>
+</div>
+
+<!-- 📋 नोंदणीकृत खाद्य पोती यादी -->
+<div class="section mb-6">
+    <h4 class="mb-3">📋 नोंदणीकृत खाद्य पोती यादी</h4>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>कंपनीचे नाव</th>
+                    <th>दर (₹)</th>
+                    <th>काढा</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sack in food_sacks %}
+                <tr>
+                    <td>{{ sack.name }}</td>
+                    <td>₹{{ sack.rate }}</td>
+                    <td>
+                        <form action="{{ url_for('delete_food_sack_rate', sack_id=sack.id) }}" method="POST"
+                              onsubmit="return confirm('तुम्हाला खात्री आहे का की हा खाद्य पोती दर काढायचा आहे?')">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">⛔ अजून कोणतेही दर नोंदलेले नाहीत.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ✏️ खाद्य पोती दर अपडेट करा -->
+<div class="section">
+    <h4 class="mb-3">✏️ खाद्य पोती दर अपडेट करा</h4>
+    <form method="POST" action="{{ url_for('update_food_sack_rate') }}" class="grid gap-4 md:grid-cols-4">
+        <select name="sack_id" class="form-select" required>
+            <option value="" disabled selected>खाद्य पोती निवडा</option>
+            {% for sack in food_sacks %}
+            <option value="{{ sack.id }}">{{ sack.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="number" name="new_rate" step="0.01" class="form-input" placeholder="नवीन दर (₹)" required>
+        <input type="date" name="date_from" class="form-input" required>
+        <button type="submit" class="btn btn-primary">दर अपडेट करा</button>
+    </form>
+</div>
+{% endblock %}

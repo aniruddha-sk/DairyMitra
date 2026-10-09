@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Generate Bank Report{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title flex items-center gap-2">
+    <span class="iconify"
+          data-icon="material-symbols:download-rounded"></span>
+    Generate Bank Report
+</h2>
+
+<div class="section max-w-lg">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="
+                    margin-bottom:15px;
+                    padding:12px;
+                    border-radius:8px;
+                    background:#ffebee;
+                    color:#b71c1c;
+                    font-weight:600;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form id="bankReportForm">
+
+        <div class="mb-3">
+            <label class="form-label">From Date</label>
+            <input
+                type="date"
+                id="from_date"
+                class="form-input"
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">To Date</label>
+            <input
+                type="date"
+                id="to_date"
+                class="form-input"
+                required>
+        </div>
+
+        <button
+            type="submit"
+            class="btn btn-primary w-full">
+
+            <span class="iconify"
+                  data-icon="material-symbols:download"></span>
+
+            Download Excel Report
+
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+const form = document.getElementById("bankReportForm");
+
+form.addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    showLoader();
+
+    try{
+
+        const formData = new FormData();
+
+        formData.append(
+            "from_date",
+            document.getElementById("from_date").value
+        );
+
+        formData.append(
+            "to_date",
+            document.getElementById("to_date").value
+        );
+
+        const response = await fetch(
+            "{{ url_for('generate_bank_report') }}",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        // Distinguish a real file download from a JSON error.
+        // A validation failure returns JSON + non-200, so response.ok
+        // is false and we show the error instead of downloading HTML/JSON
+        // as a fake file.
+        if (!response.ok) {
+            let message = "Failed to download report.";
+            try {
+                const data = await response.json();
+                if (data.error) message = data.error;
+            } catch (_) {
+                // response wasn't JSON, fall back to default message
+            }
+            throw new Error(message);
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+
+        a.href = url;
+
+        // CHANGED: now a ZIP containing Same_Bank_Report.xlsx
+        // and Other_Bank_Report.xlsx instead of a single .xlsx
+        a.download = "Bank_Reports.zip";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    }
+    catch(err){
+
+        alert(err.message || "Failed to download report.");
+
+        console.error(err);
+
+    }
+    finally{
+
+        hideLoader();
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

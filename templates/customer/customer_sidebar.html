@@ -1,0 +1,63 @@
+<aside id="sidebar">
+
+  <nav>
+
+    <!-- HOME -->
+    <a href="{{ url_for('customer_dashboard') }}" class="sidebar-link">
+      <i data-lucide="house"></i>
+      <span>HOME</span>
+    </a>
+
+    <!-- CUSTOMER MENU -->
+    <div class="sidebar-section">
+
+      <span class="section-title">CUSTOMER</span>
+
+      <a href="{{ url_for('customer_milk_history') }}" class="sidebar-link">
+        <i data-lucide="milk"></i>
+        <span>Milk History</span>
+      </a>
+
+      <a href="{{ url_for('customer_payment_history') }}" class="sidebar-link">
+        <i data-lucide="wallet"></i>
+        <span>Payment History</span>
+      </a>
+
+      <a href="{{ url_for('customer_receipts') }}" class="sidebar-link">
+        <i data-lucide="receipt"></i>
+        <span>Receipts</span>
+      </a>
+
+      <a href="{{ url_for('customer_food_sack') }}" class="sidebar-link">
+        <i data-lucide="package"></i>
+        <span>Food Sack</span>
+      </a>
+
+      <a href="{{ url_for('customer_advance') }}" class="sidebar-link">
+        <i data-lucide="hand-coins"></i>
+        <span>Advance</span>
+      </a>
+
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="sidebar-section">
+
+      <span class="section-title">ACCOUNT</span>
+
+      <a href="{{ url_for('customer_profile') }}" class="sidebar-link">
+        <i data-lucide="user"></i>
+        <span>My Profile</span>
+      </a>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <a href="{{ url_for('customer_logout') }}" class="sidebar-link logout-link">
+      <i data-lucide="log-out"></i>
+      <span>Logout</span>
+    </a>
+
+  </nav>
+
+</aside>

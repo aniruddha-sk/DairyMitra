@@ -1,0 +1,722 @@
+{% extends "base.html" %}
+
+{% block title %}दूध संकलन - Dairy Mitr{% endblock %}
+
+<div id="offlineBanner" style="
+display:none;
+background:#dc2626;
+color:white;
+padding:8px;
+border-radius:6px;
+margin-bottom:10px;
+font-weight:600;">
+🔴 Offline Mode – डेटा लोकल सेव्ह होईल
+</div>
+
+{% block content %}
+<div id="loader" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+z-index:9999;
+justify-content:center;
+align-items:center;
+">
+  <div style="
+  background:white;
+  padding:20px 30px;
+  border-radius:10px;
+  font-weight:600;
+  ">
+    ⏳ सेव्ह होत आहे...
+  </div>
+</div>
+<h2 class="page-title flex items-center gap-2">
+  
+  <div class="icon-milk" data-lucide="milk"></div>
+  दूध संकलन 
+</h2>
+
+<!-- Set Date and Slot -->
+<form method="POST" class="mb-4 flex flex-wrap items-center gap-4">
+    <div>
+      <label class="form-label">दिनांक</label>
+      <input type="date" class="form-input" name="date" value="{{ today_date }}" required>
+    </div>
+    <div>
+      <label class="form-label">वेळ</label>
+      <select name="slot" class="form-select" required>
+          <option value="morning" {% if current_slot == 'morning' %}selected{% endif %}>सकाळ</option>
+          <option value="evening" {% if current_slot == 'evening' %}selected{% endif %}>संध्याकाळ</option>
+      </select>
+    </div>
+
+</form>
+
+<!-- Hidden selected date for JS -->
+<input type="hidden" id="selected_date" value="{{ selected_date }}">
+
+<!-- Search Filter -->
+<div class="mb-4">
+  <input type="text"
+         id="vendorSearch"
+         class="form-input w-72"
+         placeholder="ग्राहक आयडी किंवा नाव शोधा"
+         onkeyup="filterVendors()">
+</div>
+<div id="offlineCounter" style="
+font-weight:600;
+color:#dc2626;
+margin-bottom:10px;">
+</div>
+<!-- Milk Entry Table -->
+<div class="table-wrap">
+<form method="POST">
+
+    <input type="hidden" name="total_vendors" value="{{ vendors|length }}">
+
+    <table class="table" id="vendorTable">
+        <thead>
+            <tr>
+                <th>ग्राहक आयडी</th>
+                <th>नाव</th>
+                <th>दूध प्रकार</th>
+                <th>प्रमाण (लिटर)</th>
+                <th>कारवाई</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for v in vendors %}
+            <tr id="row-{{ loop.index0 }}">
+
+                <td>
+                    {{ v.vendor_id }}
+                    <input type="hidden"
+                           id="vendor_id_{{ loop.index0 }}"
+                           value="{{ v.vendor_id }}">
+                </td>
+
+                <td>{{ v.name }}</td>
+
+                <!-- ✅ MILK TYPE LOGIC -->
+                <td>
+
+                    {% if v.milk_type == 'cow' %}
+
+                        <span class="milk-type-fixed">गाय</span>
+                        <input type="hidden"
+                               id="milk_type_{{ loop.index0 }}"
+                               value="cow">
+
+                    {% elif v.milk_type == 'buffalo' %}
+
+                        <span class="milk-type-fixed">म्हैस</span>
+                        <input type="hidden"
+                               id="milk_type_{{ loop.index0 }}"
+                               value="buffalo">
+
+                    {% else %}
+
+                        <select id="milk_type_{{ loop.index0 }}"
+                                class="form-select">
+                            <option value="cow">गाय</option>
+                            <option value="buffalo">म्हैस</option>
+                        </select>
+
+                    {% endif %}
+
+                </td>
+
+<td>
+
+    <input type="number"
+           id="quantity_{{ loop.index0 }}"
+           class="form-input w-28"
+           step="0.1">
+
+    <div id="warning_{{ loop.index0 }}"
+         style="color:#dc2626;font-size:13px;margin-top:4px;"></div>
+
+</td>
+
+                <td>
+                    <button type="button"
+                            class="btn btn-secondary"
+                            onclick="submitVendorMilk({{ loop.index0 }})">
+                        सबमिट
+                    </button>
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Final Submit -->
+<div class="mt-4">
+  <button type="button"
+          class="btn btn-primary"
+          onclick="finalSubmit()">
+      अंतिम सबमिट (सर्व सेव्ह करा)
+  </button>
+</div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+function showLoader(){
+    document.getElementById("loader").style.display = "flex";
+}
+
+function hideLoader(){
+    document.getElementById("loader").style.display = "none";
+}
+/* =====================================
+   📦 INDEXEDDB OFFLINE DATABASE
+===================================== */
+
+let db;
+
+function initDB(){
+
+    const request = indexedDB.open("DairyMitrOfflineDB", 1);
+
+    request.onupgradeneeded = function(e){
+
+        db = e.target.result;
+
+        if(!db.objectStoreNames.contains("milk_entries")){
+
+            db.createObjectStore("milk_entries",{
+                keyPath:"id",
+                autoIncrement:true
+            });
+
+        }
+
+    };
+
+    request.onsuccess = function(e){
+        db = e.target.result;
+        console.log("IndexedDB Ready");
+    };
+
+    request.onerror = function(){
+        console.log("IndexedDB Error");
+    };
+
+}
+
+initDB();
+
+
+/* =====================================
+   💾 SAVE OFFLINE ENTRY
+===================================== */
+function saveOfflineEntry(entry){
+
+    if(!db){
+        console.log("DB not ready");
+        return;
+    }
+
+    const tx = db.transaction("milk_entries","readwrite");
+    const store = tx.objectStore("milk_entries");
+
+    const getAll = store.getAll();
+
+    getAll.onsuccess = function(){
+
+        const entries = getAll.result;
+
+        const duplicate = entries.find(e =>
+            e.vendor_id == entry.vendor_id &&
+            e.date == entry.date &&
+            e.slot == entry.slot &&
+            e.milk_type == entry.milk_type
+        );
+
+        if(duplicate){
+
+            alert("या vendor साठी या वेळेचं दूध आधीच ऑफलाइन सेव्ह आहे.");
+
+            return;
+
+        }
+
+        store.add({
+            vendor_id: entry.vendor_id,
+            milk_type: entry.milk_type,
+            quantity: entry.quantity,
+            date: entry.date,
+            slot: entry.slot,
+            synced:false
+        });
+
+        console.log("Offline saved:", entry);
+
+/* Register background sync */
+
+if("serviceWorker" in navigator && "SyncManager" in window){
+
+    navigator.serviceWorker.ready.then(function(reg){
+
+        reg.sync.register("sync-milk-data");
+
+    });
+
+}
+
+updateOfflineCounter();
+
+
+
+    };
+
+}
+
+/* =====================================
+   🔄 SYNC OFFLINE ENTRIES
+===================================== */
+
+async function syncOfflineEntries(){
+
+    if(!db) return;
+
+    const tx = db.transaction("milk_entries","readonly");
+    const store = tx.objectStore("milk_entries");
+    const request = store.getAll();
+
+    request.onsuccess = async function(){
+
+        const entries = request.result;
+
+        if(entries.length === 0) return;
+
+        console.log("Syncing entries:", entries);
+
+        for(let entry of entries){
+
+            try{
+
+                await fetch("/submit_milk_ajax",{
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify(entry)
+                });
+
+                const deleteTx = db.transaction("milk_entries","readwrite");
+                const deleteStore = deleteTx.objectStore("milk_entries");
+
+                deleteStore.delete(entry.id);
+
+            }catch(e){
+
+                console.log("Sync failed:", e);
+                return;
+
+            }
+
+        }
+
+        console.log("Offline entries synced");
+        updateOfflineCounter();
+    };
+
+}
+
+
+/* =====================================
+   🌐 INTERNET RESTORE SYNC
+===================================== */
+
+window.addEventListener("online", function(){
+
+    console.log("Internet restored → syncing");
+
+    syncOfflineEntries();
+
+});
+
+
+/* =====================================
+   📂 PAGE LOAD SYNC
+===================================== */
+
+window.addEventListener("DOMContentLoaded", function(){
+
+    // offline sync
+    if(navigator.onLine){
+        syncOfflineEntries();
+    }
+
+    // counter
+    updateOfflineCounter();
+
+    // 🔥 NEW: auto load saved data
+    setTimeout(() => {
+    loadSavedMilkData();
+}, 300);
+
+});
+
+
+/* =====================================
+   🔍 LIVE SEARCH FILTER
+===================================== */
+
+function filterVendors() {
+
+    const input = document.getElementById("vendorSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#vendorTable tbody tr");
+
+    rows.forEach(row => {
+
+        const id = row.cells[0].textContent.toLowerCase();
+        const name = row.cells[1].textContent.toLowerCase();
+
+        row.style.display =
+            id.includes(input) || name.includes(input) ? "" : "none";
+
+    });
+
+}
+
+
+/* =====================================
+   🥛 SINGLE MILK ENTRY SUBMIT
+===================================== */
+
+function submitVendorMilk(index, forceSave=false) {
+
+    const vendor_id = document.getElementById('vendor_id_' + index).value;
+    const milk_type = document.getElementById('milk_type_' + index).value;
+    const quantity = document.getElementById('quantity_' + index).value;
+    const date = document.querySelector('input[name="date"]').value;
+    const slot = document.querySelector('select[name="slot"]').value;
+
+    if (!quantity) {
+        alert("कृपया प्रमाण भरवा.");
+        return;
+    }
+
+    /* OFFLINE MODE */
+
+    if(!navigator.onLine){
+
+        saveOfflineEntry({
+            vendor_id,
+            milk_type,
+            quantity,
+            date,
+            slot
+        });
+
+        alert("इंटरनेट नाही. डेटा ऑफलाइन सेव्ह झाला.");
+
+        return;
+    }
+    showLoader();
+    fetch("/submit_milk_ajax", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            vendor_id,
+            milk_type,
+            quantity,
+            date,
+            slot,
+            force_save: forceSave
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoader();
+        const warnBox = document.getElementById("warning_" + index);
+
+        if (data.warning && !forceSave) {
+
+            warnBox.innerText = "⚠ " + data.warning;
+
+            if(confirm(data.warning + " तरीही सेव्ह करायचं का?")){
+                submitVendorMilk(index, true);
+            }
+
+            return;
+        }
+
+        warnBox.innerText = "";
+
+        alert(data.message);
+
+        // ✅ auto update UI
+const qtyEl = document.getElementById('quantity_' + index);
+if(qtyEl){
+    qtyEl.style.background = "#d4edda";
+}
+
+// 🔥 reload fresh data
+setTimeout(() => {
+    loadSavedMilkData();
+}, 200);
+
+    })
+    .catch(error => {
+     hideLoader();   
+        console.error("Network error → saving offline");
+
+        saveOfflineEntry({
+            vendor_id,
+            milk_type,
+            quantity,
+            date,
+            slot
+        });
+
+        alert("नेटवर्क समस्या. डेटा ऑफलाइन सेव्ह झाला.");
+
+    });
+
+}
+
+
+/* =====================================
+   📦 BULK SUBMIT
+===================================== */
+
+function finalSubmit() {
+
+    const rows = document.querySelectorAll("#vendorTable tbody tr");
+    const date = document.querySelector('input[name="date"]').value;
+    const slot = document.querySelector('select[name="slot"]').value;
+
+    let data = [];
+
+    rows.forEach((row, index) => {
+
+        const vendor_id = document.getElementById('vendor_id_' + index).value;
+        const milk_type = document.getElementById('milk_type_' + index).value;
+        const quantity = document.getElementById('quantity_' + index).value;
+
+        if (quantity) {
+            data.push({ vendor_id, milk_type, quantity, date, slot });
+        }
+
+    });
+
+    if (data.length === 0) {
+        alert("कृपया किमान एक प्रमाण भरा.");
+        return;
+    }
+
+    if(!navigator.onLine){
+
+        data.forEach(e => saveOfflineEntry(e));
+
+        alert("इंटरनेट नाही. सर्व डेटा ऑफलाइन सेव्ह झाला.");
+
+        return;
+
+    }
+    showLoader();
+    fetch("/submit_bulk_milk_ajax", {
+        
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendors: data })
+    })
+    .then(response => response.json())
+    .then(result => {
+        hideLoader();
+        alert(result.message);
+        window.location.reload();
+    })
+    .catch(error => {
+        hideLoader();
+        console.error("Bulk submit failed → saving offline");
+
+        data.forEach(e => saveOfflineEntry(e));
+
+        alert("नेटवर्क समस्या. सर्व डेटा ऑफलाइन सेव्ह झाला.");
+
+    });
+
+}
+
+
+/* =====================================
+   ⏰ AUTO SLOT + RESET LOGIC
+===================================== */
+
+window.addEventListener("DOMContentLoaded", function() {
+
+    const slotSelect = document.querySelector('select[name="slot"]');
+
+    if (slotSelect && !slotSelect.value) {
+
+        const hour = new Date().getHours();
+
+        slotSelect.value = hour < 15 ? "morning" : "evening";
+
+    }
+
+    const total = {{ vendors|length }};
+
+    for (let i = 0; i < total; i++) {
+
+        const milkTypeEl = document.getElementById("milk_type_" + i);
+        const qtyEl = document.getElementById("quantity_" + i);
+
+        if (!milkTypeEl || !qtyEl) continue;
+
+        if (milkTypeEl.tagName === "SELECT") {
+
+            milkTypeEl.addEventListener("change", function() {
+                qtyEl.value = "";
+            });
+
+        }
+
+    }
+
+});
+
+function updateOfflineCounter(){
+
+    if(!db) return;
+
+    const tx = db.transaction("milk_entries","readonly");
+    const store = tx.objectStore("milk_entries");
+
+    const request = store.getAll();
+
+    request.onsuccess = function(){
+
+        const pending = request.result.length;
+
+        const box = document.getElementById("offlineCounter");
+
+        if(pending > 0){
+
+            box.innerText = "Offline entries pending : " + pending;
+
+        }else{
+
+            box.innerText = "";
+
+        }
+
+    };
+
+}
+
+function updateOfflineBanner(){
+
+    const banner = document.getElementById("offlineBanner");
+
+    if(!navigator.onLine){
+
+        banner.style.display="block";
+
+    }else{
+
+        banner.style.display="none";
+
+    }
+
+}
+
+window.addEventListener("online",updateOfflineBanner);
+window.addEventListener("offline",updateOfflineBanner);
+
+window.addEventListener("DOMContentLoaded",updateOfflineBanner);
+
+
+
+
+</script>
+
+
+<script>
+function loadSavedMilkData(){
+
+    const date = document.querySelector('input[name="date"]').value;
+    const slot = document.querySelector('select[name="slot"]').value;
+
+    fetch(`/get_milk_data?date=${date}&slot=${slot}`)
+    .then(res => res.json())
+    .then(data => {
+
+        const rows = document.querySelectorAll("#vendorTable tbody tr");
+
+        // 🔥 RESET FIRST
+        rows.forEach((row, i) => {
+            const qtyEl = document.getElementById("quantity_" + i);
+            if(qtyEl){
+                qtyEl.value = "";
+            }
+        });
+
+        // 🔥 APPLY SAVED DATA (ONLY SHOW)
+        data.forEach(item => {
+
+            rows.forEach((row, i) => {
+
+                const v_id = document.getElementById("vendor_id_" + i).value;
+
+                if(v_id == item.vendor_id){
+
+                    const typeEl = document.getElementById("milk_type_" + i);
+                    const qtyEl = document.getElementById("quantity_" + i);
+
+                    if(typeEl && typeEl.tagName === "SELECT"){
+                        typeEl.value = item.milk_type;
+                    }
+
+                    if(qtyEl){
+                        qtyEl.value = item.quantity;
+                    }
+
+                }
+
+            });
+
+        });
+
+    })
+    .catch(err => console.log("Load error:", err));
+}
+
+
+// 🔥 AUTO LOAD
+window.addEventListener("DOMContentLoaded", function(){
+    setTimeout(loadSavedMilkData, 200);
+});
+
+
+// 🔥 AUTO REFRESH (DATE / SLOT CHANGE)
+document.addEventListener("DOMContentLoaded", function(){
+
+    const dateInput = document.querySelector('input[name="date"]');
+    const slotSelect = document.querySelector('select[name="slot"]');
+
+    if(dateInput){
+        dateInput.addEventListener("change", loadSavedMilkData);
+    }
+
+    if(slotSelect){
+        slotSelect.addEventListener("change", loadSavedMilkData);
+    }
+
+});
+</script>
+{% endblock %}

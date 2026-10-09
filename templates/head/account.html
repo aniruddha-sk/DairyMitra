@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div id="app-content">
+
+    <h1 class="page-title">My Account</h1>
+
+    <!-- ================= ACCOUNT INFO ================= -->
+    <div class="section mb-6">
+
+        <div class="flex flex-col gap-3">
+
+            <div class="flex justify-between">
+                <span class="account-label">Dairy Name :</span>
+                <span>{{ user.dairy_name }}</span>
+            </div>
+
+            <div class="flex justify-between">
+                <span class="account-label">Email :</span>
+                <span>{{ user.email }}</span>
+            </div>
+
+            <div class="flex justify-between">
+                <span class="account-label">Phone :</span>
+                <span>{{ user.phone }}</span>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <span class="account-label">Dairy ID :</span>
+
+                <div class="flex items-center gap-2">
+
+                    <span id="dairyCode">{{ user.dairy_code }}</span>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="copyDairyCode()">
+                        Copy
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= ACCOUNT ACTIONS ================= -->
+
+    <div class="flex gap-3 flex-wrap">
+
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+            Logout
+        </a>
+
+        <form action="{{ url_for('delete_account') }}"
+              method="POST"
+              onsubmit="return confirm('Account delete करायचं आहे का?');">
+
+            <button type="submit" class="btn btn-danger">
+                Delete Account
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+function copyDairyCode() {
+
+    const dairyCode = document.getElementById("dairyCode").innerText;
+
+    navigator.clipboard.writeText(dairyCode)
+        .then(function () {
+            alert("Dairy ID Copied Successfully!");
+        })
+        .catch(function (err) {
+            console.error(err);
+            alert("Copy failed!");
+        });
+
+}
+</script>
+
+{% endblock %}

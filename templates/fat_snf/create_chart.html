@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}
+FAT / SNF Rate Chart
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="section mb-6">
+
+        <div class="flex items-center justify-between flex-wrap gap-3">
+
+            <div>
+                <h2 class="page-title">
+                    🥛 FAT / SNF Rate Chart
+                </h2>
+
+                <p class="text-muted">
+                    तुमचा स्वतःचा FAT / SNF दर चार्ट तयार करा
+                </p>
+            </div>
+
+            <a
+                href="{{ url_for('fat_snf_rate_chart') }}"
+                class="btn btn-secondary"
+            >
+                ← Rate Charts
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CHART BASIC INFORMATION
+    ====================================================== -->
+
+    <div class="section mb-6">
+
+        <h3 class="sub-title">
+            📋 Chart Information
+        </h3>
+
+        <div class="grid gap-4 md:grid-cols-3">
+
+            <!-- Chart Name -->
+
+            <div>
+
+                <label class="form-label">
+                    Chart Name
+                </label>
+
+                <input
+                    type="text"
+                    id="chartName"
+                    class="form-input"
+                    placeholder="उदा. Main Milk Rate Chart"
+                    required
+                >
+
+            </div>
+
+
+            <!-- Milk Type -->
+
+            <div>
+
+                <label class="form-label">
+                    Milk Type
+                </label>
+
+                <select
+                    id="milkType"
+                    class="form-select"
+                >
+
+                    <option value="cow">
+                        🐄 Cow
+                    </option>
+
+                    <option value="buffalo">
+                        🐃 Buffalo
+                    </option>
+
+                    <option value="both">
+                        🐄🐃 Both
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- Effective Date -->
+
+            <div>
+
+                <label class="form-label">
+                    Effective From
+                </label>
+
+                <input
+                    type="date"
+                    id="effectiveDate"
+                    class="form-input"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MATRIX SETTINGS
+    ====================================================== -->
+
+    <div class="section mb-6">
+
+        <h3 class="sub-title">
+            ⚙️ Matrix Settings
+        </h3>
+
+
+        <div class="grid gap-4 md:grid-cols-4">
+
+            <!-- FAT Start -->
+
+            <div>
+
+                <label class="form-label">
+                    FAT Start
+                </label>
+
+                <input
+                    type="number"
+                    id="fatStart"
+                    class="form-input"
+                    value="3.2"
+                    step="0.1"
+                    min="0"
+                >
+
+            </div>
+
+
+            <!-- FAT End -->
+
+            <div>
+
+                <label class="form-label">
+                    FAT End
+                </label>
+
+                <input
+                    type="number"
+                    id="fatEnd"
+                    class="form-input"
+                    value="5.0"
+                    step="0.1"
+                    min="0"
+                >
+
+            </div>
+
+
+            <!-- SNF Start -->
+
+            <div>
+
+                <label class="form-label">
+                    SNF Start
+                </label>
+
+                <input
+                    type="number"
+                    id="snfStart"
+                    class="form-input"
+                    value="8.3"
+                    step="0.1"
+                    min="0"
+                >
+
+            </div>
+
+
+            <!-- SNF End -->
+
+            <div>
+
+                <label class="form-label">
+                    SNF End
+                </label>
+
+                <input
+                    type="number"
+                    id="snfEnd"
+                    class="form-input"
+                    value="8.7"
+                    step="0.1"
+                    min="0"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="mt-4">
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="generateMatrix()"
+            >
+                ⚡ Generate Matrix
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RATE MATRIX
+    ====================================================== -->
+
+    <div
+        id="matrixSection"
+        class="section mb-6"
+        style="display:none;"
+    >
+
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+
+            <div>
+
+                <h3 class="sub-title">
+                    📊 FAT / SNF Rate Matrix
+                </h3>
+
+                <p class="text-muted">
+                    प्रत्येक FAT आणि SNF combination साठी दर भरा.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Matrix -->
+
+        <div
+            class="table-wrap"
+            style="overflow-x:auto;"
+        >
+
+            <table
+                class="table"
+                id="rateMatrix"
+            >
+
+                <thead id="matrixHead">
+
+                </thead>
+
+                <tbody id="matrixBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Save -->
+
+        <div class="mt-6 flex gap-3 flex-wrap">
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="saveChart()"
+            >
+                💾 Save Rate Chart
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="clearMatrix()"
+            >
+                🗑️ Clear
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+<script>
+
+let fatValues = [];
+let snfValues = [];
+
+
+/* =========================================================
+   ROUND TO ONE DECIMAL
+========================================================= */
+
+function roundOne(value) {
+
+    return Math.round(
+        (parseFloat(value) + Number.EPSILON) * 10
+    ) / 10;
+
+}
+
+
+/* =========================================================
+   GENERATE VALUES
+========================================================= */
+
+function generateValues(start, end) {
+
+    const values = [];
+
+    let current = parseFloat(start);
+    const last = parseFloat(end);
+
+    if (
+        isNaN(current) ||
+        isNaN(last) ||
+        current > last
+    ) {
+
+        return values;
+
+    }
+
+    while (current <= last + 0.0001) {
+
+        values.push(
+            roundOne(current)
+        );
+
+        current += 0.1;
+
+    }
+
+    return values;
+
+}
+
+
+/* =========================================================
+   GENERATE MATRIX
+========================================================= */
+
+function generateMatrix() {
+
+    const fatStart =
+        document.getElementById("fatStart").value;
+
+    const fatEnd =
+        document.getElementById("fatEnd").value;
+
+    const snfStart =
+        document.getElementById("snfStart").value;
+
+    const snfEnd =
+        document.getElementById("snfEnd").value;
+
+
+    fatValues = generateValues(
+        fatStart,
+        fatEnd
+    );
+
+    snfValues = generateValues(
+        snfStart,
+        snfEnd
+    );
+
+
+    if (
+        fatValues.length === 0 ||
+        snfValues.length === 0
+    ) {
+
+        alert(
+            "Please enter valid FAT and SNF range."
+        );
+
+        return;
+
+    }
+
+
+    const matrixHead =
+        document.getElementById("matrixHead");
+
+    const matrixBody =
+        document.getElementById("matrixBody");
+
+
+    matrixHead.innerHTML = "";
+    matrixBody.innerHTML = "";
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    let header = `
+        <tr>
+
+            <th
+                style="
+                    position:sticky;
+                    left:0;
+                    z-index:2;
+                    background:#dbeafe;
+                "
+            >
+                FAT / SNF
+            </th>
+    `;
+
+
+    snfValues.forEach(
+        function(snf) {
+
+            header += `
+                <th>
+                    ${snf.toFixed(1)}
+                </th>
+            `;
+
+        }
+    );
+
+
+    header += `</tr>`;
+
+
+    matrixHead.innerHTML = header;
+
+
+    /* =====================================================
+       BODY
+    ====================================================== */
+
+    fatValues.forEach(
+        function(fat, fatIndex) {
+
+            let row = `
+                <tr>
+
+                    <th
+                        style="
+                            position:sticky;
+                            left:0;
+                            z-index:1;
+                            background:#dbeafe;
+                        "
+                    >
+                        ${fat.toFixed(1)}
+                    </th>
+            `;
+
+
+            snfValues.forEach(
+                function(snf, snfIndex) {
+
+                    row += `
+                        <td>
+
+                            <input
+                                type="number"
+                                class="form-input rate-input"
+                                step="0.01"
+                                min="0"
+                                data-fat="${fat}"
+                                data-snf="${snf}"
+                                placeholder="₹"
+                            >
+
+                        </td>
+                    `;
+
+                }
+            );
+
+
+            row += `</tr>`;
+
+
+            matrixBody.innerHTML += row;
+
+        }
+    );
+
+
+    document.getElementById(
+        "matrixSection"
+    ).style.display = "block";
+
+}
+
+
+/* =========================================================
+   CLEAR MATRIX
+========================================================= */
+
+function clearMatrix() {
+
+    document.getElementById(
+        "matrixHead"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "matrixBody"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "matrixSection"
+    ).style.display = "none";
+
+}
+
+
+/* =========================================================
+   SAVE CHART
+========================================================= */
+
+function saveChart() {
+
+    const chartName =
+        document.getElementById("chartName").value.trim();
+
+    const milkType =
+        document.getElementById("milkType").value;
+
+    const effectiveDate =
+        document.getElementById("effectiveDate").value;
+
+
+    if (!chartName) {
+
+        alert("Please enter chart name.");
+
+        return;
+
+    }
+
+
+    if (!effectiveDate) {
+
+        alert("Please select effective date.");
+
+        return;
+
+    }
+
+
+    const inputs =
+        document.querySelectorAll(
+            ".rate-input"
+        );
+
+
+    if (inputs.length === 0) {
+
+        alert(
+            "Please generate the matrix first."
+        );
+
+        return;
+
+    }
+
+
+    const matrix = [];
+
+
+    inputs.forEach(
+        function(input) {
+
+            matrix.push({
+
+                fat:
+                    parseFloat(
+                        input.dataset.fat
+                    ),
+
+                snf:
+                    parseFloat(
+                        input.dataset.snf
+                    ),
+
+                rate:
+                    parseFloat(
+                        input.value
+                    )
+
+            });
+
+        }
+    );
+
+
+    /* =====================================================
+       VALIDATE RATES
+    ====================================================== */
+
+    const emptyRate =
+        matrix.some(
+            item =>
+                isNaN(item.rate)
+        );
+
+
+    if (emptyRate) {
+
+        alert(
+            "Please enter rate for every FAT/SNF cell."
+        );
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       SEND TO BACKEND
+    ====================================================== */
+
+    fetch(
+        "{{ url_for('create_fat_snf_chart') }}",
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                chart_name:
+                    chartName,
+
+                milk_type:
+                    milkType,
+
+                effective_date:
+                    effectiveDate,
+
+                fat_values:
+                    fatValues,
+
+                snf_values:
+                    snfValues,
+
+                matrix:
+                    matrix
+
+            })
+
+        }
+    )
+
+    .then(
+        response =>
+            response.json()
+    )
+
+    .then(
+        data => {
+
+            if (data.success) {
+
+                alert(
+                    data.message ||
+                    "FAT/SNF Rate Chart saved successfully."
+                );
+
+                window.location.href =
+                    "{{ url_for('fat_snf_rate_chart') }}";
+
+            } else {
+
+                alert(
+                    data.message ||
+                    "Unable to save chart."
+                );
+
+            }
+
+        }
+    )
+
+    .catch(
+        error => {
+
+            console.error(
+                "Save chart error:",
+                error
+            );
+
+            alert(
+                "Something went wrong while saving the chart."
+            );
+
+        }
+    );
+
+}
+
+</script>
+
+{% endblock %}

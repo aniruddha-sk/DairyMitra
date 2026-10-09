@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title text-center mb-4">
+  {{ session.get("dairy_name","My Dairy") }}
+</h2>
+
+<!-- TODAY ACTIONS -->
+<section class="section">
+  <h4 class="section-title">आजचं काम</h4>
+
+  <div class="grid-cards">
+
+    <!-- दूध जमा -->
+    <a class="card card-action" href="{{ url_for('milk_collection') }}">
+      <span class="iconify icon-blue" data-icon="material-symbols:local-drink-outline"></span>
+      <span>दूध जमा</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+    <!-- आजचा हिशोब -->
+    <a class="card card-action" href="{{ url_for('calculation') }}">
+      <span class="iconify icon-teal" data-icon="material-symbols:calculate-outline"></span>
+      <span>आजचा हिशोब</span>
+    </a>
+
+    <!-- पावती -->
+    <a class="card card-action" href="{{ url_for('receipt_all_vendors') }}">
+      <span class="iconify icon-purple" data-icon="material-symbols:receipt-long-outline"></span>
+      <span>पावती</span>
+    </a>
+
+    <!-- गाडीप्रमाणे दूध -->
+    <a class="card card-action" href="{{ url_for('vehicle_milk_report') }}">
+      <span class="iconify icon-purple" data-icon="mdi:truck-outline"></span>
+      <span>गाडीप्रमाणे दूध</span>
+    </a>
+
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- DAILY WORK -->
+<section class="section mt-4">
+  <h4 class="section-title">दैनंदिन काम</h4>
+
+  <div class="grid-cards">
+
+    <a class="card card-action" href="{{ url_for('edit_entry') }}">
+      <span class="iconify icon-amber" data-icon="material-symbols:edit-document-outline"></span>
+      <span>नोंदी बदला</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('food_sack') }}">
+      <span class="iconify icon-green" data-icon="material-symbols:agriculture-outline"></span>
+      <span>पेंड</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+    <a class="card card-action" href="{{ url_for('add_vendor') }}">
+      <span class="iconify icon-sky" data-icon="material-symbols:person-add-outline"></span>
+      <span>नवीन ग्राहक</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('advance') }}">
+      <span class="iconify icon-emerald" data-icon="material-symbols:payments-outline"></span>
+      <span>ॲडव्हान्स</span>
+    </a>
+
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- REPORTS -->
+
+
+<section class="section mt-4">
+  <h4 class="section-title">Reports</h4>
+
+  <div class="grid-cards">
+
+    {% if session.get('role') != 'staff' %}
+
+<a class="card card-action" href="{{ url_for('generate_bank_report') }}">
+
+  <span class="iconify icon-green" data-icon="material-symbols:download-outline">
+  </span>
+
+  <span>Generate Report</span>
+
+</a>
+{% endif %}
+
+    <a class="card card-action" href="{{ url_for('vendor_range_summary') }}">
+      <span class="iconify icon-pink" data-icon="material-symbols:grouped-bar-chart-outline"></span>
+      <span>Vendor Range Report</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('milk_summary') }}">
+      <span class="iconify icon-indigo" data-icon="material-symbols:bar-chart-outline"></span>
+      <span>दूध सारांश</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+
+
+    <a class="card card-action" href="{{ url_for('milk_rate') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
+      <span>दूध दर</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('vendor_rate') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
+      <span>Customer नुसार दूध दर</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('food_sack_rate') }}">
+      <span class="iconify icon-green" data-icon="material-symbols:eco-outline"></span>
+      <span>खाद्य दर</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('milk_summary_report') }}">
+      <span class="iconify icon-indigo" data-icon="material-symbols:bar-chart-outline"></span>
+      <span>जमा केलेले दूध</span>
+    </a>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

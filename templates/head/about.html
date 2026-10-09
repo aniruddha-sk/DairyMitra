@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-4xl mx-auto p-6 space-y-10">
+
+  <!-- PAGE TITLE -->
+  <div>
+    <h1 class="text-3xl font-bold text-slate-800 mb-2">About DairyMitr</h1>
+    <p class="text-slate-600">
+      DairyMitr हा एक आधुनिक व विश्वासार्ह dairy management platform आहे.
+      डेअरी मालक आणि शेतकरी यांच्यासाठी दूध संकलन व हिशोब प्रक्रिया डिजिटल करण्यासाठी तयार केला आहे.
+    </p>
+  </div>
+
+  <!-- PURPOSE -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-800 mb-2">आमचा उद्देश</h2>
+    <p class="text-slate-600">
+      डेअरी व्यवसायात पारदर्शकता, अचूक हिशोब आणि वेळेची बचत करणे हा DairyMitr चा मुख्य उद्देश आहे.
+    </p>
+  </div>
+
+  <!-- FEATURES -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-800 mb-3">मुख्य सुविधा</h2>
+    <ul class="list-disc list-inside text-slate-600 space-y-1">
+      <li>दूध संकलन (सकाळ / संध्याकाळ)</li>
+      <li>गाय व म्हैस दूध वेगळा हिशोब</li>
+      <li>Vendor व्यवस्थापन</li>
+      <li>Advance व Food Sack नोंद</li>
+      <li>दर व्यवस्थापन (Effective Date सह)</li>
+      <li>अंतिम पेमेंट कॅल्क्युलेशन</li>
+      <li>पावती व रिपोर्ट्स</li>
+    </ul>
+  </div>
+
+  <!-- BENEFITS -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-800 mb-3">फायदे</h2>
+    <ul class="list-disc list-inside text-slate-600 space-y-1">
+      <li>हिशोबात चूक होत नाही</li>
+      <li>कागदविरहित (Paperless) काम</li>
+      <li>वेळ आणि मेहनत वाचते</li>
+      <li>डेटा सुरक्षित राहतो</li>
+    </ul>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-800 mb-3">Quick Links</h2>
+    <div class="flex flex-wrap gap-4">
+      <a href="{{ url_for('learn') }}" class="text-indigo-600 font-medium hover:underline">
+        Learn DairyMitr
+      </a>
+      <a href="{{ url_for('contact') }}" class="text-indigo-600 font-medium hover:underline">
+        Contact Us
+      </a>
+      <a href="{{ url_for('privacy') }}" class="text-indigo-600 font-medium hover:underline">
+        Privacy Policy
+      </a>
+      <a href="{{ url_for('terms') }}" class="text-indigo-600 font-medium hover:underline">
+        Terms & Conditions
+      </a>
+      <a href="{{ url_for('account') }}" class="text-indigo-600 font-medium hover:underline">
+        My Account
+      </a>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="border-t pt-6">
+    <h2 class="text-2xl font-semibold text-slate-800 mb-3">Feedback</h2>
+    <form method="POST" class="space-y-4 max-w-md">
+      <input
+        name="name"
+        placeholder="तुमचं नाव"
+        class="w-full p-2 border rounded"
+        required
+      >
+      <textarea
+        name="message"
+        placeholder="आपला feedback..."
+        class="w-full p-2 border rounded"
+        rows="4"
+        required
+      ></textarea>
+      <button
+        class="btn btn-primary"
+        type="submit">
+        Send Feedback
+      </button>
+    </form>
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}विक्रेता कालावधी अहवाल{% endblock %}
+
+{% block content %}
+
+<!-- ===== YOUR SAME CSS (UNCHANGED) ===== -->
+<style>
+/* ===============================
+   PROFESSIONAL FILTER PANEL
+================================ */
+.filter-card{
+  background: linear-gradient(145deg,#f8fafc,#eef2ff);
+  border-radius: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(79,70,229,0.15);
+}
+.filter-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+#filterPanel{
+  overflow: hidden;
+  transition: all 0.4s ease;
+  max-height: 0;
+  opacity: 0;
+}
+#filterPanel.show{
+  max-height: 200px;
+  opacity: 1;
+}
+#rangeInput{
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+}
+#selectToggleBtn{
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+.filter-btn{
+  background: linear-gradient(135deg,#6366f1,#4f46e5);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+</style>
+
+<h2 class="page-title">विक्रेता कालावधी अहवाल</h2>
+
+<form method="POST" class="section">
+
+<div class="flex gap-4 mb-4 flex-wrap">
+  <div>
+    <label>पासून तारीख</label>
+    <input type="date" name="from_date"
+           value="{{ from_date or '' }}"
+           required class="form-input">
+  </div>
+  <div>
+    <label>पर्यंत तारीख</label>
+    <input type="date" name="to_date"
+           value="{{ to_date or '' }}"
+           required class="form-input">
+  </div>
+</div>
+
+<!-- ===== YOUR SAME FILTER PANEL ===== -->
+<div class="filter-card mb-4">
+  <button type="button" class="btn filter-btn" onclick="toggleFilter()">
+    पर्याय निवडा
+  </button>
+
+  <div id="filterPanel" class="mt-3">
+    <div class="flex gap-3 flex-wrap">
+      <button type="button" id="selectToggleBtn"
+              class="btn btn-primary"
+              onclick="toggleSelectAll()">
+        सर्व निवडा
+      </button>
+
+      <input type="text" id="rangeInput"
+             placeholder="उदा: 1-50 किंवा 1,2,10-20"
+             class="form-input w-64">
+
+      <button type="button"
+              class="btn btn-secondary"
+              onclick="applyRange()">
+        लागू करा
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VENDOR TABLE ===== -->
+<div class="table-wrap">
+<table class="table">
+<thead>
+<tr>
+  <th>निवडा</th>
+  <th>आयडी</th>
+  <th>नाव</th>
+</tr>
+</thead>
+<tbody>
+{% for v in vendors %}
+<tr>
+  <td>
+    <input type="checkbox"
+           name="vendors"
+           value="{{ v.vendor_id }}"
+           class="vendor-checkbox">
+  </td>
+  <td>{{ v.vendor_id }}</td>
+  <td>{{ v.name }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<button type="submit" class="btn btn-primary mt-4">
+  माहिती पहा
+</button>
+</form>
+
+{% if results %}
+<div class="section mt-6">
+<h4>निकाल ({{ from_date }} ते {{ to_date }})</h4>
+
+<div class="table-wrap">
+<table class="table">
+<thead>
+<tr>
+<th>आयडी</th>
+<th>नाव</th>
+<th>गायी सकाळ</th>
+<th>गायी संध्याकाळ</th>
+<th>म्हशी सकाळ</th>
+<th>म्हशी संध्याकाळ</th>
+<th>गायी एकूण</th>
+<th>म्हशी एकूण</th>
+</tr>
+</thead>
+<tbody>
+
+{% for r in results %}
+<tr>
+<td>{{ r.vendor_id }}</td>
+<td>{{ r.name }}</td>
+<td>{{ r.cow_morning }}</td>
+<td>{{ r.cow_evening }}</td>
+<td>{{ r.buffalo_morning }}</td>
+<td>{{ r.buffalo_evening }}</td>
+<td>{{ r.cow_total }}</td>
+<td>{{ r.buffalo_total }}</td>
+</tr>
+{% endfor %}
+
+<!-- GRAND TOTAL -->
+<tr style="background:#dcfce7;font-weight:700;">
+<td colspan="2">🔵 सर्व निवडलेले एकूण</td>
+<td>{{ grand_totals.cow_morning }}</td>
+<td>{{ grand_totals.cow_evening }}</td>
+<td>{{ grand_totals.buffalo_morning }}</td>
+<td>{{ grand_totals.buffalo_evening }}</td>
+<td>{{ grand_totals.cow_total }}</td>
+<td>{{ grand_totals.buffalo_total }}</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// YOUR SAME JS (UNCHANGED)
+window.onload = function(){
+  const today = new Date().toISOString().split("T")[0];
+  document.querySelector('input[name="from_date"]').value ||= today;
+  document.querySelector('input[name="to_date"]').value ||= today;
+};
+function toggleFilter(){
+  document.getElementById("filterPanel").classList.toggle("show");
+}
+let allSelected = false;
+function toggleSelectAll(){
+  const checkboxes = document.querySelectorAll(".vendor-checkbox");
+  if(!allSelected){
+    checkboxes.forEach(cb => cb.checked = true);
+    allSelected = true;
+  } else {
+    checkboxes.forEach(cb => cb.checked = false);
+    allSelected = false;
+  }
+}
+function applyRange(){
+  const input = document.getElementById("rangeInput").value.trim();
+  if(!input) return;
+  const checkboxes = document.querySelectorAll(".vendor-checkbox");
+  checkboxes.forEach(cb => cb.checked = false);
+  let ids = [];
+  input.split(",").forEach(part=>{
+    if(part.includes("-")){
+      let [start,end] = part.split("-");
+      for(let i=parseInt(start);i<=parseInt(end);i++){
+        ids.push(i.toString());
+      }
+    } else {
+      ids.push(part.trim());
+    }
+  });
+  checkboxes.forEach(cb=>{
+    if(ids.includes(cb.value)){
+      cb.checked = true;
+    }
+  });
+}
+</script>
+{% endblock %}

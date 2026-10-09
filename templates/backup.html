@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Backup System{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Step Progress Styles */
+    .process-steps {
+        list-style: none;
+        padding: 0;
+        margin: 15px 0;
+        text-align: left;
+    }
+
+    .process-steps li {
+        padding: 6px 0;
+        font-size: 14px;
+        color: #555;
+        transition: all 0.3s ease;
+    }
+
+    .process-steps li.active {
+        font-weight: bold;
+        color: #000;
+    }
+
+    /* Simple Progress Bar Styling */
+    .progress-bar {
+        width: 100%;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        height: 8px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    #progressFill {
+        width: 0%;
+        height: 100%;
+        background-color: #28a745;
+        transition: width 0.4s ease-in-out;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style>
+
+<h2 class="page-title">💾 Backup & Restore</h2>
+
+<div class="section">
+    <h3 class="mb-4">User Backup & Restore</h3>
+
+    <div class="flex gap-3 flex-wrap mb-4">
+        <button class="btn btn-primary" onclick="backupData()">
+            Backup My Data
+        </button>
+    </div>
+
+    <div id="processBox" class="section hidden" style="border: 1px solid #ddd; background: #f9f9f9;">
+        <h3 id="processTitle">Processing...</h3>
+        
+        <ul id="processSteps" class="process-steps">
+            <li id="step1">⏳ Waiting...</li>
+            <li id="step2">⏳ Waiting...</li>
+            <li id="step3">⏳ Waiting...</li>
+            <li id="step4">⏳ Waiting...</li>
+        </ul>
+
+        <div class="progress-bar">
+            <div id="progressFill"></div>
+        </div>
+    </div>
+
+    <p class="text-muted mt-4">
+        Backup मध्ये तुमचे सर्व vendors, milk entries, advance, food sack आणि milk rates सुरक्षित ठेवले जातील.
+    </p>
+</div>
+
+<div class="section">
+    <h3 class="mb-4">Backup History</h3>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Backup File</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="backupList">
+                <tr>
+                    <td colspan="2" class="text-center text-muted">
+                        No backups yet
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// --- UI Helper Functions ---
+function showProcessBox(title, s1, s2, s3, s4) {
+    const box = document.getElementById("processBox");
+    document.getElementById("processTitle").innerText = title;
+    document.getElementById("step1").innerText = "⏳ " + s1;
+    document.getElementById("step2").innerText = "⏳ " + s2;
+    document.getElementById("step3").innerText = "⏳ " + s3;
+    document.getElementById("step4").innerText = "⏳ " + s4;
+    document.getElementById("progressFill").style.width = "0%";
+    box.classList.remove("hidden");
+}
+
+// --- Backup Function ---
+function backupData() {
+    const bar = document.getElementById("progressFill");
+    
+    // UI Setup
+    showProcessBox("Creating Backup...", "Preparing backup", "Exporting database", "Compressing backup", "Saving file");
+
+    // Start Animation
+    bar.style.width = "10%";
+
+    setTimeout(() => {
+        document.getElementById("step1").innerText = "✅ Preparing backup";
+        bar.style.width = "30%";
+    }, 600);
+
+    setTimeout(() => {
+        document.getElementById("step2").innerText = "✅ Exporting database";
+        bar.style.width = "50%";
+    }, 1200);
+
+    // Actual API Call
+    fetch("/backup_my_data")
+    .then(res => res.json())
+    .then(data => {
+        setTimeout(() => {
+            document.getElementById("step3").innerText = "✅ Compressing backup";
+            bar.style.width = "85%";
+        }, 500);
+
+        setTimeout(() => {
+            document.getElementById("step4").innerText = "✅ Backup saved successfully";
+            bar.style.width = "100%";
+            loadBackups(); // Refresh list
+        }, 1000);
+    })
+    .catch(err => {
+        document.getElementById("processTitle").innerText = "❌ Error in Backup";
+    });
+}
+
+// --- Restore Function ---
+function restoreFile(file) {
+    if (!confirm("Restore this backup? Current data will be replaced!")) return;
+
+    const bar = document.getElementById("progressFill");
+
+    // UI Setup
+    showProcessBox("Restoring Data...", "Reading backup file", "Preparing database", "Restoring data", "Finalizing restore");
+
+    bar.style.width = "20%";
+
+    setTimeout(() => {
+        document.getElementById("step1").innerText = "✅ Reading backup file";
+        bar.style.width = "40%";
+    }, 700);
+
+    // Actual API Call
+    fetch("/restore_backup/" + file, {
+    method: "POST"
+})
+    .then(res => res.json())
+    .then(data => {
+        setTimeout(() => {
+            document.getElementById("step2").innerText = "✅ Preparing database";
+            bar.style.width = "65%";
+        }, 500);
+
+        setTimeout(() => {
+            document.getElementById("step3").innerText = "✅ Restoring data";
+            bar.style.width = "85%";
+        }, 1000);
+
+        setTimeout(() => {
+            document.getElementById("step4").innerText = "✅ Restore completed";
+            bar.style.width = "100%";
+            alert("Data restored successfully!");
+        }, 1500);
+    })
+    .catch(err => {
+        document.getElementById("processTitle").innerText = "❌ Restore Failed";
+    });
+}
+
+// --- Load History ---
+function loadBackups() {
+    fetch("/backup_history")
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("backupList");
+        table.innerHTML = "";
+        
+        if(data.files.length === 0) {
+            table.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No backups yet</td></tr>';
+            return;
+        }
+
+        data.files.forEach(file => {
+            table.innerHTML += `
+            <tr>
+                <td>${file}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="restoreFile('${file}')">
+                        Restore
+                    </button>
+                </td>
+            </tr>`;
+        });
+    });
+}
+
+// Initial Load
+loadBackups();
+</script>
+
+{% endblock %}

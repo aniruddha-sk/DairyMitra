@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Staff{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">✏️ Staff Edit करा</h2>
+
+<div class="section">
+
+<form method="POST" class="max-w-lg">
+
+<div class="mb-4">
+<label class="form-label">Staff Name</label>
+<input type="text" name="name" value="{{ staff.name }}" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">Email</label>
+<input type="email" name="email" value="{{ staff.email }}" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">Vehicle Number</label>
+<input type="text" name="vehicle" value="{{ staff.vehicle_number }}" class="form-input">
+</div>
+
+<div class="action-bar">
+
+<button type="submit" class="btn btn-primary">
+<i class="fa fa-save"></i> Update
+</button>
+
+<a href="{{ url_for('staff_list') }}" class="btn btn-secondary">
+<i class="fa fa-arrow-left"></i> Back
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

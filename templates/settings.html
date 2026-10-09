@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+
+<style>
+
+.settings-container{
+max-width:600px;
+margin:auto;
+}
+
+.settings-card{
+background:var(--card);
+border-radius:16px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);
+overflow:hidden;
+margin-bottom:20px;
+}
+
+
+.setting-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:18px 20px;
+border-bottom:1px solid var(--border);
+text-decoration:none;
+color:var(--text);
+transition:0.2s;
+}
+.setting-item:last-child{
+border-bottom:none;
+}
+.setting-item:hover{
+background:rgba(0,0,0,0.04);
+}
+
+.setting-left{
+display:flex;
+align-items:center;
+gap:14px;
+font-weight:600;
+font-size:16px;
+}
+
+.setting-icon{
+width:36px;
+height:36px;
+border-radius:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+}
+
+.icon1{background:#6366f1;}
+.icon2{background:#22c55e;}
+.icon3{background:#f59e0b;}
+.icon4{background:#ef4444;}
+.icon5{background:#0ea5e9;}
+.icon6{background:#8b5cf6;}
+.icon7{background:#06b6d4;}
+.icon8{background:#f97316;}
+.icon9{background:#64748b;}
+.icon10{
+    background:#14b8a6;
+}
+
+.arrow{
+color:#9ca3af;
+font-size:18px;
+}
+
+.section-title{
+font-size:14px;
+font-weight:700;
+color:#64748b;
+margin:20px 0 8px;
+}
+
+/* THEME MODAL */
+
+.theme-modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.4);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:100;
+}
+
+.theme-box{
+background:white;
+padding:24px;
+border-radius:14px;
+width:260px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+.theme-box h3{
+margin-bottom:16px;
+}
+
+</style>
+
+
+<div class="settings-container">
+
+<h2 class="page-title">⚙ Settings</h2>
+
+<div class="section-title">ACCOUNT</div>
+
+<div class="settings-card">
+
+<a href="{{ url_for('account') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon1">👤</div>
+Account
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('about') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon2">ℹ</div>
+About
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('backup_page') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon3">💾</div>
+Backup System
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('privacy') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon4">🔒</div>
+Privacy
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('staff_list') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon5">👥</div>
+Manage Staff
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('bank_settings') }}" class="setting-item">
+    <div class="setting-left">
+        <div class="setting-icon icon10">🏦</div>
+        Bank Settings
+    </div>
+    <div class="arrow">›</div>
+</a>
+
+
+</div>
+
+
+<div class="section-title">QUICK LINKS</div>
+
+<div class="settings-card">
+
+<a href="{{ url_for('learn') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon6">📘</div>
+Learn DairyMitr
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('contact') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon7">📞</div>
+Contact Us
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('privacy') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon8">📜</div>
+Privacy Policy
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="{{ url_for('terms') }}" class="setting-item">
+<div class="setting-left">
+<div class="setting-icon icon9">⚖</div>
+Terms & Conditions
+</div>
+<div class="arrow">›</div>
+</a>
+
+<a href="#" class="setting-item" onclick="openThemeModal()">
+<div class="setting-left">
+<div class="setting-icon icon6">🎨</div>
+Theme
+</div>
+<div class="arrow">›</div>
+</a>
+
+</div>
+
+</div>
+
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+
+
+{% endblock %}

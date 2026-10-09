@@ -1,0 +1,129 @@
+{% extends "base.html" %} {% block title %}विक्रेता यादी{% endblock %} {% block
+content %}
+
+<h2 class="page-title">📋 विक्रेता यादी</h2>
+
+<!-- 🔍 LIVE SEARCH (NO FORM, NO BUTTON) -->
+<div class="section mb-4 max-w-lg">
+  <input
+    type="text"
+    id="vendorSearch"
+    placeholder="आयडी किंवा नावाने शोधा"
+    class="form-input w-full"
+    onkeyup="filterVendors()"
+  />
+</div>
+
+<!-- 📋 VENDOR TABLE -->
+<div class="table-wrap">
+  <table class="table" id="vendorTable">
+    <thead>
+      <tr>
+        <th>आयडी</th>
+        <th>नाव</th>
+        <th>दूधाचा प्रकार</th>
+        <th>फोन</th>
+        <th>कृती</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for vendor in vendors %}
+      <tr>
+        <td>{{ vendor.vendor_id }}</td>
+
+        <td>{{ vendor.name }}</td>
+
+        <td>
+          {% if vendor.milk_type == 'cow' %} गाय {% elif vendor.milk_type ==
+          'buffalo' %} म्हैस {% else %} गाय-म्हैस {% endif %}
+        </td>
+
+        <td>{{ vendor.phone }}</td>
+
+        <!-- ACTION ICONS -->
+        <td class="flex gap-2 items-center">
+          <!-- ✏️ EDIT -->
+          <a
+            href="/edit_vendor/{{ vendor.vendor_id }}"
+            class="btn btn-secondary"
+            title="संपादन करा"
+          >
+            <i class="fa-solid fa-pen-to-square"></i>
+          </a>
+
+          <!-- 🗑️ DELETE -->
+          <button
+            type="button"
+            class="btn btn-danger"
+            title="हटवा"
+            onclick="openDeleteModal('{{ vendor.vendor_id }}')"
+          >
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ❌ DELETE CONFIRMATION MODAL -->
+<div
+  id="deleteModal"
+  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-50"
+>
+  <div class="bg-white p-6 rounded-xl shadow-lg w-96">
+    <h3 class="text-lg font-bold mb-4">❌ खात्री आहे का?</h3>
+
+    <p class="mb-4">हा विक्रेता आणि त्याचा सर्व डेटा कायमचा हटवला जाईल.</p>
+
+    <form id="deleteForm" method="POST">
+      <input type="hidden" name="confirm" value="1" />
+
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          class="btn btn-muted"
+          onclick="closeDeleteModal()"
+        >
+          रद्द करा
+        </button>
+
+        <button type="submit" class="btn btn-danger">होय, हटवा</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ⚡ SCRIPTS -->
+<script>
+  /* LIVE SEARCH FILTER */
+  function filterVendors() {
+    const input = document.getElementById("vendorSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#vendorTable tbody tr");
+
+    rows.forEach((row) => {
+      const id = row.cells[0].textContent.toLowerCase();
+      const name = row.cells[1].textContent.toLowerCase();
+
+      row.style.display =
+        id.includes(input) || name.includes(input) ? "" : "none";
+    });
+  }
+
+  /* DELETE MODAL */
+  function openDeleteModal(vendorId) {
+    const modal = document.getElementById("deleteModal");
+    const form = document.getElementById("deleteForm");
+
+    form.action = "/delete_vendor/" + vendorId;
+    modal.classList.remove("hidden");
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.add("hidden");
+  }
+</script>
+
+{% endblock %}

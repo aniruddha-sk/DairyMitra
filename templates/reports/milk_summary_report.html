@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}जमा केलेले दूध{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title text-center mb-4">
+  📊 जमा केलेले दूध (सर्व विक्रेते)
+</h2>
+
+<!-- 🔥 DATE FILTER (Styled with your CSS classes) -->
+<section class="section">
+
+  <form method="GET" class="flex flex-wrap justify-center items-end gap-3">
+
+    <div>
+      <label class="form-label">तारीख निवडा</label>
+      <input type="date"
+             name="date"
+             value="{{ selected_date }}"
+             class="form-input"
+             id="milk-date-filter">
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-primary">
+        पाहा
+      </button>
+    </div>
+
+  </form>
+
+</section>
+
+
+<!-- 🔥 TABLE SECTION -->
+<section class="section">
+
+  <div class="table-wrap">
+
+    <table class="table text-center">
+
+      <thead>
+        <tr>
+          <th rowspan="2">आयडी</th>
+          <th rowspan="2">नाव</th>
+          <th colspan="2">गाय</th>
+          <th colspan="2">म्हैस</th>
+          <th rowspan="2">एकूण</th>
+        </tr>
+        <tr>
+          <th>सकाळ</th>
+          <th>संध्याकाळ</th>
+          <th>सकाळ</th>
+          <th>संध्याकाळ</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {% if data %}
+          {% for row in data %}
+          <tr>
+            <td>{{ row.id }}</td>
+            <td><b>{{ row.name }}</b></td>
+
+            <td>{{ "%.1f"|format(row.cow_morning) }}</td>
+            <td>{{ "%.1f"|format(row.cow_evening) }}</td>
+
+            <td>{{ "%.1f"|format(row.buffalo_morning) }}</td>
+            <td>{{ "%.1f"|format(row.buffalo_evening) }}</td>
+
+            <td style="font-weight:700; color:var(--primary);">
+              {{ "%.1f"|format(
+                row.cow_morning +
+                row.cow_evening +
+                row.buffalo_morning +
+                row.buffalo_evening
+              ) }}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-muted">
+              डेटा उपलब्ध नाही
+            </td>
+          </tr>
+        {% endif %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+{% endblock %}

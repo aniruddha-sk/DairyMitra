@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Add Staff{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">👨‍🔧 Staff Add करा</h2>
+
+<div class="section">
+
+<form method="POST" class="max-w-lg">
+
+<div class="mb-4">
+<label class="form-label">Staff Name</label>
+<input type="text" name="name" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">Email (Login ID)</label>
+<input type="email" name="email" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">Password</label>
+<input type="password" name="password" required class="form-input">
+</div>
+
+<div class="mb-6">
+<label class="form-label">Vehicle Number</label>
+<input type="text" name="vehicle" class="form-input" placeholder="MH12AB1234">
+</div>
+
+<div class="action-bar">
+
+<button type="submit" class="btn btn-primary">
+<i class="fa fa-user-plus"></i> Add Staff
+</button>
+
+<a href="{{ url_for('staff_list') }}" class="btn btn-secondary">
+<i class="fa fa-arrow-left"></i> Back
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}
