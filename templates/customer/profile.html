@@ -1,0 +1,25 @@
+{% extends "customer/customer_base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<h1 class="page-title">👤 My Profile</h1>
+
+<div class="section">
+  <div class="flex flex-col gap-3">
+    <div class="flex justify-between"><span class="account-label">नाव :</span><span>{{ session.customer_name }}</span></div>
+    <div class="flex justify-between"><span class="account-label">ग्राहक क्र. :</span><span>{{ session.vendor_id }}</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3 class="mb-4">डेअरी</h3>
+  <div class="flex flex-col gap-3">
+    <div class="flex justify-between"><span class="account-label">डेअरीचे नाव :</span><span>{{ customer.dairy_name }}</span></div>
+    <div class="flex justify-between"><span class="account-label">Dairy ID :</span><span>{{ customer.dairy_code }}</span></div>
+    <div class="flex justify-between"><span class="account-label">संपर्क :</span><span>{{ customer.phone or '-' }}</span></div>
+  </div>
+</div>
+
+<a href="{{ url_for('customer_logout') }}" class="btn btn-secondary">Logout</a>
+{% endblock %}

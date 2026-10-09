@@ -7926,7 +7926,9 @@ def customer_dashboard():
             SELECT vendor_id, user_id, date, slot, milk_type, quantity
             FROM milk_collection
             UNION ALL
-            SELECT vendor_id, user_id, collection_date AS date, slot, milk_type, quantity
+            SELECT vendor_id, user_id, collection_date AS date,
+                   slot COLLATE utf8mb4_0900_ai_ci AS slot,
+                   milk_type COLLATE utf8mb4_0900_ai_ci AS milk_type, quantity
             FROM fat_snf_milk_collection
         ) AS milk_all
 
@@ -8027,7 +8029,9 @@ def customer_milk_history():
         SELECT vendor_id, user_id, date, slot, milk_type, quantity
         FROM milk_collection
         UNION ALL
-        SELECT vendor_id, user_id, collection_date AS date, slot, milk_type, quantity
+        SELECT vendor_id, user_id, collection_date AS date,
+                   slot COLLATE utf8mb4_0900_ai_ci AS slot,
+                   milk_type COLLATE utf8mb4_0900_ai_ci AS milk_type, quantity
         FROM fat_snf_milk_collection
     ) AS milk_all
 
