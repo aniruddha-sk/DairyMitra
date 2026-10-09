@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Settings{% endblock %}
 
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=2">{% endblock %}
 
 {% block content %}
 
@@ -284,12 +284,8 @@ Theme
   toggle.addEventListener("change", function () {
     var on = toggle.checked;
     var msg = on
-      ? "FAT/SNF पद्धत चालू करायची?
-
-यापुढे दूध संकलनात FAT, SNF व लिटर भरावे लागतील आणि दर चार्टमधून येईल. लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही. जुन्या नोंदी बदलणार नाहीत."
-      : "FAT/SNF पद्धत बंद करायची?
-
-यापुढे लिटर × दर पद्धत वापरली जाईल. FAT/SNF नोंदी जतन राहतील आणि हिशोबात जोडल्या जातील.";
+      ? "FAT/SNF पद्धत चालू करायची?\n\nयापुढे दूध संकलनात FAT, SNF व लिटर भरावे लागतील आणि दर चार्टमधून येईल. लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही. जुन्या नोंदी बदलणार नाहीत."
+      : "FAT/SNF पद्धत बंद करायची?\n\nयापुढे लिटर × दर पद्धत वापरली जाईल. FAT/SNF नोंदी जतन राहतील आणि हिशोबात जोडल्या जातील.";
     if (!confirm(msg)) { toggle.checked = !on; return; }
     toggle.disabled = true;
     FSN.api("/api/fat_snf/calculation_mode", { method: "POST",

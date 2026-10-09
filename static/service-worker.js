@@ -17,7 +17,7 @@ const APP_SHELL = [
     "/static/css/about.css",
     "/static/manifest.json",
 
-    "/static/images/logo.png"
+    "/static/images/Logo2.png"
 
 ];
 
@@ -343,10 +343,10 @@ self.addEventListener("push", (event) => {
                     data.body || "",
 
                 icon:
-                    "/static/images/logo.png",
+                    "/static/images/Logo2.png",
 
                 badge:
-                    "/static/images/logo.png",
+                    "/static/images/Logo2.png",
 
                 vibrate:
                     [200, 100, 200],

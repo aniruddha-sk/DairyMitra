@@ -3,6 +3,12 @@
    Uses the existing theme variables from style.css.
    ========================================================= */
 
+/* Class rules like `.fsn-actions {display:flex}` would otherwise override
+   the [hidden] attribute and show elements that should be hidden. */
+[hidden] { display: none !important; }
+
+#vendorInfo { color: var(--muted); }
+
 .fsn-head {
   display: flex; flex-wrap: wrap; gap: 12px;
   align-items: center; justify-content: space-between; margin-bottom: 16px;

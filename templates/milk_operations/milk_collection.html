@@ -2,6 +2,7 @@
 
 {% block title %}दूध संकलन - Dairy Mitr{% endblock %}
 
+{% block content %}
 <div id="offlineBanner" style="
 display:none;
 background:#dc2626;
@@ -13,7 +14,6 @@ font-weight:600;">
 🔴 Offline Mode – डेटा लोकल सेव्ह होईल
 </div>
 
-{% block content %}
 <div id="loader" style="
 display:none;
 position:fixed;
@@ -194,7 +194,9 @@ function initDB(){
 
     request.onupgradeneeded = function(e){
 
-        db = e.target.result;
+        // Use a local handle here; the global `db` is only set once the
+        // upgrade finished (onsuccess), so no transaction runs mid-upgrade.
+        const db = e.target.result;
 
         if(!db.objectStoreNames.contains("milk_entries")){
 

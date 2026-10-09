@@ -7681,6 +7681,10 @@ from flask import send_from_directory
 def manifest():
     return send_from_directory("static", "manifest.json")
 
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory("static/images", "Logo2.png", mimetype="image/png")
+
 @app.route("/service-worker.js")
 def service_worker():
     return send_from_directory("static", "service-worker.js")
