@@ -66,12 +66,36 @@ GEMINI_MODEL = "gemini-3.8-flash"
 # ------------------------------
 app = Flask(__name__)
 
-app.secret_key = os.getenv("SECRET_KEY", "d7e5f19e4c2a4a7b93c6f405f3d9a8c3b1a0c9e7e8d5f4c2a7b6f5e3a9d0c8f2")
+DAIRYMITR_ENV = os.getenv("DAIRYMITR_ENV", "production").strip().lower()
+IS_DEVELOPMENT = DAIRYMITR_ENV in ("development", "dev", "test")
 
-app.config["SESSION_COOKIE_SECURE"] = True
+# The previous hard-coded fallback key was published in the repository, which
+# would let anyone forge a logged-in session. A real key is now mandatory.
+_secret_key = os.getenv("SECRET_KEY", "").strip()
+if not _secret_key or len(_secret_key) < 32:
+    if not IS_DEVELOPMENT:
+        raise RuntimeError(
+            "SECRET_KEY environment variable is missing or shorter than 32 characters. "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    _secret_key = secrets.token_hex(32)
+    logging.warning("DEVELOPMENT MODE: using a random SECRET_KEY (sessions reset on restart).")
+app.secret_key = _secret_key
+
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("SESSION_COOKIE_SECURE", "1") != "0"
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # largest legitimate body is a rate chart
+
+# Behind a reverse proxy (Render/Railway/Nginx) the client IP arrives in
+# X-Forwarded-For; trust exactly the configured number of proxy hops so rate
+# limits use the real client address and cannot be spoofed.
+_proxy_hops = int(os.getenv("TRUST_PROXY_HOPS", "0") or 0)
+if _proxy_hops > 0:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=_proxy_hops, x_proto=_proxy_hops,
+                            x_host=_proxy_hops)
 
 # MySQL configuration from environment
 app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST")
@@ -81,12 +105,24 @@ app.config['MYSQL_DB'] = os.getenv("MYSQL_DB")
 app.config["MYSQL_PORT"] = int(os.getenv("MYSQL_PORT", 3306))
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
-app.config['MYSQL_CONNECT_TIMEOUT'] = 30
+app.config['MYSQL_CONNECT_TIMEOUT'] = int(os.getenv("MYSQL_CONNECT_TIMEOUT", 10))
 app.config['MYSQL_READ_DEFAULT_FILE'] = ''
+app.config['MYSQL_CHARSET'] = 'utf8mb4'
+# NOTE: autocommit stays ON for the existing single-statement routes.
+# Multi-statement financial operations open an explicit transaction
+# (core.db.transaction() / core.db.begin()), otherwise FOR UPDATE locks
+# and rollbacks would have no effect.
 app.config['MYSQL_AUTOCOMMIT'] = True
 
 
 mysql = MySQL(app)
+
+from core import audit as dm_audit
+from core import db as dm_db
+from core import security as dm_security
+
+app.extensions["dm_mysql"] = mysql
+dm_security.init_app(app)
 
 # ==============================================================================
 # PERFORMANCE NOTES (read-only, no behavior change)
@@ -335,12 +371,17 @@ OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES") or 5)
 PASSWORD_RESET_EXPIRY_MINUTES = int(os.getenv("PASSWORD_RESET_EXPIRY_MINUTES") or 15)
 
 # Logging (audit)
-LOG_FILE = os.path.join(os.getcwd(), "audit.log")
+LOG_FILE = os.getenv("AUDIT_LOG_FILE") or os.path.join(os.getcwd(), "audit.log")
+_log_handlers = [logging.FileHandler(LOG_FILE, encoding="utf-8")]
+if os.getenv("LOG_TO_STDOUT", "1") != "0":
+    # PaaS platforms (Render/Railway/Heroku) collect stdout; local files are
+    # lost on every redeploy.
+    _log_handlers.append(logging.StreamHandler())
 logging.basicConfig(
-    filename=LOG_FILE,
     level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=_log_handlers,
 )
 
 
@@ -352,236 +393,8 @@ def audit_log(user_id, action, details=""):
         print("Audit logging failed:", e)
 
 
-# ==========================================================
-# DAIRYMITR AI - DATABASE TOOLS
-# ==========================================================
-
-def get_today_milk():
-    """
-    Get today's milk collection for the currently logged-in
-    DairyMitr owner/staff account.
-
-    IMPORTANT:
-    session['id'] is the owner/user ID for both owner and staff.
-    Therefore this query is tenant-isolated using user_id.
-    """
-
-    try:
-
-        # --------------------------------------------------
-        # LOGIN / ROLE CHECK
-        # --------------------------------------------------
-
-        if not session.get("loggedin"):
-            return {
-                "success": False,
-                "error": "User is not logged in."
-            }
-
-        if session.get("role") not in ("owner", "staff"):
-            return {
-                "success": False,
-                "error": "Unauthorized access."
-            }
-
-        # --------------------------------------------------
-        # OWNER / DAIRY ID
-        # --------------------------------------------------
-
-        user_id = session.get("id")
-
-        if not user_id:
-            return {
-                "success": False,
-                "error": "User ID not found in session."
-            }
-
-        try:
-            user_id = int(user_id)
-        except (TypeError, ValueError):
-            return {
-                "success": False,
-                "error": "Invalid user ID."
-            }
-
-        # --------------------------------------------------
-        # TODAY IN INDIA
-        # --------------------------------------------------
-
-        today = datetime.now(
-            ZoneInfo("Asia/Kolkata")
-        ).date()
-
-        # --------------------------------------------------
-        # DATABASE QUERY
-        # --------------------------------------------------
-
-        cursor = SafeCursor(
-            mysql.connection.cursor()
-        )
-
-        cursor.execute(
-            """
-            SELECT
-                slot,
-                milk_type,
-                SUM(quantity) AS total_quantity
-            FROM milk_collection
-            WHERE
-                user_id=%s
-                AND DATE(date)=%s
-            GROUP BY
-                slot,
-                milk_type
-            ORDER BY
-                slot,
-                milk_type
-            """,
-            (
-                user_id,
-                today
-            )
-        )
-
-        rows = cursor.fetchall()
-
-        cursor.close()
-
-        # --------------------------------------------------
-        # DEFAULT VALUES
-        # --------------------------------------------------
-
-        morning_cow = 0.0
-        morning_buffalo = 0.0
-
-        evening_cow = 0.0
-        evening_buffalo = 0.0
-
-        # --------------------------------------------------
-        # PROCESS DATABASE RESULT
-        # --------------------------------------------------
-
-        for row in rows:
-
-            slot = str(
-                row.get("slot") or ""
-            ).lower().strip()
-
-            milk_type = str(
-                row.get("milk_type") or ""
-            ).lower().strip()
-
-            quantity = float(
-                row.get("total_quantity") or 0
-            )
-
-            # Morning
-            if slot == "morning":
-
-                if milk_type == "cow":
-
-                    morning_cow += quantity
-
-                elif milk_type == "buffalo":
-
-                    morning_buffalo += quantity
-
-                elif milk_type == "both":
-
-                    # If your database uses "both",
-                    # count it separately only if required.
-                    pass
-
-            # Evening
-            elif slot == "evening":
-
-                if milk_type == "cow":
-
-                    evening_cow += quantity
-
-                elif milk_type == "buffalo":
-
-                    evening_buffalo += quantity
-
-                elif milk_type == "both":
-
-                    pass
-
-        # --------------------------------------------------
-        # TOTALS
-        # --------------------------------------------------
-
-        morning_total = (
-            morning_cow +
-            morning_buffalo
-        )
-
-        evening_total = (
-            evening_cow +
-            evening_buffalo
-        )
-
-        total_milk = (
-            morning_total +
-            evening_total
-        )
-
-        # --------------------------------------------------
-        # RETURN DATA TO GEMINI
-        # --------------------------------------------------
-
-        return {
-            "success": True,
-
-            "date": str(today),
-
-            "morning": {
-                "cow_liters": round(
-                    morning_cow,
-                    2
-                ),
-                "buffalo_liters": round(
-                    morning_buffalo,
-                    2
-                ),
-                "total_liters": round(
-                    morning_total,
-                    2
-                )
-            },
-
-            "evening": {
-                "cow_liters": round(
-                    evening_cow,
-                    2
-                ),
-                "buffalo_liters": round(
-                    evening_buffalo,
-                    2
-                ),
-                "total_liters": round(
-                    evening_total,
-                    2
-                )
-            },
-
-            "total_liters": round(
-                total_milk,
-                2
-            )
-        }
-
-    except Exception as e:
-
-        logging.exception(
-            "get_today_milk failed"
-        )
-
-        return {
-            "success": False,
-            "error": "Unable to retrieve today's milk data."
-        }
-
+# (A duplicate get_today_milk() that used to live here was removed; the
+# DairyMitr AI tools are defined together further below.)
 
 
 # ------------------------------
@@ -662,8 +475,15 @@ def login():
 
     if request.method == 'POST':
 
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
+
+        if dm_security.rate_limited([
+            ("login_ip", dm_security.client_ip(), 30, 900),
+            ("login_email", email.lower(), 10, 900),
+        ]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return render_template('auth/login.html'), 429
 
         cursor = SafeCursor(mysql.connection.cursor())
 
@@ -693,12 +513,14 @@ def login():
 
             cursor.close()
 
+            audit_log(account['id'], 'owner_login', '')
+
             flash('Logged in successfully!', 'success')
 
             return redirect(url_for('dashboard'))
 
         # ==========================================================
-        # STAFF LOGIN
+        # STAFF LOGIN (owner approves with an emailed OTP)
         # ==========================================================
         cursor.execute(
             """
@@ -712,17 +534,11 @@ def login():
 
         staff = cursor.fetchone()
 
-        # ----------------------------------------------------------
-        # STAFF PASSWORD CHECK
-        # ----------------------------------------------------------
         if staff and check_password_hash(
             staff['password'],
             password
         ):
 
-            # ------------------------------------------------------
-            # FIND OWNER EMAIL
-            # ------------------------------------------------------
             cursor.execute(
                 """
                 SELECT id, email, dairy_name
@@ -733,59 +549,34 @@ def login():
             )
 
             owner = cursor.fetchone()
+            cursor.close()
 
             if not owner:
-                cursor.close()
-
-                flash(
-                    'Owner account not found.',
-                    'danger'
-                )
-
+                flash('Owner account not found.', 'danger')
                 return redirect(url_for('login'))
 
-            # ------------------------------------------------------
-            # GENERATE STAFF LOGIN OTP
-            # ------------------------------------------------------
-            otp = generate_otp()
+            # The OTP is stored hashed in dm_challenges. Only the opaque
+            # challenge id goes into the session cookie (which is signed
+            # but NOT encrypted, so it must never contain the OTP).
+            challenge_id, otp = dm_security.create_challenge(
+                "staff_login",
+                f"staff:{staff['id']}",
+                {"staff_id": int(staff['id']), "owner_id": int(staff['owner_id'])},
+                OTP_EXPIRY_MINUTES * 60,
+            )
 
-            # ------------------------------------------------------
-            # CREATE TEMPORARY LOGIN SESSION
-            #
-            # IMPORTANT:
-            # loggedin=True is NOT set here.
-            #
-            # Staff gets actual login session ONLY after
-            # OTP verification.
-            # ------------------------------------------------------
             session.clear()
             session.permanent = True
-
             session['staff_login_pending'] = True
+            session['staff_challenge_id'] = challenge_id
 
-            session['pending_staff_id'] = int(staff['id'])
-            session['pending_owner_id'] = int(staff['owner_id'])
-
-            session['pending_staff_email'] = staff['email']
-            session['pending_vehicle'] = staff.get('vehicle_number')
-
-            session['staff_login_otp'] = otp
-
-            session['staff_login_otp_expiry'] = (
-                datetime.now(timezone.utc)
-                + timedelta(minutes=OTP_EXPIRY_MINUTES)
-            ).isoformat()
-
-            # ------------------------------------------------------
-            # SEND OTP TO OWNER EMAIL
-            # ------------------------------------------------------
             email_sent = send_email(
                 owner['email'],
-                'DairyMitra - Staff Login OTP',
+                'DairyMitr - Staff Login OTP',
                 f"""
-DairyMitra Staff Login Verification
+DairyMitr Staff Login Verification
 
-A staff member is trying to login to your DairyMitra account.
+A staff member is trying to login to your DairyMitr account.
 
 Staff Email:
 {staff['email']}
@@ -805,41 +596,18 @@ If you did not authorize this login, please ignore this email.
 """
             )
 
-            cursor.close()
-
-            # ------------------------------------------------------
-            # EMAIL FAILED
-            # ------------------------------------------------------
             if not email_sent:
-
+                dm_security.discard_challenge(challenge_id)
                 session.clear()
-
-                flash(
-                    'Unable to send OTP to owner email. Please try again.',
-                    'danger'
-                )
-
+                flash('Unable to send OTP to owner email. Please try again.', 'danger')
                 return redirect(url_for('login'))
 
-            # ------------------------------------------------------
-            # OTP SENT SUCCESSFULLY
-            # ------------------------------------------------------
-            flash(
-                'OTP has been sent to the owner email. Please enter the OTP.',
-                'info'
-            )
-
+            flash('OTP has been sent to the owner email. Please enter the OTP.', 'info')
             return redirect(url_for('verify_staff_otp'))
 
-        # ----------------------------------------------------------
-        # INVALID LOGIN
-        # ----------------------------------------------------------
         cursor.close()
 
-        flash(
-            'Invalid credentials!',
-            'danger'
-        )
+        flash('Invalid credentials!', 'danger')
 
     return render_template('auth/login.html')
 
@@ -852,6 +620,10 @@ def logout():
     return redirect(url_for('login'))
 
 
+PASSWORD_PATTERN = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+PASSWORD_POLICY_MESSAGE = 'पासवर्ड किमान 8 अक्षरे असावा, त्यात अक्षरे, अंक आणि symbol असणे आवश्यक आहे.'
+
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
 
@@ -861,23 +633,31 @@ def signup():
     if request.method == 'POST':
 
         dairy_name = request.form.get('dairy_name', '').strip()
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
+        email = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
         phone = request.form.get('phone', '').strip()
 
-        # password validation
-        password_pattern = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+        if dm_security.rate_limited([
+            ("signup_ip", dm_security.client_ip(), 10, 3600),
+            ("signup_email", email.lower(), 5, 3600),
+        ]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return redirect(url_for('signup'))
 
-        if not re.match(password_pattern, password):
-            flash('पासवर्ड किमान 8 अक्षरे असावा, त्यात अक्षरे, अंक आणि symbol असणे आवश्यक आहे.', 'danger')
+        if not dairy_name or len(dairy_name) > 255:
+            flash('कृपया डेअरीचे नाव भरा.', 'danger')
+            return redirect(url_for('signup'))
+
+        if not re.match(PASSWORD_PATTERN, password):
+            flash(PASSWORD_POLICY_MESSAGE, 'danger')
             return redirect(url_for('signup'))
 
         if password != confirm_password:
             flash('Passwords do not match!', 'danger')
             return redirect(url_for('signup'))
 
-        if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+        if len(email) > 255 or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
             flash('Invalid email!', 'danger')
             return redirect(url_for('signup'))
 
@@ -888,29 +668,33 @@ def signup():
             (email,)
         )
 
-        if cursor.fetchone():
+        exists = cursor.fetchone()
+        cursor.close()
+
+        if exists:
             flash('Account already exists!', 'warning')
             return redirect(url_for('signup'))
 
-        # OTP generate
-        otp = generate_otp()
-
-        hashed_password = generate_password_hash(password)
-
-        # temporarily store signup data
-        session['temp_signup'] = {
-            'email': email,
-            'password': hashed_password,
-            'phone': phone,
-            'dairy_name': dairy_name,
-            'otp': otp
-        }
-
-        email_sent = send_email(
+        challenge_id, otp = dm_security.create_challenge(
+            "signup",
             email,
-            "तुमचा OTP",
-            f"तुमचा OTP: {otp}"
+            {
+                'email': email,
+                'password': generate_password_hash(password),
+                'phone': phone[:20],
+                'dairy_name': dairy_name,
+            },
+            OTP_EXPIRY_MINUTES * 60,
         )
+
+        session['signup_challenge_id'] = challenge_id
+        session['signup_email'] = email
+
+        if not send_email(email, "तुमचा OTP", f"तुमचा OTP: {otp}"):
+            dm_security.discard_challenge(challenge_id)
+            session.pop('signup_challenge_id', None)
+            flash('OTP पाठवता आला नाही. कृपया पुन्हा प्रयत्न करा.', 'danger')
+            return redirect(url_for('signup'))
 
         flash('OTP sent. Please verify.', 'info')
 
@@ -921,85 +705,109 @@ def signup():
 
 @app.route('/verify-account', methods=['GET', 'POST'])
 def verify_account():
-    temp = session.get('temp_signup')
-    if not temp:
+    challenge_id = session.get('signup_challenge_id')
+    if not challenge_id:
         flash('Session expired. Signup again.', 'warning')
         return redirect(url_for('signup'))
 
     if request.method == 'POST':
-        otp_entered = request.form.get('otp')
-        if otp_entered == temp.get('otp'):
-            cursor = SafeCursor(mysql.connection.cursor())
+        if dm_security.rate_limited([("otp_ip", dm_security.client_ip(), 30, 900)]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return render_template('auth/verify_account.html',
+                                   email=session.get('signup_email')), 429
 
-            # ----------------------------
-            # Insert new user
-            # ----------------------------
-            cursor.execute("""
-                INSERT INTO users
-                (
-                    email,
-                    password,
-                    phone,
-                    dairy_name,
-                    is_verified
-                )
-                VALUES
-                (%s, %s, %s, %s, TRUE)
-            """, (
-                temp['email'],
-                temp['password'],
-                temp['phone'],
-                temp['dairy_name']
-            ))
+        status, temp = dm_security.verify_challenge(
+            challenge_id, "signup", request.form.get('otp'))
 
-            mysql.connection.commit()
-
-            # ----------------------------
-            # Generate Dairy ID
-            # ----------------------------
-            user_id = cursor.lastrowid
-            dairy_code = f"DM{user_id:06d}"
-
-            cursor.execute("""
-                UPDATE users
-                SET dairy_code = %s
-                WHERE id = %s
-            """, (
-                dairy_code,
-                user_id
-            ))
-
-            mysql.connection.commit()
-
-            session.pop('temp_signup', None)
-
-            flash(
-                f'Account verified successfully! Your Dairy ID is {dairy_code}',
-                'success'
-            )
-
-            return redirect(url_for('login'))
-        else:
+        if status == "invalid":
             flash('Invalid OTP.', 'danger')
+            return render_template('auth/verify_account.html',
+                                   email=session.get('signup_email'))
 
-    return render_template('auth/verify_account.html', email=temp.get('email'))
+        if status != "ok":
+            session.pop('signup_challenge_id', None)
+            flash(dm_security.CHALLENGE_MESSAGES[status], 'danger')
+            return redirect(url_for('signup'))
+
+        session.pop('signup_challenge_id', None)
+        session.pop('signup_email', None)
+
+        try:
+            with dm_db.transaction() as cur:
+                cur.execute("SELECT id FROM users WHERE email = %s FOR UPDATE",
+                            (temp['email'],))
+                if cur.fetchone():
+                    flash('Account already exists!', 'warning')
+                    return redirect(url_for('login'))
+
+                cur.execute("""
+                    INSERT INTO users
+                    (
+                        email,
+                        password,
+                        phone,
+                        dairy_name,
+                        is_verified
+                    )
+                    VALUES
+                    (%s, %s, %s, %s, TRUE)
+                """, (
+                    temp['email'],
+                    temp['password'],
+                    temp['phone'],
+                    temp['dairy_name']
+                ))
+
+                user_id = cur.lastrowid
+                dairy_code = f"DM{user_id:06d}"
+
+                cur.execute(
+                    "UPDATE users SET dairy_code = %s WHERE id = %s",
+                    (dairy_code, user_id)
+                )
+        except MySQLdb.IntegrityError:
+            flash('Account already exists!', 'warning')
+            return redirect(url_for('login'))
+
+        audit_log(user_id, 'signup', f'dairy_code={dairy_code}')
+
+        flash(
+            f'Account verified successfully! Your Dairy ID is {dairy_code}',
+            'success'
+        )
+
+        return redirect(url_for('login'))
+
+    return render_template('auth/verify_account.html', email=session.get('signup_email'))
+
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
+
+        if dm_security.rate_limited([
+            ("pwreset_ip", dm_security.client_ip(), 20, 3600),
+            ("pwreset_email", email.lower(), 5, 3600),
+        ]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return render_template('auth/forgot_password.html'), 429
+
         cursor = SafeCursor(mysql.connection.cursor())
         cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
         account = cursor.fetchone()
+        cursor.close()
         if account:
-            otp = generate_otp()
-            cursor.execute("""
-                UPDATE users SET otp = %s, otp_expiry = DATE_ADD(NOW(), INTERVAL %s MINUTE)
-                WHERE email = %s
-            """, (otp, OTP_EXPIRY_MINUTES, email))
-            mysql.connection.commit()
-            send_email(email, 'Password reset OTP', f"Your OTP: {otp}")
+            challenge_id, otp = dm_security.create_challenge(
+                "pwreset", email, {"email": email, "user_id": int(account['id'])},
+                OTP_EXPIRY_MINUTES * 60)
+            if not send_email(email, 'Password reset OTP', f"Your OTP: {otp}"):
+                dm_security.discard_challenge(challenge_id)
+                flash('OTP पाठवता आला नाही. कृपया पुन्हा प्रयत्न करा.', 'danger')
+                return render_template('auth/forgot_password.html')
+            session.pop('otp_verified', None)
             session['reset_email'] = email
+            session['reset_challenge_id'] = challenge_id
             flash('OTP sent to email.', 'info')
             return redirect(url_for('verify_reset_otp'))
         else:
@@ -1009,54 +817,66 @@ def forgot_password():
 
 @app.route('/verify-reset-otp', methods=['GET', 'POST'])
 def verify_reset_otp():
-    if 'reset_email' not in session:
+    if 'reset_email' not in session or 'reset_challenge_id' not in session:
         flash('Session expired.', 'warning')
         return redirect(url_for('forgot_password'))
 
     email = session['reset_email']
     if request.method == 'POST':
-        otp = request.form.get('otp')
-        cursor = SafeCursor(mysql.connection.cursor())
-        cursor.execute('SELECT otp, otp_expiry FROM users WHERE email = %s', (email,))
-        acc = cursor.fetchone()
-        if not acc:
-            flash('Invalid request.', 'danger')
-            return redirect(url_for('forgot_password'))
+        if dm_security.rate_limited([("otp_ip", dm_security.client_ip(), 30, 900)]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return render_template('auth/verify_reset_otp.html', email=email), 429
 
-        now_utc = datetime.now(timezone.utc)
-        otp_expiry = acc.get('otp_expiry')
+        # Max 5 attempts per OTP (previously unlimited, i.e. brute-forceable).
+        status, payload = dm_security.verify_challenge(
+            session.get('reset_challenge_id'), "pwreset", request.form.get('otp'))
 
-        # ✅ Fix: ensure both datetimes are comparable
-        if otp_expiry and otp_expiry.tzinfo is None:
-            otp_expiry = otp_expiry.replace(tzinfo=timezone.utc)
-
-        if otp == acc.get('otp') and (not otp_expiry or now_utc < otp_expiry):
+        if status == "ok" and payload and payload.get("email") == email:
+            session.pop('reset_challenge_id', None)
             session['otp_verified'] = True
+            session['reset_user_id'] = payload['user_id']
+            session['reset_ok_until'] = int(datetime.now(timezone.utc).timestamp()) + 600
             flash('OTP verified. Set new password.', 'success')
             return redirect(url_for('reset_password'))
-        else:
+
+        if status == "invalid":
             flash('Invalid or expired OTP.', 'danger')
+        else:
+            for k in ('reset_challenge_id', 'reset_email'):
+                session.pop(k, None)
+            flash(dm_security.CHALLENGE_MESSAGES.get(status, 'Invalid or expired OTP.'),
+                  'danger')
+            return redirect(url_for('forgot_password'))
 
     return render_template('auth/verify_reset_otp.html', email=email)
 
 @app.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
-    if not session.get('otp_verified') or 'reset_email' not in session:
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    if (not session.get('otp_verified') or 'reset_user_id' not in session
+            or session.get('reset_ok_until', 0) < now_ts):
+        for k in ('otp_verified', 'reset_user_id', 'reset_ok_until', 'reset_email'):
+            session.pop(k, None)
         flash('Unauthorized access.', 'warning')
         return redirect(url_for('forgot_password'))
-    email = session['reset_email']
     if request.method == 'POST':
-        pwd = request.form.get('password')
-        cpwd = request.form.get('confirm_password')
+        pwd = request.form.get('password') or ''
+        cpwd = request.form.get('confirm_password') or ''
         if pwd != cpwd:
             flash('Passwords do not match.', 'danger')
             return redirect(url_for('reset_password'))
+        if not re.match(PASSWORD_PATTERN, pwd):
+            flash(PASSWORD_POLICY_MESSAGE, 'danger')
+            return redirect(url_for('reset_password'))
         hashed = generate_password_hash(pwd)
         cursor = SafeCursor(mysql.connection.cursor())
-        cursor.execute("UPDATE users SET password = %s, otp = NULL, otp_expiry = NULL WHERE email = %s", (hashed, email))
-        mysql.connection.commit()
-        session.pop('otp_verified', None)
-        session.pop('reset_email', None)
+        cursor.execute(
+            "UPDATE users SET password = %s, otp = NULL, otp_expiry = NULL WHERE id = %s",
+            (hashed, session['reset_user_id']))
+        cursor.close()
+        audit_log(session['reset_user_id'], 'password_reset', '')
+        for k in ('otp_verified', 'reset_user_id', 'reset_ok_until', 'reset_email'):
+            session.pop(k, None)
         flash('Password updated. Please login.', 'success')
         return redirect(url_for('login'))
     return render_template('auth/reset_password.html')
@@ -1064,281 +884,88 @@ def reset_password():
 @app.route('/verify-staff-otp', methods=['GET', 'POST'])
 def verify_staff_otp():
 
-    # ==========================================================
-    # CHECK PENDING STAFF LOGIN
-    # ==========================================================
-    if not session.get('staff_login_pending'):
-
-        flash(
-            'Session expired. Please login again.',
-            'warning'
-        )
-
+    if not session.get('staff_login_pending') or not session.get('staff_challenge_id'):
+        flash('Session expired. Please login again.', 'warning')
         return redirect(url_for('login'))
 
-    # ==========================================================
-    # OTP SUBMISSION
-    # ==========================================================
     if request.method == 'POST':
 
-        otp_entered = request.form.get('otp', '').strip()
+        if dm_security.rate_limited([("otp_ip", dm_security.client_ip(), 30, 900)]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
+            return render_template('auth/verify_staff_otp.html'), 429
 
-        stored_otp = session.get('staff_login_otp')
+        status, payload = dm_security.verify_challenge(
+            session.get('staff_challenge_id'), "staff_login",
+            request.form.get('otp', '').strip())
 
-        expiry_string = session.get(
-            'staff_login_otp_expiry'
-        )
+        if status == "invalid":
+            flash('Invalid OTP. Please try again.', 'danger')
+            return render_template('auth/verify_staff_otp.html')
 
-        # ------------------------------------------------------
-        # CHECK OTP SESSION DATA
-        # ------------------------------------------------------
-        if not stored_otp or not expiry_string:
-
+        if status != "ok":
             session.clear()
-
-            flash(
-                'OTP session expired. Please login again.',
-                'warning'
-            )
-
+            flash(dm_security.CHALLENGE_MESSAGES[status], 'danger')
             return redirect(url_for('login'))
 
-        # ------------------------------------------------------
-        # CONVERT EXPIRY TIME
-        # ------------------------------------------------------
-        try:
+        staff_id = payload['staff_id']
+        owner_id = payload['owner_id']
 
-            otp_expiry = datetime.fromisoformat(
-                expiry_string
-            )
-
-            if otp_expiry.tzinfo is None:
-
-                otp_expiry = otp_expiry.replace(
-                    tzinfo=timezone.utc
-                )
-
-        except Exception:
-
-            session.clear()
-
-            flash(
-                'Invalid OTP session. Please login again.',
-                'warning'
-            )
-
-            return redirect(url_for('login'))
-
-        # ------------------------------------------------------
-        # CURRENT UTC TIME
-        # ------------------------------------------------------
-        now_utc = datetime.now(timezone.utc)
-
-        # ------------------------------------------------------
-        # OTP EXPIRED
-        # ------------------------------------------------------
-        if now_utc >= otp_expiry:
-
-            session.clear()
-
-            flash(
-                'OTP has expired. Please login again.',
-                'danger'
-            )
-
-            return redirect(url_for('login'))
-
-        # ------------------------------------------------------
-        # OTP INCORRECT
-        # ------------------------------------------------------
-        if otp_entered != stored_otp:
-
-            flash(
-                'Invalid OTP. Please try again.',
-                'danger'
-            )
-
-            return render_template(
-                'auth/verify_staff_otp.html'
-            )
-
-        # ======================================================
-        # OTP CORRECT
-        # ======================================================
-
-        staff_id = session.get(
-            'pending_staff_id'
-        )
-
-        owner_id = session.get(
-            'pending_owner_id'
-        )
-
-        # ------------------------------------------------------
-        # BASIC SESSION DATA CHECK
-        # ------------------------------------------------------
-        if not staff_id or not owner_id:
-
-            session.clear()
-
-            flash(
-                'Invalid login session. Please login again.',
-                'danger'
-            )
-
-            return redirect(url_for('login'))
-
-        # ------------------------------------------------------
-        # CHECK STAFF FROM DATABASE AGAIN
-        # ------------------------------------------------------
-        cursor = SafeCursor(
-            mysql.connection.cursor()
-        )
-
+        # Re-check the staff account in the database.
+        cursor = SafeCursor(mysql.connection.cursor())
         cursor.execute(
             """
-            SELECT
-                id,
-                owner_id,
-                email,
-                vehicle_number,
-                is_active
+            SELECT id, owner_id, email, vehicle_number, is_active
             FROM staff
             WHERE id=%s
             """,
             (staff_id,)
         )
-
         staff = cursor.fetchone()
-
         cursor.close()
 
-        # ------------------------------------------------------
-        # STAFF NOT FOUND
-        # ------------------------------------------------------
         if not staff:
-
             session.clear()
-
-            flash(
-                'Staff account not found.',
-                'danger'
-            )
-
+            flash('Staff account not found.', 'danger')
             return redirect(url_for('login'))
 
-        # ------------------------------------------------------
-        # STAFF DISABLED
-        # ------------------------------------------------------
         if int(staff['is_active']) != 1:
-
             session.clear()
-
-            flash(
-                'Your account has been disabled by owner.',
-                'danger'
-            )
-
+            flash('Your account has been disabled by owner.', 'danger')
             return redirect(url_for('login'))
 
-        # ------------------------------------------------------
-        # OWNER CHECK
-        # ------------------------------------------------------
         if int(staff['owner_id']) != int(owner_id):
-
             session.clear()
-
-            flash(
-                'Invalid staff login session.',
-                'danger'
-            )
-
+            flash('Invalid staff login session.', 'danger')
             return redirect(url_for('login'))
 
-        # ======================================================
-        # OTP VERIFIED
-        #
-        # NOW CREATE REAL LOGIN SESSION
-        # ======================================================
-
+        # OTP verified: create the real login session.
         session.clear()
-
         session.permanent = True
-
-        # ------------------------------------------------------
-        # LOGIN STATUS
-        # ------------------------------------------------------
         session['loggedin'] = True
-
-        # ------------------------------------------------------
-        # ROLE
-        # ------------------------------------------------------
         session['role'] = 'staff'
-
-        # ------------------------------------------------------
-        # STAFF INFORMATION
-        # ------------------------------------------------------
-        session['staff_id'] = int(
-            staff['id']
-        )
-
-        session['owner_id'] = int(
-            staff['owner_id']
-        )
-
-        session['vehicle'] = (
-            staff['vehicle_number']
-        )
-
-        # ------------------------------------------------------
-        # IMPORTANT:
-        # Existing application uses owner ID as session['id']
-        # ------------------------------------------------------
-        session['id'] = int(
-            staff['owner_id']
-        )
-
-        # ------------------------------------------------------
-        # OPTIONAL STAFF EMAIL
-        # ------------------------------------------------------
+        session['staff_id'] = int(staff['id'])
+        session['owner_id'] = int(staff['owner_id'])
+        session['vehicle'] = staff['vehicle_number']
+        # Existing application uses the owner ID as session['id'].
+        session['id'] = int(staff['owner_id'])
         session['email'] = staff['email']
 
-        # ------------------------------------------------------
-        # AUDIT LOG
-        # ------------------------------------------------------
         audit_log(
             staff['id'],
             'staff_login',
             f'OTP verified successfully for owner_id={staff["owner_id"]}'
         )
 
-        # ------------------------------------------------------
-        # LOGIN SUCCESS
-        # ------------------------------------------------------
-        flash(
-            'Staff login successful!',
-            'success'
-        )
+        flash('Staff login successful!', 'success')
+        return redirect(url_for('dashboard'))
 
-        return redirect(
-            url_for('dashboard')
-        )
+    return render_template('auth/verify_staff_otp.html')
 
-    # ==========================================================
-    # GET REQUEST
-    # ==========================================================
-    return render_template(
-        'auth/verify_staff_otp.html'
-    )
 
 @app.before_request
 def require_login():
-
-    print("=" * 60)
-    print("PATH :", request.path)
-    print("COOKIE:", request.cookies)
-    print("SESSION:", dict(session))
-    print("=" * 60)
+    # (Removed: printing every request's cookies and session to the logs
+    # leaked session cookies and OTPs.)
 
     """
     Basic protection
@@ -1394,6 +1021,7 @@ def require_login():
 
     is_shared_route = (
         request.path.startswith("/receipt/")
+        or endpoint in ("subscribe", "vapid_public_key")
     )
 
     # ==========================================================
@@ -1441,10 +1069,14 @@ def require_login():
         #
         elif is_shared_route:
 
-            if session.get('role') in (
+            if session.get('role') == 'staff':
+                blocked = dm_security.enforce_staff_allowlist()
+                if blocked is not None:
+                    return blocked
+
+            elif session.get('role') in (
                 'customer',
-                'owner',
-                'staff'
+                'owner'
             ):
                 pass
 
@@ -1472,6 +1104,12 @@ def require_login():
                 return redirect(
                     url_for('customer_login')
                 )
+
+            # Staff may only use the daily-work endpoints (server-side
+            # enforcement; previously only the menu was hidden).
+            blocked = dm_security.enforce_staff_allowlist()
+            if blocked is not None:
+                return blocked
 
     # ==========================================================
     # NORMALIZE SESSION ID
@@ -1593,10 +1231,88 @@ def require_login():
             return redirect(
                 url_for("login")
             )
-# ------------------------------
-# Dashboard
-# ------------------------------
-from datetime import date
+
+
+# ==========================================================
+# MILK CALCULATION MODE ROUTER (server-side enforcement)
+#
+# OFF ('general'): existing litre x rate workflow.
+# ON  ('fat_snf'): FAT/SNF matrix workflow. Litre-rate collection writes
+#   are refused so the same milk cannot be saved in both systems; the
+#   litre-rate report pages redirect to their FAT/SNF equivalents
+#   (append ?legacy=1 to open the old page for historical records).
+# ==========================================================
+from fat_snf import service as fsn_service
+from fat_snf.routes import bp as fat_snf_bp, render_receipt as fsn_render_receipt
+
+app.register_blueprint(fat_snf_bp)
+
+
+def _fat_snf_on():
+    if session.get("role") not in ("owner", "staff", "customer"):
+        return False
+    try:
+        return fsn_service.is_fat_snf(int(session.get("id")))
+    except (TypeError, ValueError):
+        return False
+
+
+def _range_args(a, start_key, end_key):
+    return {"from_date": a.get(start_key) or None, "to_date": a.get(end_key) or None}
+
+
+_FSN_REDIRECTS = {
+    "milk_collection": lambda a: url_for("fat_snf.collection_page"),
+    "edit_entry": lambda a: url_for("fat_snf.edit_entries_page"),
+    "calculation": lambda a: url_for("fat_snf.calculation"),
+    "payment": lambda a: url_for("fat_snf.calculation",
+                                 **_range_args(a, "start_date", "end_date")),
+    "receipt_all_vendors": lambda a: url_for("fat_snf.receipt"),
+    "milk_summary": lambda a: url_for("fat_snf.milk_summary",
+                                      **_range_args(a, "from_date", "to_date")),
+    "milk_summary_report": lambda a: url_for("fat_snf.calculation",
+                                             from_date=a.get("date") or None),
+    "vendor_range_summary": lambda a: url_for("fat_snf.milk_summary"),
+    "milk_rate": lambda a: url_for("fat_snf.charts_page"),
+    "vendor_rate": lambda a: url_for("fat_snf.charts_page"),
+}
+
+MODE_ON_COLLECTION_MESSAGE = (
+    "FAT/SNF पद्धत चालू आहे. दूध संकलन FAT/SNF पानावरून करा "
+    "(लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही)."
+)
+
+
+@app.before_request
+def fat_snf_mode_router():
+    if session.get("role") not in ("owner", "staff"):
+        return None
+    endpoint = request.endpoint or ""
+
+    if endpoint in ("submit_milk_ajax", "submit_bulk_milk_ajax"):
+        if _fat_snf_on():
+            return jsonify({"success": False, "code": "mode_on",
+                            "message": MODE_ON_COLLECTION_MESSAGE}), 409
+        return None
+
+    if request.method != "GET" or request.args.get("legacy") == "1":
+        return None
+    target = _FSN_REDIRECTS.get(endpoint)
+    if target and _fat_snf_on():
+        return redirect(target(request.args))
+    return None
+
+
+@app.context_processor
+def inject_calculation_mode():
+    """Templates use `calc_mode` to show the right menu for the active mode."""
+    if session.get("role") in ("owner", "staff"):
+        try:
+            return {"calc_mode": fsn_service.get_mode(int(session.get("id")))}
+        except Exception:
+            app.logger.exception("calc mode lookup failed")
+    return {"calc_mode": "general"}
+
 
 # ------------------------------
 # Dashboard
@@ -1902,20 +1618,35 @@ def add_staff():
 
     if request.method == "POST":
 
-        name = request.form.get("name")
-        email = request.form.get("email")
-        password = generate_password_hash(request.form.get("password"))
-        vehicle = request.form.get("vehicle")
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        raw_password = request.form.get("password") or ""
+        vehicle = (request.form.get("vehicle") or "").strip()
+
+        if not name or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            flash("कृपया नाव आणि योग्य ई-मेल भरा.", "danger")
+            return render_template("staff/add_staff.html")
+
+        if not re.match(PASSWORD_PATTERN, raw_password):
+            flash(PASSWORD_POLICY_MESSAGE, "danger")
+            return render_template("staff/add_staff.html")
+
+        password = generate_password_hash(raw_password)
 
         cursor = SafeCursor(mysql.connection.cursor())
 
-        cursor.execute("""
-        INSERT INTO staff
-        (owner_id,name,email,password,vehicle_number)
-        VALUES (%s,%s,%s,%s,%s)
-        """,(session["id"],name,email,password,vehicle))
+        try:
+            cursor.execute("""
+            INSERT INTO staff
+            (owner_id,name,email,password,vehicle_number)
+            VALUES (%s,%s,%s,%s,%s)
+            """,(session["id"],name,email,password,vehicle))
+        except MySQLdb.IntegrityError:
+            flash("हा ई-मेल आधीच वापरात आहे.", "danger")
+            return render_template("staff/add_staff.html")
 
         mysql.connection.commit()
+        audit_log(session["id"], "staff_add", f"email={email}")
 
         flash("Staff added successfully","success")
 
@@ -1953,11 +1684,15 @@ def edit_staff(staff_id):
         email = request.form.get("email")
         vehicle = request.form.get("vehicle")
 
-        cursor.execute("""
-        UPDATE staff
-        SET name=%s,email=%s,vehicle_number=%s
-        WHERE id=%s AND owner_id=%s
-        """,(name,email,vehicle,staff_id,session["id"]))
+        try:
+            cursor.execute("""
+            UPDATE staff
+            SET name=%s,email=%s,vehicle_number=%s
+            WHERE id=%s AND owner_id=%s
+            """,(name,email,vehicle,staff_id,session["id"]))
+        except MySQLdb.IntegrityError:
+            flash("हा ई-मेल आधीच वापरात आहे.", "danger")
+            return redirect(request.url)
 
         mysql.connection.commit()
 
@@ -1993,6 +1728,10 @@ def reset_staff_password(staff_id):
             flash("Passwords do not match","danger")
             return redirect(request.url)
 
+        if not re.match(PASSWORD_PATTERN, password or ""):
+            flash(PASSWORD_POLICY_MESSAGE, "danger")
+            return redirect(request.url)
+
         hashed = generate_password_hash(password)
 
         cursor.execute("""
@@ -2009,7 +1748,7 @@ def reset_staff_password(staff_id):
 
     return render_template("staff/reset_staff_password.html")
 
-@app.route('/disable_staff/<int:staff_id>')
+@app.route('/disable_staff/<int:staff_id>', methods=['POST'])
 def disable_staff(staff_id):
 
     # login check
@@ -2051,7 +1790,7 @@ def disable_staff(staff_id):
     flash("Staff disabled successfully.", "warning")
     return redirect(url_for("staff_list"))
 
-@app.route('/enable_staff/<int:staff_id>')
+@app.route('/enable_staff/<int:staff_id>', methods=['POST'])
 def enable_staff(staff_id):
 
     # login check
@@ -2094,7 +1833,7 @@ def enable_staff(staff_id):
     return redirect(url_for("staff_list"))
 
 
-@app.route('/delete_staff/<int:staff_id>')
+@app.route('/delete_staff/<int:staff_id>', methods=['POST'])
 def delete_staff(staff_id):
 
     # ==========================================================
@@ -2219,7 +1958,6 @@ os.environ["TZ"] = "Asia/Kolkata"
 def _auto_slot():
     """System time पाहून default slot ठरवतो (Asia/Kolkata)."""
     now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    print("DEBUG TIME (IST):", now.strftime("%Y-%m-%d %H:%M:%S"), "Hour:", now.hour)
     if now.hour < 15:  # 00:00 → 14:59
         return "morning"
     return "evening"
@@ -2384,6 +2122,9 @@ def get_vendor_rate(cursor, vendor_id, animal, entry_date, user_id=None):
 
     return float(default_row['rate']) if default_row else 0
 
+
+app.extensions["dm_hooks"] = {"general_rate": get_vendor_rate}
+
 @app.route('/vendor_rate', methods=['GET', 'POST'])
 def vendor_rate():
 
@@ -2518,7 +2259,9 @@ def _get_date_slot_from_request(req):
     date_val = req.form.get("date") or req.args.get("date")
     slot_val = req.form.get("slot") or req.args.get("slot")
 
-    today = date.today().isoformat()
+    # IST date (the server itself usually runs in UTC, where date.today()
+    # is still "yesterday" between 00:00 and 05:30 IST).
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date().isoformat()
 
     # अगर date नसली किंवा जुनी असेल → आजची date
     if not date_val or date_val < today:
@@ -3391,6 +3134,9 @@ def advance_add():
     )
 
     try:
+        # Real transaction: with autocommit ON the FOR UPDATE lock below
+        # would otherwise be released immediately.
+        mysql.connection.begin()
 
         # ======================================================================
         # TRANSACTION START
@@ -3562,6 +3308,9 @@ def advance_deduct():
     )
 
     try:
+        # Real transaction: with autocommit ON the FOR UPDATE lock below
+        # would otherwise be released immediately.
+        mysql.connection.begin()
 
         # ======================================================================
         # LOCK VENDOR
@@ -3773,6 +3522,9 @@ def advance_edit(transaction_id):
     )
 
     try:
+        # Real transaction: with autocommit ON the FOR UPDATE lock below
+        # would otherwise be released immediately.
+        mysql.connection.begin()
 
         # ======================================================================
         # GET TRANSACTION + VERIFY OWNERSHIP
@@ -3854,6 +3606,33 @@ def advance_edit(transaction_id):
         #
         # Such edit must be rejected.
         # ======================================================================
+
+        if transaction_type == 'advance':
+
+            # Reducing an advance below what has already been deducted would
+            # make the ledger negative (same rule as advance_delete).
+            cursor.execute("""
+                SELECT COALESCE(SUM(CASE
+                    WHEN transaction_type='advance' THEN amount
+                    WHEN transaction_type='deduction' THEN -amount
+                    ELSE 0 END), 0) AS balance_without_transaction
+                FROM advance_transactions
+                WHERE vendor_id=%s AND user_id=%s AND id<>%s
+            """, (vendor_id, user_id, transaction_id))
+
+            balance_without_transaction = Decimal(
+                str(cursor.fetchone()["balance_without_transaction"] or 0)
+            )
+
+            if balance_without_transaction + amount < 0:
+
+                mysql.connection.rollback()
+                cursor.close()
+
+                return _advance_json_error(
+                    "हा ॲडव्हान्स एवढा कमी करता येणार नाही, कारण त्यातून आधीच "
+                    f"₹{-balance_without_transaction:.2f} वजा झाले आहेत."
+                )
 
         if transaction_type == 'deduction':
 
@@ -3978,6 +3757,9 @@ def advance_delete(transaction_id):
     )
 
     try:
+        # Real transaction: with autocommit ON the FOR UPDATE lock below
+        # would otherwise be released immediately.
+        mysql.connection.begin()
 
         # ======================================================================
         # GET TRANSACTION + OWNERSHIP
@@ -5051,6 +4833,9 @@ def update_entries():
     )
 
     try:
+        # Explicit transaction so the rollback below really undoes
+        # partial changes (the connection runs with autocommit ON).
+        mysql.connection.begin()
 
         # =====================================================
         # OWNERSHIP + MILK TYPE
@@ -5445,6 +5230,9 @@ def delete_entry():
     )
 
     try:
+        # Explicit transaction so the rollback below really undoes
+        # partial changes (the connection runs with autocommit ON).
+        mysql.connection.begin()
 
         # =====================================================
         # OWNERSHIP CHECK
@@ -5805,6 +5593,24 @@ def calculation():
             and food_row['total'] is not None
             else 0
         )
+
+        # FAT/SNF entries (present only after a mode switch) are added so
+        # no delivered milk is left out of the calculation.
+        for (fsn_type, fsn_slot), (fsn_l, fsn_a) in fsn_service.fsn_slot_totals(
+                session['id'], vendor_id, start_date, end_date).items():
+            fsn_l, fsn_a = float(fsn_l), float(fsn_a)
+            if fsn_type == "cow" and fsn_slot == "morning":
+                mcq += fsn_l
+                mcp += fsn_a
+            elif fsn_type == "cow":
+                ecq += fsn_l
+                ecp += fsn_a
+            elif fsn_slot == "morning":
+                mbq += fsn_l
+                mbp += fsn_a
+            else:
+                ebq += fsn_l
+                ebp += fsn_a
 
         # =====================================================
         # FINAL CALCULATION
@@ -6201,6 +6007,10 @@ def payment():
                 or 0
             )
 
+        # FAT/SNF entries in the range (only non-empty after a mode
+        # switch) are added so no delivered milk goes unpaid.
+        fsn_amounts = fsn_service.fsn_amounts_by_vendor(user_id, start_date, end_date)
+
         # =====================================================
         # PROCESS ALL VENDORS
         # =====================================================
@@ -6260,6 +6070,14 @@ def payment():
                     buffalo_cost += (
                         qty * rate
                     )
+
+            for fsn_type, (fsn_l, fsn_a) in fsn_amounts.get(int(vendor_id), {}).items():
+                if fsn_type == "cow":
+                    total_cow += float(fsn_l)
+                    cow_cost += float(fsn_a)
+                else:
+                    total_buffalo += float(fsn_l)
+                    buffalo_cost += float(fsn_a)
 
             # -------------------------------------------------
             # Current period deduction
@@ -6611,6 +6429,11 @@ def receipt_all_vendors():
                 int(row['vendor_id'])
             ] = remaining_balance
 
+        # FAT/SNF entries (present only after a mode switch)
+        fsn_by_vendor = {}
+        for fsn_row in fsn_service.fsn_entries_in_range(user_id, from_date, to_date):
+            fsn_by_vendor.setdefault(int(fsn_row['vendor_id']), []).append(fsn_row)
+
         # =====================================================
         # PROCESS VENDORS
         # =====================================================
@@ -6724,13 +6547,27 @@ def receipt_all_vendors():
                         qty * rate
                     )
 
+            for fsn_row in fsn_by_vendor.get(vid, []):
+                dt = fsn_row['collection_date'].strftime("%Y-%m-%d")
+                key = f"{fsn_row['milk_type']}_{fsn_row['slot']}"
+                if dt not in grouped:
+                    grouped[dt] = {
+                        'day': fsn_row['collection_date'].strftime("%d"),
+                        'cow_morning': 0, 'cow_evening': 0,
+                        'buffalo_morning': 0, 'buffalo_evening': 0,
+                    }
+                grouped[dt][key] += float(fsn_row['quantity'])
+                totals[key] += float(fsn_row['quantity'])
+                if fsn_row['milk_type'] == "cow":
+                    cow_cost += float(fsn_row['amount'])
+                else:
+                    buffalo_cost += float(fsn_row['amount'])
+
             # =================================================
-            # ENTRIES
+            # ENTRIES (date order)
             # =================================================
 
-            entries = list(
-                grouped.values()
-            )
+            entries = [grouped[k] for k in sorted(grouped)]
 
             # =================================================
             # FOOD SACK
@@ -7247,8 +7084,14 @@ def generate_bank_report():
     if not from_date or not to_date:
         return jsonify({"error": "Please select both dates."}), 400
 
-    if from_date > to_date:
-        return jsonify({"error": "Invalid date range."}), 400
+    try:
+        from fat_snf.logic import parse_date_range, ValidationError as _VE
+        start_d, end_d = parse_date_range(from_date, to_date)
+    except _VE as e:
+        return jsonify({"error": e.message}), 400
+
+    if dm_security.rate_limited([("bank_report", session["id"], 20, 600)]):
+        return jsonify({"error": dm_security.RATE_LIMIT_MESSAGE}), 429
 
     user_id = int(session["id"])
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -7300,353 +7143,220 @@ def generate_bank_report():
     vendors = cursor.fetchall()
 
     # -------------------------------------------------
-    # 2. Milk quantities - aggregated in SQL itself
+    # 2. Payable per vendor — the SAME rule and per-date rates as the
+    #    payment page:  (litre-rate milk + FAT/SNF milk) - food sack
+    #    - advance deducted in the period. Remaining advance is carried
+    #    forward and NOT deducted again.
+    #    (Previously this queried a non-existent advance_transactions.date
+    #    column and its main body sat inside a loop, so it always failed.)
     # -------------------------------------------------
-    cursor.execute("""
-        SELECT vendor_id, milk_type, SUM(quantity) AS qty
-        FROM milk_collection
-        WHERE user_id=%s
-        AND date BETWEEN %s AND %s
-        GROUP BY vendor_id, milk_type
-    """, (user_id, from_date, to_date))
-
-    milk_map = {}
-    for r in cursor.fetchall():
-        vid = int(r["vendor_id"])
-        milk_map.setdefault(vid, {})[r["milk_type"]] = float(r["qty"] or 0)
-
-    # -------------------------------------------------
-    # 3. Food sack totals - aggregated in SQL itself
-    # -------------------------------------------------
-    cursor.execute("""
-        SELECT fs.vendor_id, SUM(COALESCE(fs.total_cost,0)) AS total
-        FROM food_sack fs
-        WHERE fs.user_id=%s
-        AND fs.date BETWEEN %s AND %s
-        GROUP BY fs.vendor_id
-    """, (user_id, from_date, to_date))
-
-    food_map = {
-        int(f["vendor_id"]): float(f["total"] or 0)
-        for f in cursor.fetchall()
+    from decimal import ROUND_HALF_UP as _HALF_UP
+    statements = fsn_service.build_statements(user_id, start_d, end_d, list(vendors))
+    payable_map = {
+        int(st["vendor"]["vendor_id"]): int(st["final"].quantize(Decimal("1"), rounding=_HALF_UP))
+        for st in statements
     }
+
     # -------------------------------------------------
-    # 4. Advances
+    # 6. Styles (reused everywhere)
     # -------------------------------------------------
-    # Ledger-based advance calculation:
-    # advance     = +
-    # deduction   = -
-    cursor.execute("""
-        SELECT
-            vendor_id,
+    FONT_NAME = "Times New Roman"
 
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN transaction_type = 'advance'
-                        THEN amount
-                        ELSE 0
-                    END
-                ),
-                0
-            ) AS total_advance,
+    header_font = Font(name=FONT_NAME, size=12, bold=True)      # dairy/owner/date/branch lines
+    col_header_font = Font(name=FONT_NAME, size=12, bold=True)  # table column headings
+    data_font = Font(name=FONT_NAME, size=12, bold=False)       # normal data rows
 
-            COALESCE(
-                SUM(
-                    CASE
-                        WHEN transaction_type = 'deduction'
-                        THEN amount
-                        ELSE 0
-                    END
-                ),
-                0
-            ) AS total_deduction
+    thin = Side(style="thin", color="000000")
+    full_border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-        FROM advance_transactions
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center")
+    right_align = Alignment(horizontal="right", vertical="center")
 
-        WHERE user_id=%s
-        AND date BETWEEN %s AND %s
+    headers = [
+        "Sr.No",
+        "Beneficiary IFSC CODE",
+        "Beneficiary Account No",
+        "Beneficiary Name",
+        "ADDRESS",
+        "AMOUNT"
+    ]
+    last_col = len(headers)
+    last_col_letter = get_column_letter(last_col)
 
-        GROUP BY vendor_id
-    """, (user_id, from_date, to_date))
+    def style_range(ws, cell_range):
+        """Apply border to every cell in a merged/unmerged range string like 'A1:F1'."""
+        for row in ws[cell_range]:
+            for cell in row:
+                cell.border = full_border
 
-    adv_map = {}
+    def write_header_block(ws):
+        """
+        Row1: dairy/user name
+        Row2: owner name
+        Row3: date range
+        Row4: branch
+        Row5: column headings
+        Returns the row number where data should start.
+        """
+        # Row 1 - dairy/login name
+        ws.merge_cells(f"A1:{last_col_letter}1")
+        c = ws["A1"]
+        c.value = dairy_name
+        c.font = header_font
+        c.alignment = center_align
+        style_range(ws, f"A1:{last_col_letter}1")
 
-    for a in cursor.fetchall():
-        vendor_id_key = int(a["vendor_id"])
+        # Row 2 - owner name
+        ws.merge_cells(f"A2:{last_col_letter}2")
+        c = ws["A2"]
+        c.value = owner_name
+        c.font = header_font
+        c.alignment = center_align
+        style_range(ws, f"A2:{last_col_letter}2")
 
-        total_advance = float(
-            a["total_advance"] or 0
-        )
+        # Row 3 - date range
+        ws.merge_cells(f"A3:{last_col_letter}3")
+        c = ws["A3"]
+        c.value = f"DATE:- {from_date} TO {to_date}"
+        c.font = header_font
+        c.alignment = center_align
+        style_range(ws, f"A3:{last_col_letter}3")
 
-        total_deduction = float(
-            a["total_deduction"] or 0
-        )
+        # Row 4 - branch
+        ws.merge_cells(f"A4:{last_col_letter}4")
+        c = ws["A4"]
+        c.value = f"Branch:- {branch_name}"
+        c.font = header_font
+        c.alignment = right_align
+        style_range(ws, f"A4:{last_col_letter}4")
 
-        # Net advance
-        adv_map[vendor_id_key] = round(
-            total_advance - total_deduction,
-            2
-        )
+        # Row 5 - column headings
+        for col_idx, h in enumerate(headers, 1):
+            cell = ws.cell(row=5, column=col_idx, value=h)
+            cell.font = col_header_font
+            cell.alignment = center_align
+            cell.border = full_border
 
-        # -------------------------------------------------
-        # 5. Rates - fetched ONCE for all vendors (no N+1 queries)
-        # -------------------------------------------------
-        if isinstance(from_date, str):
-            rate_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+        return 6  # first data row
+
+    def new_workbook(title):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = title
+        start_row = write_header_block(ws)
+        return wb, ws, start_row
+
+    same_wb, same_ws, same_start_row = new_workbook("Same Bank Report")
+    other_wb, other_ws, other_start_row = new_workbook("Other Bank Report")
+
+    same_row = same_start_row
+    other_row = other_start_row
+    same_sr = 1
+    other_sr = 1
+    same_total = 0
+    other_total = 0
+
+    for vendor in vendors:
+
+        vid = int(vendor["vendor_id"])
+
+        final_payable = payable_map.get(vid, 0)
+
+        vendor_ifsc = (vendor.get("ifsc_code") or "").strip().upper()
+        vendor_bank_code = vendor_ifsc[:4]
+
+        if vendor_bank_code and vendor_bank_code == owner_bank_code:
+            ws, row_num, sr = same_ws, same_row, same_sr
+            same_total += final_payable
         else:
-            rate_date = from_date
+            ws, row_num, sr = other_ws, other_row, other_sr
+            other_total += final_payable
 
-        cursor.execute("""
-            SELECT vendor_id, cow_rate, buffalo_rate, date_from
-            FROM vendor_milk_rates
-            WHERE user_id=%s
-            AND date_from<=%s
-            ORDER BY vendor_id, date_from DESC
-        """, (user_id, rate_date))
-
-        special_rate_map = {}
-        for r in cursor.fetchall():
-            vid = int(r["vendor_id"])
-            if vid not in special_rate_map:
-                special_rate_map[vid] = r
-
-        cursor.execute("""
-            SELECT animal, rate, date_from
-            FROM milk_rates
-            WHERE user_id=%s
-            AND date_from<=%s
-            ORDER BY animal, date_from DESC
-        """, (user_id, rate_date))
-
-        default_rate_map = {}
-        for r in cursor.fetchall():
-            if r["animal"] not in default_rate_map:
-                default_rate_map[r["animal"]] = float(r["rate"])
-
-        def resolve_rate(vid, animal):
-            special = special_rate_map.get(vid)
-            if special:
-                val = special.get(f"{animal}_rate")
-                if val:
-                    return float(val)
-            return default_rate_map.get(animal, 0)
-
-        # -------------------------------------------------
-        # 6. Styles (reused everywhere)
-        # -------------------------------------------------
-        FONT_NAME = "Times New Roman"
-
-        header_font = Font(name=FONT_NAME, size=12, bold=True)      # dairy/owner/date/branch lines
-        col_header_font = Font(name=FONT_NAME, size=12, bold=True)  # table column headings
-        data_font = Font(name=FONT_NAME, size=12, bold=False)       # normal data rows
-
-        thin = Side(style="thin", color="000000")
-        full_border = Border(left=thin, right=thin, top=thin, bottom=thin)
-
-        center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        left_align = Alignment(horizontal="left", vertical="center")
-        right_align = Alignment(horizontal="right", vertical="center")
-
-        headers = [
-            "Sr.No",
-            "Beneficiary IFSC CODE",
-            "Beneficiary Account No",
-            "Beneficiary Name",
-            "ADDRESS",
-            "AMOUNT"
+        row_values = [
+            sr,
+            vendor_ifsc,
+            vendor.get("account_no") or "",
+            (vendor.get("name_en") or vendor.get("name") or "").upper(),
+            vendor.get("address"),
+            final_payable
         ]
-        last_col = len(headers)
-        last_col_letter = get_column_letter(last_col)
 
-        def style_range(ws, cell_range):
-            """Apply border to every cell in a merged/unmerged range string like 'A1:F1'."""
-            for row in ws[cell_range]:
-                for cell in row:
-                    cell.border = full_border
-
-        def write_header_block(ws):
-            """
-            Row1: dairy/user name
-            Row2: owner name
-            Row3: date range
-            Row4: branch
-            Row5: column headings
-            Returns the row number where data should start.
-            """
-            # Row 1 - dairy/login name
-            ws.merge_cells(f"A1:{last_col_letter}1")
-            c = ws["A1"]
-            c.value = dairy_name
-            c.font = header_font
-            c.alignment = center_align
-            style_range(ws, f"A1:{last_col_letter}1")
-
-            # Row 2 - owner name
-            ws.merge_cells(f"A2:{last_col_letter}2")
-            c = ws["A2"]
-            c.value = owner_name
-            c.font = header_font
-            c.alignment = center_align
-            style_range(ws, f"A2:{last_col_letter}2")
-
-            # Row 3 - date range
-            ws.merge_cells(f"A3:{last_col_letter}3")
-            c = ws["A3"]
-            c.value = f"DATE:- {from_date} TO {to_date}"
-            c.font = header_font
-            c.alignment = center_align
-            style_range(ws, f"A3:{last_col_letter}3")
-
-            # Row 4 - branch
-            ws.merge_cells(f"A4:{last_col_letter}4")
-            c = ws["A4"]
-            c.value = f"Branch:- {branch_name}"
-            c.font = header_font
-            c.alignment = right_align
-            style_range(ws, f"A4:{last_col_letter}4")
-
-            # Row 5 - column headings
-            for col_idx, h in enumerate(headers, 1):
-                cell = ws.cell(row=5, column=col_idx, value=h)
-                cell.font = col_header_font
-                cell.alignment = center_align
-                cell.border = full_border
-
-            return 6  # first data row
-
-        def new_workbook(title):
-            wb = Workbook()
-            ws = wb.active
-            ws.title = title
-            start_row = write_header_block(ws)
-            return wb, ws, start_row
-
-        same_wb, same_ws, same_start_row = new_workbook("Same Bank Report")
-        other_wb, other_ws, other_start_row = new_workbook("Other Bank Report")
-
-        same_row = same_start_row
-        other_row = other_start_row
-        same_sr = 1
-        other_sr = 1
-        same_total = 0
-        other_total = 0
-
-        for vendor in vendors:
-
-            vid = int(vendor["vendor_id"])
-
-            cow_rate = resolve_rate(vid, "cow")
-            buffalo_rate = resolve_rate(vid, "buffalo")
-
-            qtys = milk_map.get(vid, {})
-            cow_qty = qtys.get("cow", 0)
-            buffalo_qty = qtys.get("buffalo", 0)
-
-            cow_cost = cow_qty * cow_rate
-            buffalo_cost = buffalo_qty * buffalo_rate
-
-            food_total = food_map.get(vid, 0)
-            advance = adv_map.get(vid, 0)
-
-            final_payable = int(round(
-                (cow_cost + buffalo_cost) - (advance + food_total)
-            ))
-
-            vendor_ifsc = (vendor.get("ifsc_code") or "").strip().upper()
-            vendor_bank_code = vendor_ifsc[:4]
-
-            if vendor_bank_code and vendor_bank_code == owner_bank_code:
-                ws, row_num, sr = same_ws, same_row, same_sr
-                same_total += final_payable
+        for col_idx, val in enumerate(row_values, 1):
+            cell = ws.cell(row=row_num, column=col_idx, value=val)
+            cell.font = data_font
+            cell.border = full_border
+            if col_idx == 6:
+                cell.number_format = '0'
+                cell.alignment = right_align
             else:
-                ws, row_num, sr = other_ws, other_row, other_sr
-                other_total += final_payable
+                cell.alignment = left_align if col_idx != 1 else center_align
 
-            row_values = [
-                sr,
-                vendor_ifsc,
-                vendor.get("account_no") or "",
-                (vendor.get("name_en") or vendor.get("name") or "").upper(),
-                vendor.get("address"),
-                final_payable
-            ]
+        if ws is same_ws:
+            same_row += 1
+            same_sr += 1
+        else:
+            other_row += 1
+            other_sr += 1
 
-            for col_idx, val in enumerate(row_values, 1):
-                cell = ws.cell(row=row_num, column=col_idx, value=val)
-                cell.font = data_font
-                cell.border = full_border
-                if col_idx == 6:
-                    cell.number_format = '0'
-                    cell.alignment = right_align
-                else:
-                    cell.alignment = left_align if col_idx != 1 else center_align
+    # -------------------------------------------------
+    # 6b. Total row at the bottom of each sheet
+    # -------------------------------------------------
+    def write_total_row(ws, row_num, total_amount):
+        ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=last_col - 1)
+        label_cell = ws.cell(row=row_num, column=1, value="Total")
+        label_cell.font = col_header_font
+        label_cell.alignment = right_align
+        label_cell.border = full_border
 
-            if ws is same_ws:
-                same_row += 1
-                same_sr += 1
-            else:
-                other_row += 1
-                other_sr += 1
+        for col_idx in range(2, last_col):
+            ws.cell(row=row_num, column=col_idx).border = full_border
 
-        # -------------------------------------------------
-        # 6b. Total row at the bottom of each sheet
-        # -------------------------------------------------
-        def write_total_row(ws, row_num, total_amount):
-            ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=last_col - 1)
-            label_cell = ws.cell(row=row_num, column=1, value="Total")
-            label_cell.font = col_header_font
-            label_cell.alignment = right_align
-            label_cell.border = full_border
+        total_cell = ws.cell(row=row_num, column=last_col, value=int(round(total_amount)))
+        total_cell.font = col_header_font
+        total_cell.number_format = '0'
+        total_cell.alignment = right_align
+        total_cell.border = full_border
 
-            for col_idx in range(2, last_col):
-                ws.cell(row=row_num, column=col_idx).border = full_border
+    write_total_row(same_ws, same_row, same_total)
+    write_total_row(other_ws, other_row, other_total)
 
-            total_cell = ws.cell(row=row_num, column=last_col, value=int(round(total_amount)))
-            total_cell.font = col_header_font
-            total_cell.number_format = '0'
-            total_cell.alignment = right_align
-            total_cell.border = full_border
+    # -------------------------------------------------
+    # 7. Fixed column widths
+    # -------------------------------------------------
+    widths = [8, 20, 22, 40, 32, 14]
+    for ws in (same_ws, other_ws):
+        for i, w in enumerate(widths, 1):
+            ws.column_dimensions[get_column_letter(i)].width = w
+        # header rows a bit taller so wrapped text looks clean
+        for r in (1, 2, 3, 4):
+            ws.row_dimensions[r].height = 20
 
-        write_total_row(same_ws, same_row, same_total)
-        write_total_row(other_ws, other_row, other_total)
+    cursor.close()
 
-        # -------------------------------------------------
-        # 7. Fixed column widths
-        # -------------------------------------------------
-        widths = [8, 20, 22, 40, 32, 14]
-        for ws in (same_ws, other_ws):
-            for i, w in enumerate(widths, 1):
-                ws.column_dimensions[get_column_letter(i)].width = w
-            # header rows a bit taller so wrapped text looks clean
-            for r in (1, 2, 3, 4):
-                ws.row_dimensions[r].height = 20
+    # -------------------------------------------------
+    # 8. Save both workbooks into a single ZIP
+    # -------------------------------------------------
+    same_bytes = BytesIO()
+    same_wb.save(same_bytes)
+    same_bytes.seek(0)
 
-        cursor.close()
+    other_bytes = BytesIO()
+    other_wb.save(other_bytes)
+    other_bytes.seek(0)
 
-        # -------------------------------------------------
-        # 8. Save both workbooks into a single ZIP
-        # -------------------------------------------------
-        same_bytes = BytesIO()
-        same_wb.save(same_bytes)
-        same_bytes.seek(0)
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("Same_Bank_Report.xlsx", same_bytes.getvalue())
+        zf.writestr("Other_Bank_Report.xlsx", other_bytes.getvalue())
+    zip_buffer.seek(0)
 
-        other_bytes = BytesIO()
-        other_wb.save(other_bytes)
-        other_bytes.seek(0)
-
-        zip_buffer = BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("Same_Bank_Report.xlsx", same_bytes.getvalue())
-            zf.writestr("Other_Bank_Report.xlsx", other_bytes.getvalue())
-        zip_buffer.seek(0)
-
-        return send_file(
-            zip_buffer,
-            as_attachment=True,
-            download_name=f"Bank_Reports_{from_date}_to_{to_date}.zip",
-            mimetype="application/zip"
-        )
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"Bank_Reports_{from_date}_to_{to_date}.zip",
+        mimetype="application/zip"
+    )
 @app.route('/bank_settings', methods=['GET', 'POST'])
 def bank_settings():
 
@@ -7774,8 +7484,9 @@ def milk_prediction_page():
 
     cursor = SafeCursor(mysql.connection.cursor())
 
+    # The prediction API is keyed by vendor_id (not the vendors.id PK).
     cursor.execute(
-        "SELECT id, name FROM vendors WHERE user_id=%s",
+        "SELECT vendor_id AS id, name FROM vendors WHERE user_id=%s ORDER BY vendor_id",
         (session['id'],)
     )
 
@@ -7905,11 +7616,25 @@ def account():
 
 @app.route("/delete_account", methods=["POST"])
 def delete_account():
-    if "id" not in session:
+    if "id" not in session or session.get("role") != "owner":
         flash("Unauthorized request", "danger")
         return redirect(url_for("login"))
 
+    if dm_security.rate_limited([("delete_account", session["id"], 5, 3600)]):
+        flash(dm_security.RATE_LIMIT_MESSAGE, "danger")
+        return redirect(url_for("account"))
+
+    # Irreversible (cascades to every vendor, entry and payment record), so
+    # the owner must re-enter the password.
     cursor = SafeCursor(mysql.connection.cursor())
+    cursor.execute("SELECT password FROM users WHERE id = %s", (session["id"],))
+    row = cursor.fetchone()
+    if not row or not check_password_hash(row["password"], request.form.get("password") or ""):
+        cursor.close()
+        flash("पासवर्ड चुकीचा आहे. खाते delete केले नाही.", "danger")
+        return redirect(url_for("account"))
+
+    audit_log(session["id"], "account_delete", f"email={session.get('email')}")
     cursor.execute("DELETE FROM users WHERE id = %s", (session["id"],))
     mysql.connection.commit()
     session.clear()
@@ -7969,67 +7694,90 @@ def disable_cache(response):
     return response
 
 
-@app.route("/backup_my_data")
+# ----------------------------------------------------------------------
+# Backups
+#
+# These run mysqldump / mysql against the WHOLE multi-tenant database, so
+# they are restricted to platform administrators (DAIRYMITR_ADMIN_EMAILS).
+# Previously any logged-in user — including staff of any dairy — could
+# restore the entire database (wiping every other dairy's data) or dump it.
+# ----------------------------------------------------------------------
+BACKUP_NAME_RE = re.compile(r"^[A-Za-z0-9_\-]+\.sql\.gz$")
+
+
+def _require_platform_admin():
+    if not dm_security.is_platform_admin():
+        return dm_security.json_error(
+            "Backup/restore फक्त प्लॅटफॉर्म ॲडमिनसाठी उपलब्ध आहे.", 403, code="forbidden")
+    return None
+
+
+@app.route("/backup_my_data", methods=["POST"])
 def backup_my_data():
 
-    if "id" not in session:
-        return {"error": "Unauthorized"}, 401
+    denied = _require_platform_admin()
+    if denied:
+        return denied
 
-    filename = create_backup()
+    try:
+        filename = create_backup(backup_type="manual", user_id=session["id"])
+    except Exception:
+        logging.exception("backup failed")
+        return dm_security.json_error("Backup तयार करता आला नाही.", 500, code="backup_failed")
 
-    return jsonify({
-        "status": "success",
-        "file": filename
-    })
+    audit_log(session["id"], "backup_create", filename)
+    return jsonify({"status": "success", "file": filename})
 
 
 @app.route("/restore_backup/<filename>", methods=["POST"])
 def restore_backup_route(filename):
 
-    if "id" not in session:
-        return {"error": "Unauthorized"}, 401
+    denied = _require_platform_admin()
+    if denied:
+        return denied
+
+    if not BACKUP_NAME_RE.match(filename) or filename not in list_backups():
+        return dm_security.json_error("Backup file सापडली नाही.", 404, code="not_found")
 
     try:
-
         restore_backup(filename)
+    except Exception:
+        logging.exception("restore failed for %s", filename)
+        return dm_security.json_error("Restore करता आला नाही.", 500, code="restore_failed")
 
-        return {
-            "status": "success",
-            "message": "Backup restored successfully"
-        }
-
-    except Exception as e:
-
-        return {
-            "status": "error",
-            "message": str(e)
-        }, 500
+    dm_audit.record("backup_restore", "backup", filename)
+    return {"status": "success", "message": "Backup restored successfully"}
 
 
-@app.route("/admin_full_backup")
+@app.route("/admin_full_backup", methods=["POST"])
 def admin_full_backup():
 
-    filename = create_full_backup()
+    denied = _require_platform_admin()
+    if denied:
+        return denied
 
-    return jsonify({
-        "status": "success",
-        "file": filename
-    })
+    try:
+        filename = create_full_backup()
+    except Exception:
+        logging.exception("full backup failed")
+        return dm_security.json_error("Backup तयार करता आला नाही.", 500, code="backup_failed")
+
+    audit_log(session["id"], "backup_full", filename)
+    return jsonify({"status": "success", "file": filename})
 
 
 @app.route("/backup_history")
 def backup_history():
 
-    files = list_backups()
+    if not dm_security.is_platform_admin():
+        return jsonify({"files": [], "admin": False})
 
-    return jsonify({
-        "files": files
-    })
+    return jsonify({"files": list_backups(), "admin": True})
 
 
 @app.route("/backup_page")
 def backup_page():
-    return render_template("backup.html")
+    return render_template("backup.html", is_admin=dm_security.is_platform_admin())
 
 
 
@@ -8060,8 +7808,17 @@ def customer_login():
 
     if request.method == 'POST':
 
-        dairy_id = request.form.get('dairy_id')
-        phone = request.form.get('phone')
+        dairy_id = (request.form.get('dairy_id') or '').strip().upper()
+        phone = (request.form.get('phone') or '').strip()
+
+        # Dairy code + phone is a weak credential (the code is not secret),
+        # so throttle guessing per IP and per dairy.
+        if dm_security.rate_limited([
+            ("customer_login_ip", dm_security.client_ip(), 20, 900),
+            ("customer_login_dairy", dairy_id, 50, 900),
+        ]):
+            flash(dm_security.RATE_LIMIT_MESSAGE, "danger")
+            return render_template("customer/login.html"), 429
 
         cursor = SafeCursor(mysql.connection.cursor())
 
@@ -8109,16 +7866,12 @@ def customer_login():
             return redirect(url_for("customer_dashboard"))
 
         flash("Invalid Dairy ID or Mobile Number", "danger")
-        print("LOGIN SUCCESS SESSION:", dict(session))
-        print("REDIRECT URL:", url_for("customer_dashboard"))
 
 
     return render_template("customer/login.html")
 
 @app.route("/customer/dashboard")
 def customer_dashboard():
-    print("ENTER CUSTOMER DASHBOARD")
-    print("SESSION IN DASHBOARD:", dict(session))
 
     if session.get("role") != "customer":
         flash("Please login first.", "warning")
@@ -8126,7 +7879,7 @@ def customer_dashboard():
 
     cursor = SafeCursor(mysql.connection.cursor())
 
-    today = date.today()
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
 
     cursor.execute("""
         SELECT
@@ -8163,7 +7916,13 @@ def customer_dashboard():
                 END
             ),0) AS buffalo_evening
 
-        FROM milk_collection
+        FROM (
+            SELECT vendor_id, user_id, date, slot, milk_type, quantity
+            FROM milk_collection
+            UNION ALL
+            SELECT vendor_id, user_id, collection_date AS date, slot, milk_type, quantity
+            FROM fat_snf_milk_collection
+        ) AS milk_all
 
         WHERE
             vendor_id = %s
@@ -8258,7 +8017,13 @@ def customer_milk_history():
         SUM(CASE WHEN slot='evening' AND milk_type='buffalo'
             THEN quantity ELSE 0 END) buffalo_evening
 
-    FROM milk_collection
+    FROM (
+        SELECT vendor_id, user_id, date, slot, milk_type, quantity
+        FROM milk_collection
+        UNION ALL
+        SELECT vendor_id, user_id, collection_date AS date, slot, milk_type, quantity
+        FROM fat_snf_milk_collection
+    ) AS milk_all
 
     WHERE
         vendor_id=%s
@@ -8316,12 +8081,12 @@ from datetime import date
 
 @app.route('/receipt/<int:vendor_id>', methods=['GET', 'POST'])
 def generate_receipt(vendor_id):
-    print("SESSION IN RECEIPT =", dict(session))
 
     # ----------------------------
-    # Login Check
+    # Login Check (customers can only ever see their own vendor record)
     # ----------------------------
-    if session.get("role") == "customer":
+    is_customer = session.get("role") == "customer"
+    if is_customer:
         user_id = session["owner_id"]
         vendor_id = session["vendor_id"]
     elif "id" in session:
@@ -8329,6 +8094,13 @@ def generate_receipt(vendor_id):
     else:
         flash("Please login first.", "warning")
         return redirect(url_for("login"))
+
+    # FAT/SNF mode: the daily FAT/SNF receipt (same view for owner and customer)
+    if fsn_service.is_fat_snf(user_id) and request.args.get("legacy") != "1":
+        return fsn_render_receipt(
+            user_id, vendor_id,
+            base_template="customer/customer_base.html" if is_customer else "base.html",
+            customer=is_customer)
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
@@ -8354,7 +8126,7 @@ def generate_receipt(vendor_id):
     if not vendor:
         cursor.close()
         flash('Vendor not found.', 'danger')
-        return redirect(url_for('vendor_list'))
+        return redirect(url_for('customer_dashboard' if is_customer else 'vendor_list'))
 
     receipt = None
     from_date = None
@@ -8490,74 +8262,38 @@ def generate_receipt(vendor_id):
             )
 
             # ----------------------------
-            # Rates: vendor-specific first,
-            # else default
+            # Amounts: rate resolved per entry date exactly like the payment
+            # page (vendor special rate first, else the default rate for that
+            # animal). Previously a vendor rate row with an empty cow/buffalo
+            # rate produced ₹0 instead of falling back to the default.
             # ----------------------------
             cursor.execute("""
-                SELECT cow_rate, buffalo_rate
-                FROM vendor_milk_rates
-                WHERE vendor_id = %s
-                  AND user_id = %s
-                  AND date_from <= %s
-                ORDER BY date_from DESC
-                LIMIT 1
-            """, (vendor_id, user_id, to_date))
+                SELECT date, milk_type, SUM(quantity) AS qty
+                FROM milk_collection
+                WHERE vendor_id = %s AND user_id = %s AND date BETWEEN %s AND %s
+                GROUP BY date, milk_type
+            """, (vendor_id, user_id, from_date, to_date))
 
-            vendor_rate = cursor.fetchone()
+            cow_amount = 0.0
+            buffalo_amount = 0.0
+            for r in cursor.fetchall():
+                amt = float(r['qty'] or 0) * get_vendor_rate(
+                    cursor, vendor_id, r['milk_type'], r['date'], user_id=user_id)
+                if r['milk_type'] == 'cow':
+                    cow_amount += amt
+                else:
+                    buffalo_amount += amt
 
-            if vendor_rate:
+            cow_amount = round(cow_amount, 2)
+            buffalo_amount = round(buffalo_amount, 2)
 
-                cow_rate = float(
-                    vendor_rate.get('cow_rate') or 0
-                )
-
-                buffalo_rate = float(
-                    vendor_rate.get('buffalo_rate') or 0
-                )
-
-            else:
-
-                cursor.execute("""
-                    SELECT animal, rate
-                    FROM milk_rates
-                    WHERE user_id = %s
-                      AND date_from <= %s
-                    ORDER BY date_from DESC
-                """, (user_id, to_date))
-
-                rate_rows = cursor.fetchall()
-
-                cow_rate = 0
-                buffalo_rate = 0
-
-                got_cow = False
-                got_buffalo = False
-
-                for r in rate_rows:
-
-                    if r['animal'] == 'cow' and not got_cow:
-                        cow_rate = float(r['rate'] or 0)
-                        got_cow = True
-
-                    elif (
-                        r['animal'] == 'buffalo'
-                        and not got_buffalo
-                    ):
-                        buffalo_rate = float(r['rate'] or 0)
-                        got_buffalo = True
-
-                    if got_cow and got_buffalo:
-                        break
-
-            cow_amount = round(
-                total_cow_milk * cow_rate,
-                2
-            )
-
-            buffalo_amount = round(
-                total_buffalo_milk * buffalo_rate,
-                2
-            )
+            # Displayed rate: effective average for the period (equals the
+            # single rate when the rate did not change inside the period).
+            cow_rate = (round(cow_amount / total_cow_milk, 2) if total_cow_milk
+                        else get_vendor_rate(cursor, vendor_id, 'cow', to_date, user_id=user_id))
+            buffalo_rate = (round(buffalo_amount / total_buffalo_milk, 2) if total_buffalo_milk
+                            else get_vendor_rate(cursor, vendor_id, 'buffalo', to_date,
+                                                 user_id=user_id))
 
             total_milk_amount = round(
                 cow_amount + buffalo_amount,
@@ -8565,36 +8301,17 @@ def generate_receipt(vendor_id):
             )
 
             # ----------------------------
-            # Advance Ledger
+            # Advance ledger — same rule as every other payment screen:
+            # only the advance DEDUCTED in this period is subtracted.
+            # (Previously this queried a non-existent column and crashed.)
             # ----------------------------
             cursor.execute("""
-                SELECT
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN transaction_type = 'advance'
-                                THEN amount
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS total_advance,
-
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN transaction_type = 'deduction'
-                                THEN amount
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS total_deduction
-
+                SELECT COALESCE(SUM(amount), 0) AS period_deduction
                 FROM advance_transactions
                 WHERE vendor_id = %s
                   AND user_id = %s
-                  AND date BETWEEN %s AND %s
+                  AND transaction_type = 'deduction'
+                  AND transaction_date BETWEEN %s AND %s
             """, (
                 vendor_id,
                 user_id,
@@ -8602,19 +8319,8 @@ def generate_receipt(vendor_id):
                 to_date
             ))
 
-            advance_row = cursor.fetchone() or {}
-
-            total_advance = float(
-                advance_row.get('total_advance') or 0
-            )
-
-            total_deduction = float(
-                advance_row.get('total_deduction') or 0
-            )
-
-            # Net advance = advances - deductions
             total_advance = round(
-                total_advance - total_deduction,
+                float((cursor.fetchone() or {}).get('period_deduction') or 0),
                 2
             )
 
@@ -8759,8 +8465,6 @@ def generate_receipt(vendor_id):
 @app.route('/customer/receipts')
 def customer_receipts():
 
-    print("SESSION =", dict(session))
-    print("CUSTOMER RECEIPTS ROUTE CALLED")
 
     if 'customer_id' not in session:
         flash('Please login first.', 'warning')
@@ -8850,7 +8554,9 @@ def subscribe():
     p256dh = keys.get("p256dh")
     auth = keys.get("auth")
 
-    if not endpoint or not p256dh or not auth:
+    if (not endpoint or not p256dh or not auth
+            or not str(endpoint).startswith("https://") or len(str(endpoint)) > 700
+            or len(str(p256dh)) > 255 or len(str(auth)) > 255):
         return jsonify({"message": "Invalid subscription data"}), 400
 
     user_id = session["owner_id"]
@@ -8858,9 +8564,6 @@ def subscribe():
 
     cursor = SafeCursor(mysql.connection.cursor())
 
-    # Current Database
-    cursor.execute("SELECT DATABASE()")
-    print("SUBSCRIBE DB:", cursor.fetchone())
 
     cursor.execute(
         "SELECT id FROM push_subscriptions WHERE endpoint=%s",
@@ -8900,18 +8603,6 @@ def subscribe():
 
     mysql.connection.commit()
 
-    print("COMMIT SUCCESS")
-
-    cursor.execute("""
-        SELECT
-            id,
-            user_id,
-            vendor_id
-        FROM push_subscriptions
-    """)
-
-    print("ALL SUBSCRIPTIONS:")
-    print(cursor.fetchall())
 
     cursor.close()
 
@@ -8950,7 +8641,25 @@ def customer_logout():
 # ------------------------------
 @app.route('/healthcheck')
 def healthcheck():
-    return "OK"
+    if request.args.get("deep") != "1":
+        return "OK"
+    # Deep check: database reachable and migrations applied. Reveals no data.
+    try:
+        from migrations.runner import load_migrations
+        cur = dm_db.cursor()
+        cur.execute("SELECT 1 AS ok")
+        cur.fetchone()
+        cur.execute("SELECT version FROM schema_migrations")
+        applied = {r["version"] for r in cur.fetchall()}
+        cur.close()
+        pending = [m.VERSION for m in load_migrations() if m.VERSION not in applied]
+        status = 200 if not pending else 503
+        return jsonify({"database": "ok",
+                        "migrations": "up_to_date" if not pending else "pending",
+                        "pending": pending}), status
+    except Exception:
+        logging.exception("deep healthcheck failed")
+        return jsonify({"database": "unavailable"}), 503
 
 
 # ==========================================================
@@ -9838,6 +9547,34 @@ def get_vendor_summary(
 # ==========================================================
 # 8. PAYMENT TOOL
 # ==========================================================
+#
+# Payments are not stored as a separate ledger; the payable amount is
+# computed with the same rule as the payment page:
+#   milk amount - food sack - advance deducted in the period.
+# Money data is available to the owner only (staff never see payments).
+
+def _ai_owner_only():
+    if session.get("role") != "owner":
+        return {"success": False,
+                "error": "Payment/advance information is available to the dairy owner only."}
+    return None
+
+
+def _ai_range(start_date, end_date):
+    from fat_snf.logic import parse_date_range
+    today = dairymitr_ai_today()
+    start = start_date or str(today)
+    end = end_date or start
+    return parse_date_range(start, end)
+
+
+def _ai_vendors(user_id, vendor_name=""):
+    vendors = fsn_service.list_vendors(user_id)
+    if vendor_name:
+        needle = vendor_name.strip().lower()
+        vendors = [v for v in vendors if needle in (v.get("name") or "").lower()]
+    return vendors
+
 
 def get_payments(
     start_date="",
@@ -9850,245 +9587,47 @@ def get_payments(
         user_id = dairymitr_ai_get_user_id()
 
         if not user_id:
+            return {"success": False, "error": "Unauthorized access."}
 
-            return {
-                "success": False,
-                "error": "Unauthorized access."
+        denied = _ai_owner_only()
+        if denied:
+            return denied
+
+        start, end = _ai_range(start_date, end_date)
+        statements = fsn_service.build_statements(
+            user_id, start, end, _ai_vendors(user_id, vendor_name))
+
+        records = [
+            {
+                "vendor_id": st["vendor"]["vendor_id"],
+                "vendor_name": st["vendor"]["name"],
+                "milk_amount": float(st["milk_total"]),
+                "food_sack": float(st["food"]["total"]),
+                "advance_deducted": float(st["period_deduction"]),
+                "final_payable": float(st["final"]),
+                "remaining_advance": float(st["remaining_advance"]),
             }
-
-        today = dairymitr_ai_today()
-
-        if not start_date:
-            start_date = str(today)
-
-        if not end_date:
-            end_date = start_date
-
-        cursor = SafeCursor(
-            mysql.connection.cursor()
-        )
-
-        # First inspect known payment columns safely.
-        cursor.execute(
-            """
-            SELECT
-                COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'payments'
-            ORDER BY ORDINAL_POSITION
-            """
-        )
-
-        columns = [
-            row.get("COLUMN_NAME")
-            for row in cursor.fetchall()
+            for st in statements if st["has_activity"]
         ]
 
-        # Known safe candidates.
-        date_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "date",
-                    "payment_date",
-                    "created_at"
-                )
-            ),
-            None
-        )
-
-        amount_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "amount",
-                    "payment_amount",
-                    "total_amount",
-                    "paid_amount"
-                )
-            ),
-            None
-        )
-
-        vendor_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "vendor_id",
-                    "vendorid"
-                )
-            ),
-            None
-        )
-
-        if not date_col or not amount_col:
-
-            cursor.close()
-
-            return {
-                "success": False,
-                "error":
-                    "Payment date/amount columns were not found."
-            }
-
-        # Column names come ONLY from INFORMATION_SCHEMA,
-        # not from user input.
-        query = f"""
-            SELECT
-                p.`{date_col}` AS payment_date,
-                p.`{amount_col}` AS payment_amount
-        """
-
-        if vendor_col:
-            query += f""",
-                p.`{vendor_col}` AS vendor_id,
-                v.name AS vendor_name
-            """
-
-        query += f"""
-            FROM payments p
-        """
-
-        if vendor_col:
-
-            query += f"""
-                LEFT JOIN vendors v
-                    ON v.vendor_id =
-                       p.`{vendor_col}`
-                    AND v.user_id = %s
-            """
-
-        query += f"""
-            WHERE p.user_id=%s
-              AND DATE(p.`{date_col}`)
-                  BETWEEN %s AND %s
-        """
-
-        params = []
-
-        if vendor_col:
-            params.append(user_id)
-
-        params.extend([
-            user_id,
-            start_date,
-            end_date
-        ])
-
-        if vendor_name and vendor_col:
-
-            query += """
-                AND (
-                    v.name LIKE %s
-                    OR v.name_en LIKE %s
-                )
-            """
-
-            search = f"%{vendor_name}%"
-
-            params.extend([
-                search,
-                search
-            ])
-
-        query += f"""
-            ORDER BY
-                p.`{date_col}` DESC
-        """
-
-        cursor.execute(
-            query,
-            tuple(params)
-        )
-
-        rows = cursor.fetchall()
-
-        cursor.close()
-
-        records = []
-
-        total = 0.0
-
-        for row in rows:
-
-            amount = float(
-                row.get(
-                    "payment_amount"
-                ) or 0
-            )
-
-            total += amount
-
-            records.append({
-
-                "date":
-                    str(
-                        row.get(
-                            "payment_date"
-                        )
-                    ),
-
-                "amount":
-                    round(
-                        amount,
-                        2
-                    ),
-
-                "vendor_id":
-                    row.get(
-                        "vendor_id"
-                    ),
-
-                "vendor_name":
-                    row.get(
-                        "vendor_name"
-                    )
-            })
-
         return {
-
             "success": True,
-
-            "start_date":
-                str(start_date),
-
-            "end_date":
-                str(end_date),
-
-            "total_payment":
-                round(
-                    total,
-                    2
-                ),
-
-            "records":
-                records,
-
-            "record_count":
-                len(records)
+            "start_date": str(start),
+            "end_date": str(end),
+            "total_payment": round(sum(r["final_payable"] for r in records), 2),
+            "records": records,
+            "record_count": len(records),
         }
 
     except Exception:
 
-        logging.exception(
-            "get_payments failed"
-        )
+        logging.exception("get_payments failed")
 
-        return {
-
-            "success": False,
-
-            "error":
-                "Unable to retrieve payment data."
-        }
+        return {"success": False, "error": "Unable to retrieve payment data."}
 
 
 # ==========================================================
-# 9. ADVANCE TOOL
+# 9. ADVANCE TOOL (advance_transactions ledger)
 # ==========================================================
 
 def get_advance(
@@ -10102,235 +9641,61 @@ def get_advance(
         user_id = dairymitr_ai_get_user_id()
 
         if not user_id:
+            return {"success": False, "error": "Unauthorized access."}
 
-            return {
-                "success": False,
-                "error": "Unauthorized access."
-            }
+        denied = _ai_owner_only()
+        if denied:
+            return denied
 
-        today = dairymitr_ai_today()
+        start, end = _ai_range(start_date, end_date)
 
-        if not start_date:
-            start_date = str(today)
-
-        if not end_date:
-            end_date = start_date
-
-        cursor = SafeCursor(
-            mysql.connection.cursor()
-        )
-
-        cursor.execute(
-            """
-            SELECT
-                COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'advance'
-            ORDER BY ORDINAL_POSITION
-            """
-        )
-
-        columns = [
-            row.get("COLUMN_NAME")
-            for row in cursor.fetchall()
-        ]
-
-        date_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "date",
-                    "advance_date",
-                    "created_at"
-                )
-            ),
-            None
-        )
-
-        amount_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "amount",
-                    "advance_amount"
-                )
-            ),
-            None
-        )
-
-        vendor_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "vendor_id",
-                    "vendorid"
-                )
-            ),
-            None
-        )
-
-        if not date_col or not amount_col:
-
-            cursor.close()
-
-            return {
-
-                "success": False,
-
-                "error":
-                    "Advance date/amount columns were not found."
-            }
-
-        query = f"""
-            SELECT
-                a.`{date_col}` AS advance_date,
-                a.`{amount_col}` AS advance_amount
+        sql = """
+            SELECT at.transaction_date, at.transaction_type, at.amount,
+                   at.vendor_id, v.name AS vendor_name
+            FROM advance_transactions at
+            JOIN vendors v ON v.vendor_id = at.vendor_id AND v.user_id = at.user_id
+            WHERE at.user_id = %s AND at.transaction_date BETWEEN %s AND %s
         """
+        params = [user_id, start, end]
 
-        if vendor_col:
+        if vendor_name:
+            sql += " AND (v.name LIKE %s OR v.name_en LIKE %s)"
+            like = "%" + vendor_name.replace("%", "").replace("_", "") + "%"
+            params += [like, like]
 
-            query += f""",
-                a.`{vendor_col}` AS vendor_id,
-                v.name AS vendor_name
-            """
-
-        query += """
-            FROM advance a
-        """
-
-        if vendor_col:
-
-            query += f"""
-                LEFT JOIN vendors v
-                    ON v.vendor_id =
-                       a.`{vendor_col}`
-                    AND v.user_id=%s
-            """
-
-        query += f"""
-            WHERE a.user_id=%s
-              AND DATE(a.`{date_col}`)
-                  BETWEEN %s AND %s
-        """
-
-        params = []
-
-        if vendor_col:
-            params.append(user_id)
-
-        params.extend([
-            user_id,
-            start_date,
-            end_date
-        ])
-
-        if vendor_name and vendor_col:
-
-            query += """
-                AND (
-                    v.name LIKE %s
-                    OR v.name_en LIKE %s
-                )
-            """
-
-            search = f"%{vendor_name}%"
-
-            params.extend([
-                search,
-                search
-            ])
-
-        query += f"""
-            ORDER BY
-                a.`{date_col}` DESC
-        """
-
-        cursor.execute(
-            query,
-            tuple(params)
-        )
-
+        cursor = dm_db.cursor()
+        cursor.execute(sql + " ORDER BY at.transaction_date DESC, at.id DESC LIMIT 500",
+                       params)
         rows = cursor.fetchall()
-
         cursor.close()
 
-        records = []
-
-        total = 0.0
-
-        for row in rows:
-
-            amount = float(
-                row.get(
-                    "advance_amount"
-                ) or 0
-            )
-
-            total += amount
-
-            records.append({
-
-                "date":
-                    str(
-                        row.get(
-                            "advance_date"
-                        )
-                    ),
-
-                "amount":
-                    round(
-                        amount,
-                        2
-                    ),
-
-                "vendor_id":
-                    row.get(
-                        "vendor_id"
-                    ),
-
-                "vendor_name":
-                    row.get(
-                        "vendor_name"
-                    )
-            })
+        records = [
+            {
+                "date": str(r["transaction_date"]),
+                "type": r["transaction_type"],
+                "amount": float(r["amount"]),
+                "vendor_id": r["vendor_id"],
+                "vendor_name": r["vendor_name"],
+            }
+            for r in rows
+        ]
 
         return {
-
             "success": True,
-
-            "start_date":
-                str(start_date),
-
-            "end_date":
-                str(end_date),
-
-            "total_advance":
-                round(
-                    total,
-                    2
-                ),
-
-            "records":
-                records
+            "start_date": str(start),
+            "end_date": str(end),
+            "total_advance": round(sum(r["amount"] for r in records
+                                       if r["type"] == "advance"), 2),
+            "total_deduction": round(sum(r["amount"] for r in records
+                                         if r["type"] == "deduction"), 2),
+            "records": records,
         }
 
     except Exception:
 
-        logging.exception(
-            "get_advance failed"
-        )
+        logging.exception("get_advance failed")
 
-        return {
-
-            "success": False,
-
-            "error":
-                "Unable to retrieve advance data."
-        }
+        return {"success": False, "error": "Unable to retrieve advance data."}
 
 
 # ==========================================================
@@ -10348,283 +9713,60 @@ def get_food_sack(
         user_id = dairymitr_ai_get_user_id()
 
         if not user_id:
+            return {"success": False, "error": "Unauthorized access."}
 
-            return {
-                "success": False,
-                "error": "Unauthorized access."
-            }
+        start, end = _ai_range(start_date, end_date)
 
-        today = dairymitr_ai_today()
-
-        if not start_date:
-            start_date = str(today)
-
-        if not end_date:
-            end_date = start_date
-
-        cursor = SafeCursor(
-            mysql.connection.cursor()
-        )
-
-        cursor.execute(
-            """
-            SELECT
-                COLUMN_NAME
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'food_sack'
-            ORDER BY ORDINAL_POSITION
-            """
-        )
-
-        columns = [
-            row.get("COLUMN_NAME")
-            for row in cursor.fetchall()
-        ]
-
-        date_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "date",
-                    "sack_date",
-                    "created_at"
-                )
-            ),
-            None
-        )
-
-        qty_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "quantity",
-                    "qty",
-                    "sack_quantity",
-                    "sacks",
-                    "food_sack"
-                )
-            ),
-            None
-        )
-
-        amount_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "amount",
-                    "total_amount",
-                    "payment"
-                )
-            ),
-            None
-        )
-
-        vendor_col = next(
-            (
-                c for c in columns
-                if c.lower()
-                in (
-                    "vendor_id",
-                    "vendorid"
-                )
-            ),
-            None
-        )
-
-        if not date_col or not qty_col:
-
-            cursor.close()
-
-            return {
-
-                "success": False,
-
-                "error":
-                    "Food sack date/quantity columns were not found."
-            }
-
-        query = f"""
-            SELECT
-                fs.`{date_col}` AS sack_date,
-                fs.`{qty_col}` AS sack_quantity
-        """
-
-        if amount_col:
-
-            query += f""",
-                fs.`{amount_col}` AS sack_amount
-            """
-
-        else:
-
-            query += """
-                NULL AS sack_amount
-            """
-
-        if vendor_col:
-
-            query += f""",
-                fs.`{vendor_col}` AS vendor_id,
-                v.name AS vendor_name
-            """
-
-        query += """
+        sql = """
+            SELECT fs.date, fs.sack_qty, fs.total_cost, r.name AS sack_name,
+                   fs.vendor_id, v.name AS vendor_name
             FROM food_sack fs
+            JOIN food_sack_rates r ON r.id = fs.sack_rate_id
+            JOIN vendors v ON v.vendor_id = fs.vendor_id AND v.user_id = fs.user_id
+            WHERE fs.user_id = %s AND fs.date BETWEEN %s AND %s
         """
+        params = [user_id, start, end]
 
-        if vendor_col:
+        if vendor_name:
+            sql += " AND (v.name LIKE %s OR v.name_en LIKE %s)"
+            like = "%" + vendor_name.replace("%", "").replace("_", "") + "%"
+            params += [like, like]
 
-            query += f"""
-                LEFT JOIN vendors v
-                    ON v.vendor_id =
-                       fs.`{vendor_col}`
-                    AND v.user_id=%s
-            """
-
-        query += f"""
-            WHERE fs.user_id=%s
-              AND DATE(fs.`{date_col}`)
-                  BETWEEN %s AND %s
-        """
-
-        params = []
-
-        if vendor_col:
-            params.append(user_id)
-
-        params.extend([
-            user_id,
-            start_date,
-            end_date
-        ])
-
-        if vendor_name and vendor_col:
-
-            query += """
-                AND (
-                    v.name LIKE %s
-                    OR v.name_en LIKE %s
-                )
-            """
-
-            search = f"%{vendor_name}%"
-
-            params.extend([
-                search,
-                search
-            ])
-
-        query += f"""
-            ORDER BY
-                fs.`{date_col}` DESC
-        """
-
-        cursor.execute(
-            query,
-            tuple(params)
-        )
-
+        cursor = dm_db.cursor()
+        cursor.execute(sql + " ORDER BY fs.date DESC LIMIT 500", params)
         rows = cursor.fetchall()
-
         cursor.close()
 
-        total_quantity = 0.0
-        total_amount = 0.0
-
+        show_money = session.get("role") == "owner"
         records = []
+        for r in rows:
+            rec = {
+                "date": str(r["date"]),
+                "sack_name": r["sack_name"],
+                "quantity": int(r["sack_qty"] or 0),
+                "vendor_id": r["vendor_id"],
+                "vendor_name": r["vendor_name"],
+            }
+            if show_money:
+                rec["amount"] = round(float(r["total_cost"] or 0), 2)
+            records.append(rec)
 
-        for row in rows:
-
-            quantity = float(
-                row.get(
-                    "sack_quantity"
-                ) or 0
-            )
-
-            amount = float(
-                row.get(
-                    "sack_amount"
-                ) or 0
-            )
-
-            total_quantity += quantity
-            total_amount += amount
-
-            records.append({
-
-                "date":
-                    str(
-                        row.get(
-                            "sack_date"
-                        )
-                    ),
-
-                "quantity":
-                    round(
-                        quantity,
-                        2
-                    ),
-
-                "amount":
-                    round(
-                        amount,
-                        2
-                    ),
-
-                "vendor_id":
-                    row.get(
-                        "vendor_id"
-                    ),
-
-                "vendor_name":
-                    row.get(
-                        "vendor_name"
-                    )
-            })
-
-        return {
-
+        result = {
             "success": True,
-
-            "start_date":
-                str(start_date),
-
-            "end_date":
-                str(end_date),
-
-            "total_sacks":
-                round(
-                    total_quantity,
-                    2
-                ),
-
-            "total_amount":
-                round(
-                    total_amount,
-                    2
-                ),
-
-            "records":
-                records
+            "start_date": str(start),
+            "end_date": str(end),
+            "total_sacks": sum(r["quantity"] for r in records),
+            "records": records,
         }
+        if show_money:
+            result["total_amount"] = round(sum(r.get("amount", 0) for r in records), 2)
+        return result
 
     except Exception:
 
-        logging.exception(
-            "get_food_sack failed"
-        )
+        logging.exception("get_food_sack failed")
 
-        return {
-
-            "success": False,
-
-            "error":
-                "Unable to retrieve food sack data."
-        }
+        return {"success": False, "error": "Unable to retrieve food sack data."}
 
 
 # ==========================================================
@@ -11004,6 +10146,10 @@ def dairy_mitr_ai_chat():
         }), 400
 
 
+    if dm_security.rate_limited([("ai_chat", session.get("id"), 40, 600)]):
+        return jsonify({"success": False, "error": dm_security.RATE_LIMIT_MESSAGE}), 429
+
+
     # ======================================================
     # GEMINI
     # ======================================================
@@ -11128,7 +10274,7 @@ def dairy_mitr_ai_chat():
             "success": False,
 
             "error":
-                f"DairyMitr AI error: {str(e)}"
+                "DairyMitr AI सध्या उत्तर देऊ शकत नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा."
 
         }), 500
 
@@ -11174,1164 +10320,15 @@ def dairy_mitr_ai_chat():
 
 
 # ============================================================
-# DAIRYMITR - FAT / SNF BACKEND
-# Chart Management + Rate Lookup + Milk Collection + Edit
-# Calculation Mode
+# FAT/SNF: see fat_snf/ (blueprint registered near require_login).
+# The earlier inline implementation that lived here was replaced: it let
+# staff change the owner's calculation mode, never enforced the mode,
+# and its multi-statement writes were not real transactions.
 # ============================================================
-
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from datetime import date, datetime
-
-from flask import (
-    request,
-    jsonify,
-    render_template,
-    redirect,
-    url_for,
-    session,
-)
-
-# Existing project मध्ये mysql आणि SafeCursor आधीच defined असतील,
-# तर त्यांचे imports पुन्हा करू नकोस.
-
-
-# ============================================================
-# 1. COMMON HELPERS
-# ============================================================
-
-def fsn_current_user_id():
-    """Get the logged-in user ID from the existing session."""
-
-    if not session.get("loggedin"):
-        return None
-
-    if session.get("role") not in ("owner", "staff"):
-        return None
-
-    try:
-        user_id = int(session.get("id"))
-        return user_id if user_id > 0 else None
-    except (TypeError, ValueError):
-        return None
-
-
-def fsn_decimal(value, field_name):
-    """Convert a value to a finite Decimal."""
-
-    if value is None or isinstance(value, bool):
-        raise ValueError(f"{field_name} is required.")
-
-    try:
-        result = Decimal(str(value).strip())
-    except (InvalidOperation, TypeError, ValueError):
-        raise ValueError(f"Invalid {field_name}.")
-
-    if not result.is_finite():
-        raise ValueError(f"Invalid {field_name}.")
-
-    return result
-
-
-def fsn_validate_fat(value):
-    result = fsn_decimal(value, "FAT")
-
-    if result < 0 or result > 100:
-        raise ValueError("FAT must be between 0 and 100.")
-
-    return result.quantize(Decimal("0.01"))
-
-
-def fsn_validate_snf(value):
-    result = fsn_decimal(value, "SNF")
-
-    if result < 0 or result > 100:
-        raise ValueError("SNF must be between 0 and 100.")
-
-    return result.quantize(Decimal("0.01"))
-
-
-def fsn_validate_rate(value):
-    result = fsn_decimal(value, "Rate")
-
-    if result < 0 or result > Decimal("99999999"):
-        raise ValueError("Invalid rate.")
-
-    return result.quantize(Decimal("0.01"))
-
-
-def fsn_validate_quantity(value):
-    result = fsn_decimal(value, "Quantity")
-
-    if result <= 0 or result > Decimal("99999999"):
-        raise ValueError("Quantity must be greater than zero.")
-
-    return result.quantize(Decimal("0.01"))
-
-
-def fsn_money(value):
-    """Round monetary values to two decimal places."""
-
-    return Decimal(str(value)).quantize(
-        Decimal("0.01"),
-        rounding=ROUND_HALF_UP
-    )
-
-
-def fsn_json_value(value):
-    """Convert Decimal and date values into JSON-compatible values."""
-
-    if isinstance(value, Decimal):
-        return float(value)
-
-    if isinstance(value, (date, datetime)):
-        return value.isoformat()
-
-    return value
-
-
-def fsn_row_dict(row):
-    """Convert a dictionary or tuple cursor row into a dictionary."""
-
-    if row is None:
-        return None
-
-    if isinstance(row, dict):
-        return {
-            key: fsn_json_value(value)
-            for key, value in row.items()
-        }
-
-    raise TypeError(
-        "Expected dictionary cursor rows. "
-        "Check your existing MySQL cursor configuration."
-    )
-
-
-def fsn_error(message, status=400):
-    return jsonify({
-        "success": False,
-        "message": message
-    }), status
-
-
-def fsn_get_json():
-    data = request.get_json(silent=True)
-
-    if not isinstance(data, dict):
-        raise ValueError("A valid JSON request body is required.")
-
-    return data
-
-
-def fsn_parse_date(value):
-    try:
-        return date.fromisoformat(str(value))
-    except (TypeError, ValueError):
-        raise ValueError("Invalid date. Use YYYY-MM-DD.")
-
-
-def fsn_get_cursor():
-    """Use the project's existing database connection and wrapper."""
-
-    return SafeCursor(mysql.connection.cursor())
-
-
-# ============================================================
-# 2. CHART OWNERSHIP HELPER
-# ============================================================
-
-def fsn_fetch_chart(chart_id, user_id, cursor):
-    """Fetch a chart only when it belongs to this user."""
-
-    cursor.execute(
-        """
-        SELECT
-            id,
-            user_id,
-            created_by_staff_id,
-            chart_name,
-            milk_type,
-            effective_from,
-            status,
-            created_at,
-            updated_at
-        FROM fat_snf_charts
-        WHERE id = %s
-          AND user_id = %s
-        LIMIT 1
-        """,
-        (chart_id, user_id)
-    )
-
-    return cursor.fetchone()
-
-
-# ============================================================
-# 3. FIND APPLICABLE CHART AND EXACT MATRIX RATE
-# ============================================================
-
-def fsn_find_rate(user_id, milk_type, fat, snf, collection_date, cursor):
-    """
-    Find the active chart effective on the collection date.
-    A specific milk-type chart has priority over a 'both' chart.
-    FAT and SNF must exactly match a saved matrix cell.
-    """
-
-    cursor.execute(
-        """
-        SELECT
-            id,
-            chart_name,
-            milk_type,
-            effective_from
-        FROM fat_snf_charts
-        WHERE user_id = %s
-          AND status = 'active'
-          AND effective_from <= %s
-          AND milk_type IN (%s, 'both')
-        ORDER BY
-            CASE WHEN milk_type = %s THEN 0 ELSE 1 END,
-            effective_from DESC,
-            id DESC
-        LIMIT 1
-        """,
-        (
-            user_id,
-            collection_date,
-            milk_type,
-            milk_type
-        )
-    )
-
-    chart = cursor.fetchone()
-
-    if not chart:
-        raise ValueError(
-            "No active FAT/SNF rate chart exists for this date and milk type."
-        )
-
-    cursor.execute(
-        """
-        SELECT id, rate
-        FROM fat_snf_chart_values
-        WHERE chart_id = %s
-          AND fat = %s
-          AND snf = %s
-        LIMIT 1
-        """,
-        (
-            chart["id"],
-            fat,
-            snf
-        )
-    )
-
-    cell = cursor.fetchone()
-
-    if not cell:
-        raise ValueError(
-            f"No rate found for FAT {fat} and SNF {snf}. "
-            "Check the selected rate chart."
-        )
-
-    return {
-        "chart_id": chart["id"],
-        "chart_name": chart["chart_name"],
-        "chart_value_id": cell["id"],
-        "rate": fsn_money(cell["rate"])
-    }
-
-
-# ============================================================
-# 4. RATE CHART LIST PAGE
-# Template: templates/fat_snf/rate_chart.html
-# ============================================================
-
-@app.route("/fat_snf/rate-chart", methods=["GET"])
-def fat_snf_rate_chart():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return redirect(url_for("login"))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT
-                id,
-                chart_name,
-                milk_type,
-                effective_from,
-                status,
-                created_at,
-                updated_at
-            FROM fat_snf_charts
-            WHERE user_id = %s
-            ORDER BY effective_from DESC, id DESC
-            """,
-            (user_id,)
-        )
-
-        charts = cursor.fetchall()
-
-        return render_template(
-            "fat_snf/rate_chart.html",
-            charts=charts
-        )
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 5. CREATE CHART PAGE
-# Template: templates/fat_snf/create_chart.html
-# ============================================================
-
-@app.route("/fat_snf/rate-chart/create", methods=["GET"])
-def create_fat_snf_chart_page():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return redirect(url_for("login"))
-
-    return render_template("fat_snf/create_chart.html")
-
-
-# ============================================================
-# 6. CREATE / SAVE RATE CHART API
-# POST /api/fat_snf/charts/create
-# ============================================================
-
-@app.route("/api/fat_snf/charts/create", methods=["POST"])
-def create_fat_snf_chart():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    try:
-        data = fsn_get_json()
-
-        chart_name = str(data.get("chart_name", "")).strip()
-        milk_type = str(data.get("milk_type", "")).strip().lower()
-        effective_date = fsn_parse_date(data.get("effective_date"))
-        fat_values = data.get("fat_values")
-        snf_values = data.get("snf_values")
-        matrix = data.get("matrix")
-
-        if not chart_name or len(chart_name) > 150:
-            raise ValueError("Chart name is required (maximum 150 characters).")
-
-        if milk_type not in ("cow", "buffalo", "both"):
-            raise ValueError("Invalid milk type.")
-
-        if not isinstance(fat_values, list) or not fat_values:
-            raise ValueError("FAT values are required.")
-
-        if not isinstance(snf_values, list) or not snf_values:
-            raise ValueError("SNF values are required.")
-
-        if not isinstance(matrix, list) or not matrix:
-            raise ValueError("Rate matrix is required.")
-
-        if len(fat_values) > 50 or len(snf_values) > 50:
-            raise ValueError("The matrix dimensions are too large.")
-
-        if len(matrix) > 2500:
-            raise ValueError("The matrix cannot contain more than 2500 cells.")
-
-        fats = [fsn_validate_fat(value) for value in fat_values]
-        snfs = [fsn_validate_snf(value) for value in snf_values]
-
-        if len(set(fats)) != len(fats):
-            raise ValueError("Duplicate FAT values are not allowed.")
-
-        if len(set(snfs)) != len(snfs):
-            raise ValueError("Duplicate SNF values are not allowed.")
-
-        expected_cells = len(fats) * len(snfs)
-
-        if len(matrix) != expected_cells:
-            raise ValueError("The matrix must contain every FAT/SNF combination.")
-
-        expected_pairs = {
-            (fat, snf)
-            for fat in fats
-            for snf in snfs
-        }
-
-        cleaned_matrix = []
-        seen_pairs = set()
-
-        for item in matrix:
-            if not isinstance(item, dict):
-                raise ValueError("Invalid matrix cell.")
-
-            fat = fsn_validate_fat(item.get("fat"))
-            snf = fsn_validate_snf(item.get("snf"))
-            rate = fsn_validate_rate(item.get("rate"))
-
-            pair = (fat, snf)
-
-            if pair in seen_pairs:
-                raise ValueError("Duplicate FAT/SNF matrix cell.")
-
-            if pair not in expected_pairs:
-                raise ValueError("Matrix contains unexpected FAT/SNF values.")
-
-            seen_pairs.add(pair)
-
-            cleaned_matrix.append((fat, snf, rate))
-
-        if seen_pairs != expected_pairs:
-            raise ValueError("Some FAT/SNF matrix cells are missing.")
-
-    except ValueError as exc:
-        return fsn_error(str(exc))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT id
-            FROM fat_snf_charts
-            WHERE user_id = %s
-              AND milk_type = %s
-              AND effective_from = %s
-              AND status = 'active'
-            LIMIT 1
-            """,
-            (user_id, milk_type, effective_date)
-        )
-
-        if cursor.fetchone():
-            return fsn_error(
-                "An active chart already exists for this milk type and date."
-            )
-
-        cursor.execute(
-            """
-            INSERT INTO fat_snf_charts
-                (user_id, created_by_staff_id, chart_name,
-                 milk_type, effective_from, status)
-            VALUES (%s, %s, %s, %s, %s, 'active')
-            """,
-            (
-                user_id,
-                session.get("staff_id"),
-                chart_name,
-                milk_type,
-                effective_date
-            )
-        )
-
-        chart_id = cursor.lastrowid
-
-        for fat, snf, rate in cleaned_matrix:
-            cursor.execute(
-                """
-                INSERT INTO fat_snf_chart_values
-                    (chart_id, fat, snf, rate)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (chart_id, fat, snf, rate)
-            )
-
-        mysql.connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "FAT/SNF rate chart created successfully.",
-            "chart_id": chart_id
-        }), 201
-
-    except Exception:
-        mysql.connection.rollback()
-        app.logger.exception("FAT/SNF chart creation failed.")
-
-        return fsn_error(
-            "Unable to save the rate chart. Check the server logs.",
-            500
-        )
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 7. VIEW A RATE CHART
-# GET /api/fat_snf/charts/<chart_id>
-# ============================================================
-
-@app.route("/api/fat_snf/charts/<int:chart_id>", methods=["GET"])
-def get_fat_snf_chart_api(chart_id):
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    cursor = fsn_get_cursor()
-
-    try:
-        chart = fsn_fetch_chart(chart_id, user_id, cursor)
-
-        if not chart:
-            return fsn_error("Chart not found.", 404)
-
-        cursor.execute(
-            """
-            SELECT id, fat, snf, rate
-            FROM fat_snf_chart_values
-            WHERE chart_id = %s
-            ORDER BY fat ASC, snf ASC
-            """,
-            (chart_id,)
-        )
-
-        values = cursor.fetchall()
-
-        return jsonify({
-            "success": True,
-            "chart": fsn_row_dict(chart),
-            "values": [fsn_row_dict(row) for row in values]
-        })
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 8. DEACTIVATE RATE CHART
-# POST /api/fat_snf/charts/<chart_id>/deactivate
-# ============================================================
-
-@app.route(
-    "/api/fat_snf/charts/<int:chart_id>/deactivate",
-    methods=["POST"]
-)
-def deactivate_fat_snf_chart(chart_id):
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    cursor = fsn_get_cursor()
-
-    try:
-        chart = fsn_fetch_chart(chart_id, user_id, cursor)
-
-        if not chart:
-            return fsn_error("Chart not found.", 404)
-
-        cursor.execute(
-            """
-            UPDATE fat_snf_charts
-            SET status = 'inactive'
-            WHERE id = %s AND user_id = %s
-            """,
-            (chart_id, user_id)
-        )
-
-        mysql.connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Rate chart deactivated successfully."
-        })
-
-    except Exception:
-        mysql.connection.rollback()
-        app.logger.exception("FAT/SNF chart deactivation failed.")
-        return fsn_error("Unable to deactivate the chart.", 500)
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 9. AUTOMATIC RATE LOOKUP API
-# GET /api/fat_snf/rate
-# ============================================================
-
-@app.route("/api/fat_snf/rate", methods=["GET"])
-def get_fat_snf_rate():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    try:
-        milk_type = str(
-            request.args.get("milk_type", "")
-        ).strip().lower()
-
-        if milk_type not in ("cow", "buffalo"):
-            raise ValueError("Milk type must be cow or buffalo.")
-
-        fat = fsn_validate_fat(request.args.get("fat"))
-        snf = fsn_validate_snf(request.args.get("snf"))
-        selected_date = fsn_parse_date(
-            request.args.get("date") or date.today().isoformat()
-        )
-
-    except ValueError as exc:
-        return fsn_error(str(exc))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        result = fsn_find_rate(
-            user_id,
-            milk_type,
-            fat,
-            snf,
-            selected_date,
-            cursor
-        )
-
-        return jsonify({
-            "success": True,
-            "chart_id": result["chart_id"],
-            "chart_name": result["chart_name"],
-            "chart_value_id": result["chart_value_id"],
-            "fat": float(fat),
-            "snf": float(snf),
-            "rate": float(result["rate"])
-        })
-
-    except ValueError as exc:
-        return fsn_error(str(exc), 404)
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 10. FAT/SNF MILK COLLECTION PAGE
-# Template: templates/fat_snf/milk_collection.html
-# ============================================================
-
-@app.route("/fat_snf/milk_collection", methods=["GET"])
-def fat_snf_milk_collection():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return redirect(url_for("login"))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT vendor_id, name, phone
-            FROM vendors
-            WHERE user_id = %s
-            ORDER BY name ASC
-            """,
-            (user_id,)
-        )
-
-        vendors = cursor.fetchall()
-
-        return render_template(
-            "fat_snf/milk_collection.html",
-            vendors=vendors
-        )
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 11. SAVE FAT/SNF MILK COLLECTION
-# POST /api/fat_snf/milk_collection
-# ============================================================
-
-@app.route("/api/fat_snf/milk_collection", methods=["POST"])
-def save_fat_snf_milk_collection():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    try:
-        data = fsn_get_json()
-
-        vendor_id = int(data.get("vendor_id"))
-        selected_date = fsn_parse_date(data.get("collection_date"))
-
-        slot = str(data.get("slot", "")).strip().lower()
-        milk_type = str(data.get("milk_type", "")).strip().lower()
-
-        fat = fsn_validate_fat(data.get("fat"))
-        snf = fsn_validate_snf(data.get("snf"))
-        quantity = fsn_validate_quantity(data.get("quantity"))
-
-        if vendor_id <= 0:
-            raise ValueError("Invalid vendor.")
-
-        if slot not in ("morning", "evening"):
-            raise ValueError("Invalid collection slot.")
-
-        if milk_type not in ("cow", "buffalo"):
-            raise ValueError("Invalid milk type.")
-
-    except (ValueError, TypeError) as exc:
-        return fsn_error(str(exc))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        # Verify vendor ownership.
-        cursor.execute(
-            """
-            SELECT vendor_id
-            FROM vendors
-            WHERE vendor_id = %s AND user_id = %s
-            LIMIT 1
-            """,
-            (vendor_id, user_id)
-        )
-
-        if not cursor.fetchone():
-            return fsn_error("Vendor not found.", 404)
-
-        # Prevent duplicate entries for the same vendor/date/slot/type.
-        cursor.execute(
-            """
-            SELECT id
-            FROM fat_snf_milk_collection
-            WHERE user_id = %s
-              AND vendor_id = %s
-              AND collection_date = %s
-              AND slot = %s
-              AND milk_type = %s
-            LIMIT 1
-            """,
-            (
-                user_id,
-                vendor_id,
-                selected_date,
-                slot,
-                milk_type
-            )
-        )
-
-        if cursor.fetchone():
-            return fsn_error(
-                "An entry already exists for this vendor, date, slot and milk type.",
-                409
-            )
-
-        rate_data = fsn_find_rate(
-            user_id,
-            milk_type,
-            fat,
-            snf,
-            selected_date,
-            cursor
-        )
-
-        rate = rate_data["rate"]
-        amount = fsn_money(quantity * rate)
-
-        cursor.execute(
-            """
-            INSERT INTO fat_snf_milk_collection (
-                user_id,
-                vendor_id,
-                staff_id,
-                chart_id,
-                chart_value_id,
-                collection_date,
-                slot,
-                milk_type,
-                fat,
-                snf,
-                quantity,
-                rate,
-                amount
-            )
-            VALUES (
-                %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s
-            )
-            """,
-            (
-                user_id,
-                vendor_id,
-                session.get("staff_id"),
-                rate_data["chart_id"],
-                rate_data["chart_value_id"],
-                selected_date,
-                slot,
-                milk_type,
-                fat,
-                snf,
-                quantity,
-                rate,
-                amount
-            )
-        )
-
-        entry_id = cursor.lastrowid
-
-        mysql.connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "FAT/SNF milk entry saved successfully.",
-            "entry_id": entry_id,
-            "rate": float(rate),
-            "amount": float(amount)
-        }), 201
-
-    except ValueError as exc:
-        mysql.connection.rollback()
-        return fsn_error(str(exc), 400)
-
-    except Exception:
-        mysql.connection.rollback()
-        app.logger.exception("FAT/SNF collection save failed.")
-        return fsn_error("Unable to save milk collection.", 500)
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 12. GET ONE COLLECTION ENTRY FOR EDITING
-# GET /api/fat_snf/milk_collection/<entry_id>
-# ============================================================
-
-@app.route(
-    "/api/fat_snf/milk_collection/<int:entry_id>",
-    methods=["GET"]
-)
-def get_fat_snf_milk_entry(entry_id):
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT
-                m.id,
-                m.vendor_id,
-                v.name AS vendor_name,
-                m.collection_date,
-                m.slot,
-                m.milk_type,
-                m.fat,
-                m.snf,
-                m.quantity,
-                m.rate,
-                m.amount,
-                m.chart_id
-            FROM fat_snf_milk_collection AS m
-            INNER JOIN vendors AS v
-                ON v.vendor_id = m.vendor_id
-               AND v.user_id = m.user_id
-            WHERE m.id = %s
-              AND m.user_id = %s
-            LIMIT 1
-            """,
-            (entry_id, user_id)
-        )
-
-        entry = cursor.fetchone()
-
-        if not entry:
-            return fsn_error("Collection entry not found.", 404)
-
-        return jsonify({
-            "success": True,
-            "entry": fsn_row_dict(entry)
-        })
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 13. UPDATE COLLECTION ENTRY
-# PUT /api/fat_snf/milk_collection/<entry_id>
-# ============================================================
-
-@app.route(
-    "/api/fat_snf/milk_collection/<int:entry_id>",
-    methods=["PUT"]
-)
-def update_fat_snf_milk_entry(entry_id):
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    try:
-        data = fsn_get_json()
-
-        fat = fsn_validate_fat(data.get("fat"))
-        snf = fsn_validate_snf(data.get("snf"))
-        quantity = fsn_validate_quantity(data.get("quantity"))
-
-    except ValueError as exc:
-        return fsn_error(str(exc))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT
-                id,
-                vendor_id,
-                collection_date,
-                slot,
-                milk_type
-            FROM fat_snf_milk_collection
-            WHERE id = %s AND user_id = %s
-            LIMIT 1
-            """,
-            (entry_id, user_id)
-        )
-
-        entry = cursor.fetchone()
-
-        if not entry:
-            return fsn_error("Collection entry not found.", 404)
-
-        # Do not accept rate or amount from the frontend.
-        rate_data = fsn_find_rate(
-            user_id,
-            entry["milk_type"],
-            fat,
-            snf,
-            entry["collection_date"],
-            cursor
-        )
-
-        rate = rate_data["rate"]
-        amount = fsn_money(quantity * rate)
-
-        cursor.execute(
-            """
-            UPDATE fat_snf_milk_collection
-            SET
-                chart_id = %s,
-                chart_value_id = %s,
-                fat = %s,
-                snf = %s,
-                quantity = %s,
-                rate = %s,
-                amount = %s,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = %s
-              AND user_id = %s
-            """,
-            (
-                rate_data["chart_id"],
-                rate_data["chart_value_id"],
-                fat,
-                snf,
-                quantity,
-                rate,
-                amount,
-                entry_id,
-                user_id
-            )
-        )
-
-        mysql.connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Milk entry updated successfully.",
-            "rate": float(rate),
-            "amount": float(amount)
-        })
-
-    except ValueError as exc:
-        mysql.connection.rollback()
-        return fsn_error(str(exc), 400)
-
-    except Exception:
-        mysql.connection.rollback()
-        app.logger.exception("FAT/SNF collection update failed.")
-        return fsn_error("Unable to update milk entry.", 500)
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 14. COLLECTION HISTORY / EDIT PAGE
-# Template: templates/fat_snf/edit_entry.html
-# ============================================================
-
-@app.route("/fat_snf/edit_entry", methods=["GET"])
-def fat_snf_edit_entry():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return redirect(url_for("login"))
-
-    try:
-        selected_date = fsn_parse_date(
-            request.args.get("date") or date.today().isoformat()
-        )
-    except ValueError:
-        selected_date = date.today()
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT
-                m.id,
-                m.vendor_id,
-                v.name AS vendor_name,
-                m.collection_date,
-                m.slot,
-                m.milk_type,
-                m.fat,
-                m.snf,
-                m.quantity,
-                m.rate,
-                m.amount
-            FROM fat_snf_milk_collection AS m
-            INNER JOIN vendors AS v
-                ON v.vendor_id = m.vendor_id
-               AND v.user_id = m.user_id
-            WHERE m.user_id = %s
-              AND m.collection_date = %s
-            ORDER BY v.name ASC, m.slot ASC, m.milk_type ASC
-            """,
-            (user_id, selected_date)
-        )
-
-        entries = cursor.fetchall()
-
-        return render_template(
-            "fat_snf/edit_entry.html",
-            entries=entries,
-            selected_date=selected_date.isoformat()
-        )
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 15. GET CALCULATION MODE
-# GET /api/fat_snf/calculation_mode
-# ============================================================
-
-@app.route("/api/fat_snf/calculation_mode", methods=["GET"])
-def get_calculation_mode():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT calculation_mode
-            FROM fat_snf_calculation_settings
-            WHERE user_id = %s
-            LIMIT 1
-            """,
-            (user_id,)
-        )
-
-        row = cursor.fetchone()
-
-        mode = row["calculation_mode"] if row else "general"
-
-        return jsonify({
-            "success": True,
-            "calculation_mode": mode
-        })
-
-    finally:
-        cursor.close()
-
-
-# ============================================================
-# 16. CHANGE CALCULATION MODE
-# POST /api/fat_snf/calculation_mode
-# ============================================================
-
-@app.route("/api/fat_snf/calculation_mode", methods=["POST"])
-def set_calculation_mode():
-    user_id = fsn_current_user_id()
-
-    if not user_id:
-        return fsn_error("Unauthorized access.", 401)
-
-    try:
-        data = fsn_get_json()
-
-        mode = str(
-            data.get("calculation_mode", "")
-        ).strip().lower()
-
-        if mode not in ("general", "fat_snf"):
-            raise ValueError(
-                "Calculation mode must be 'general' or 'fat_snf'."
-            )
-
-    except ValueError as exc:
-        return fsn_error(str(exc))
-
-    cursor = fsn_get_cursor()
-
-    try:
-        cursor.execute(
-            """
-            INSERT INTO fat_snf_calculation_settings
-                (user_id, calculation_mode)
-            VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE
-                calculation_mode = VALUES(calculation_mode),
-                updated_at = CURRENT_TIMESTAMP
-            """,
-            (user_id, mode)
-        )
-
-        mysql.connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Calculation mode updated successfully.",
-            "calculation_mode": mode
-        })
-
-    except Exception:
-        mysql.connection.rollback()
-        app.logger.exception("Calculation mode update failed.")
-        return fsn_error("Unable to update calculation mode.", 500)
-
-    finally:
-        cursor.close()
-
-
-
-
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    # Never run the interactive debugger in production (it allows remote
+    # code execution). Opt in locally with FLASK_DEBUG=1.
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

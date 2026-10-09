@@ -16,6 +16,14 @@ DB_NAME = os.getenv("MYSQL_DB")
 
 BACKUP_DIR = "backups"
 
+
+def _mysql_env():
+    """Pass the password via the environment, not argv (argv is visible to
+    every user on the host through `ps`)."""
+    env = os.environ.copy()
+    env["MYSQL_PWD"] = DB_PASS or ""
+    return env
+
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 
@@ -53,7 +61,6 @@ def create_backup(backup_type="manual", user_id=1):
         "-h", DB_HOST,
         "-P", str(DB_PORT),
         "-u", DB_USER,
-        f"-p{DB_PASS}",
         DB_NAME
     ]
 
@@ -62,7 +69,7 @@ def create_backup(backup_type="manual", user_id=1):
         print("Starting database backup...")
 
         with open(sql_file, "w") as f:
-            subprocess.run(command, stdout=f, check=True)
+            subprocess.run(command, stdout=f, check=True, env=_mysql_env())
 
         print("Compressing backup...")
 
@@ -112,12 +119,11 @@ def create_full_backup():
         "-h", DB_HOST,
         "-P", str(DB_PORT),
         "-u", DB_USER,
-        f"-p{DB_PASS}",
         DB_NAME
     ]
 
     with open(sql_file, "w") as f:
-        subprocess.run(command, stdout=f, check=True)
+        subprocess.run(command, stdout=f, check=True, env=_mysql_env())
 
     with open(sql_file, "rb") as f_in:
         with gzip.open(gzip_file, "wb") as f_out:
@@ -136,9 +142,10 @@ def create_full_backup():
 
 def restore_backup(filename):
 
+    filename = os.path.basename(filename)
     filepath = os.path.join(BACKUP_DIR, filename)
 
-    if not os.path.exists(filepath):
+    if not filename.endswith(".sql.gz") or not os.path.exists(filepath):
         raise Exception("Backup file not found")
 
     # -------------------------------------------------
@@ -162,14 +169,13 @@ def restore_backup(filename):
         "-h", DB_HOST,
         "-P", str(DB_PORT),
         "-u", DB_USER,
-        f"-p{DB_PASS}",
         DB_NAME
     ]
 
     print("Restoring database...")
 
     with open(temp_sql, "rb") as sql_file:
-        subprocess.run(command, stdin=sql_file, check=True)
+        subprocess.run(command, stdin=sql_file, check=True, env=_mysql_env())
 
     os.remove(temp_sql)
 

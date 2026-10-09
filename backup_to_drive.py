@@ -51,12 +51,12 @@ def create_backup():
         "-h", DB_HOST,
         "-P", DB_PORT,
         "-u", DB_USER,
-        f"-p{DB_PASS}",
         DB_NAME
     ]
 
     with open(filename, "w") as file:
-        subprocess.run(command, stdout=file)
+        subprocess.run(command, stdout=file, check=True,
+                       env={**os.environ, "MYSQL_PWD": DB_PASS or ""})
 
     print(f"✅ Backup created: {filename}")
 
