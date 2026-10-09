@@ -478,10 +478,13 @@ def login():
         email = (request.form.get('email') or '').strip()
         password = request.form.get('password') or ''
 
-        if dm_security.rate_limited([
-            ("login_ip", dm_security.client_ip(), 30, 900),
-            ("login_email", email.lower(), 10, 900),
-        ]):
+        # Only FAILED attempts count, so owners using several devices are
+        # never locked out, while password guessing is.
+        login_rules = [
+            ("login_fail_ip", dm_security.client_ip(), 30, 900),
+            ("login_fail_email", email.lower(), 10, 900),
+        ]
+        if dm_security.failures_blocked(login_rules):
             flash(dm_security.RATE_LIMIT_MESSAGE, 'danger')
             return render_template('auth/login.html'), 429
 
@@ -607,6 +610,7 @@ If you did not authorize this login, please ignore this email.
 
         cursor.close()
 
+        dm_security.record_failures(login_rules)
         flash('Invalid credentials!', 'danger')
 
     return render_template('auth/login.html')
@@ -7823,10 +7827,11 @@ def customer_login():
 
         # Dairy code + phone is a weak credential (the code is not secret),
         # so throttle guessing per IP and per dairy.
-        if dm_security.rate_limited([
-            ("customer_login_ip", dm_security.client_ip(), 20, 900),
-            ("customer_login_dairy", dairy_id, 50, 900),
-        ]):
+        customer_rules = [
+            ("customer_fail_ip", dm_security.client_ip(), 20, 900),
+            ("customer_fail_dairy", dairy_id, 50, 900),
+        ]
+        if dm_security.failures_blocked(customer_rules):
             flash(dm_security.RATE_LIMIT_MESSAGE, "danger")
             return render_template("customer/login.html"), 429
 
@@ -7875,6 +7880,7 @@ def customer_login():
 
             return redirect(url_for("customer_dashboard"))
 
+        dm_security.record_failures(customer_rules)
         flash("Invalid Dairy ID or Mobile Number", "danger")
 
 

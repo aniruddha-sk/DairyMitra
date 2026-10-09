@@ -140,6 +140,35 @@ def hit_rate_limit(name, key, limit, window_seconds):
         return True
 
 
+def is_blocked(name, key, limit):
+    """Read-only check (no hit recorded): True when the bucket is over limit."""
+    bucket = hashlib.sha256(f"{name}:{key}".encode()).hexdigest()
+    try:
+        cur = db.cursor()
+        cur.execute("SELECT hits FROM dm_rate_limits WHERE bucket_key = %s AND expires_at >= %s",
+                    (bucket, int(time.time())))
+        row = cur.fetchone()
+        cur.close()
+        return bool(row) and row["hits"] >= limit
+    except Exception:
+        log.exception("rate limiter unavailable (name=%s)", name)
+        return False
+
+
+def failures_blocked(rules):
+    """For login forms: only FAILED attempts count. Check before verifying
+    the password; call record_failures(rules) after a failed attempt."""
+    blocked = any(is_blocked(name, key, limit) for name, key, limit, _ in rules)
+    if blocked:
+        log.warning("login blocked after repeated failures path=%s ip=%s", request.path, client_ip())
+    return blocked
+
+
+def record_failures(rules):
+    for name, key, limit, window in rules:
+        hit_rate_limit(name, key, limit, window)
+
+
 def rate_limited(rules):
     """rules: iterable of (name, key, limit, window). True if ANY is exceeded."""
     exceeded = False

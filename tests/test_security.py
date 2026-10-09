@@ -349,3 +349,12 @@ class TestHeadersAndConfig:
     def test_vapid_private_key_not_shipped(self):
         assert not (ROOT / "vapid_private_key.pem").exists()
         assert "vapid_private_key.pem" in (ROOT / ".gitignore").read_text()
+
+
+class TestSuccessfulLoginsNotThrottled:
+    def test_many_successful_logins_allowed(self, client):
+        make_owner()
+        for _ in range(15):
+            r = client.post("/login", data={"email": "owner@test.local", "password": PASSWORD})
+            assert r.status_code == 302
+            client.get("/logout")
