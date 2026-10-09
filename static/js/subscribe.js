@@ -39,15 +39,25 @@ async function subscribeUser() {
         let subscription =
             await registration.pushManager.getSubscription();
 
+        const keyRes = await fetch("/vapid_public_key");
+        const keyData = await keyRes.json();
+        const serverKey = urlBase64ToUint8Array(keyData.publicKey);
+
+        // After a VAPID key rotation, a subscription made with the old key
+        // can never receive pushes: drop it and subscribe again.
+        if (subscription && subscription.options && subscription.options.applicationServerKey) {
+            const current = new Uint8Array(subscription.options.applicationServerKey);
+            const same = current.length === serverKey.length &&
+                current.every((b, i) => b === serverKey[i]);
+            if (!same) {
+                await subscription.unsubscribe();
+                subscription = null;
+            }
+        }
+
         if (!subscription) {
 
             console.log("Creating new subscription...");
-
-            const keyRes = await fetch("/vapid_public_key");
-
-            console.log("VAPID Status =", keyRes.status);
-
-            const keyData = await keyRes.json();
 
             subscription =
                 await registration.pushManager.subscribe({
