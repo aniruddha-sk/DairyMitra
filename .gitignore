@@ -16,3 +16,7 @@ vapid_private_key.pem
 *.pem
 .env.*
 !.env.example
+
+# test artifacts
+tests/.test-audit.log
+.pytest_cache/
