@@ -7578,7 +7578,13 @@ def vendor_performance():
 
 @app.route("/settings")
 def settings():
-    return render_template("settings.html")
+    uid = int(session["id"])
+    charts = fsn_service.list_charts(uid)
+    return render_template(
+        "settings.html",
+        fsn=fsn_service.get_settings(uid),
+        active_charts=[c for c in charts if c["status"] == "active"],
+    )
 
 
 @app.route("/learn")

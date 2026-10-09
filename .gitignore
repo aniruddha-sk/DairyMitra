@@ -10,3 +10,9 @@ client_secret.json
 dairymitr-backup-*.json
 
 tempCodeRunnerFile.py
+
+# Secrets — never commit (the previously committed VAPID key must be rotated)
+vapid_private_key.pem
+*.pem
+.env.*
+!.env.example

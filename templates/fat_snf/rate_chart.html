@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}FAT/SNF दर चार्ट{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="fsn-head">
+  <div>
+    <h2 class="page-title">📊 FAT/SNF दर चार्ट</h2>
+    <div class="fsn-sub">FAT व SNF नुसार दुधाचा दर. प्रत्येक दुधाच्या प्रकारासाठी वेगळा चार्ट ठेवता येतो.</div>
+  </div>
+  <div class="fsn-actions">
+    <span class="fsn-badge {{ 'on' if mode == 'fat_snf' else 'off' }}">
+      FAT/SNF पद्धत: {{ 'चालू' if mode == 'fat_snf' else 'बंद' }}
+    </span>
+    <a class="btn btn-primary" href="{{ url_for('fat_snf.chart_create_page') }}">➕ नवीन चार्ट</a>
+  </div>
+</div>
+
+{% if mode != 'fat_snf' %}
+<div class="fsn-notice">
+  FAT/SNF पद्धत सध्या बंद आहे. आधी चार्ट तयार करा, मग
+  <a href="{{ url_for('settings') }}">Settings</a> मधून पद्धत चालू करा.
+</div>
+{% endif %}
+
+<div id="chartAlert" aria-live="polite"></div>
+
+<div class="section">
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead>
+        <tr>
+          <th>नाव</th>
+          <th>दूध</th>
+          <th>लागू तारीख</th>
+          <th>आवृत्ती</th>
+          <th>स्थिती</th>
+          <th class="num">दर (cells)</th>
+          <th class="num">नोंदी</th>
+          <th>कृती</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in charts %}
+        <tr>
+          <td><b>{{ c.chart_name }}</b></td>
+          <td>{{ type_labels.get(c.milk_type, c.milk_type) }}</td>
+          <td>{{ c.effective_from | date_indian }}</td>
+          <td>v{{ c.version or 1 }}</td>
+          <td>
+            <span class="fsn-badge {{ 'final' if c.status == 'active' else 'inactive' }}">
+              {{ 'सक्रिय' if c.status == 'active' else 'निष्क्रिय' }}
+            </span>
+          </td>
+          <td class="num">{{ c.cell_count }}</td>
+          <td class="num">{{ c.entry_count }}</td>
+          <td>
+            <div class="fsn-actions">
+              <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.chart_edit_page', chart_id=c.id) }}">✏️ पहा / संपादन</a>
+              <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.chart_create_page', revise=c.id) }}"
+                 title="नवीन तारखेपासून लागू होणारी सुधारित आवृत्ती">🆕 नवीन आवृत्ती</a>
+              <button type="button" class="btn btn-sm {{ 'btn-danger' if c.status == 'active' else 'btn-primary' }}"
+                      data-chart="{{ c.id }}" data-active="{{ 0 if c.status == 'active' else 1 }}">
+                {{ 'निष्क्रिय करा' if c.status == 'active' else 'सक्रिय करा' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted">अजून कोणताही चार्ट नाही. "नवीन चार्ट" वापरून तयार करा.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="fsn-help">
+    नियम: नोंदीच्या तारखेला लागू असलेला (लागू तारीख ≤ नोंद तारीख) सर्वात नवीन सक्रिय चार्ट वापरला जातो.
+    गाय/म्हैस साठीचा स्वतंत्र चार्ट "दोन्ही" चार्टपेक्षा प्राधान्याने वापरला जातो.
+    चार्ट बदलला तरी आधीच्या नोंदींचा दर बदलत नाही.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
+<script>
+document.querySelectorAll("button[data-chart]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var activate = btn.dataset.active === "1";
+    var msg = activate ? "हा चार्ट सक्रिय करायचा?"
+      : "हा चार्ट निष्क्रिय करायचा? त्यानंतर नवीन नोंदींसाठी तो वापरला जाणार नाही (जुन्या नोंदी बदलणार नाहीत).";
+    if (!confirm(msg)) { return; }
+    btn.disabled = true;
+    FSN.api("/api/fat_snf/charts/" + btn.dataset.chart + "/status",
+            { method: "POST", body: { active: activate } }).then(function (r) {
+      if (r.ok) { window.location.reload(); return; }
+      btn.disabled = false;
+      FSN.notice("chartAlert", r.data.message, "error");
+    });
+  });
+});
+</script>
+{% endblock %}

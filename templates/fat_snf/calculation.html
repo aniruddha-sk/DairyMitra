@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}हिशोब (FAT/SNF){% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+<style>
+  @media print {
+    .fsn-calc, .fsn-calc * { visibility: visible !important; }
+    .fsn-calc { position: static !important; }
+    .fsn-calc .table th, .fsn-calc .table td { font-size: 8pt; padding: 2px 3px; }
+    @page { size: A4 landscape; margin: 8mm; }
+  }
+</style>
+{% endblock %}
+
+{% macro m(v) %}{% if v is not none %}₹{{ "{:,.2f}".format(v) }}{% else %}–{% endif %}{% endmacro %}
+{% macro n(v) %}{% if v is not none %}{{ "%.2f"|format(v) }}{% else %}–{% endif %}{% endmacro %}
+
+{% block content %}
+<div class="fsn-head no-print">
+  <div>
+    <h2 class="page-title">🧮 हिशोब (FAT/SNF)</h2>
+    <div class="fsn-sub">अंतिम देय = दुधाची रक्कम − खाद्य − या कालावधीत वजा केलेला ॲडव्हान्स. शिल्लक ॲडव्हान्स पुढे नेला जातो.</div>
+  </div>
+  <div class="fsn-actions">
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.receipt', from_date=start.isoformat(), to_date=end.isoformat(), vendor_id='all', generate=1) }}">🧾 पावत्या</a>
+    <a class="btn btn-secondary btn-sm" href="{{ request.path }}?{{ request.query_string.decode() }}&export=csv">⬇ CSV</a>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">🖨 प्रिंट</button>
+  </div>
+</div>
+
+<form method="GET" class="section mb-4 fsn-form-grid no-print">
+  <div class="fsn-field"><label for="from_date">पासून</label>
+    <input type="date" id="from_date" name="from_date" class="form-input" value="{{ start.isoformat() }}"></div>
+  <div class="fsn-field"><label for="to_date">पर्यंत</label>
+    <input type="date" id="to_date" name="to_date" class="form-input" value="{{ end.isoformat() }}"></div>
+  <div class="fsn-field"><label for="q">ग्राहक शोधा</label>
+    <input id="q" name="q" class="form-input" value="{{ q }}" placeholder="आयडी / नाव"></div>
+  <div class="fsn-field"><label for="milk_type">दूध</label>
+    <select id="milk_type" name="milk_type" class="form-select">
+      <option value="">सर्व</option>
+      <option value="cow" {{ 'selected' if milk_type == 'cow' }}>गाय</option>
+      <option value="buffalo" {{ 'selected' if milk_type == 'buffalo' }}>म्हैस</option>
+    </select></div>
+  <div class="fsn-field">
+    <label><input type="checkbox" name="all" value="1" {{ 'checked' if show_all }}> नोंद नसलेले ग्राहकही दाखवा</label>
+    <button class="btn btn-primary w-full" type="submit">दाखवा</button>
+  </div>
+</form>
+
+<div class="fsn-calc">
+<p class="fsn-sub">{{ start | date_indian }} ते {{ end | date_indian }} · {{ count }} ग्राहक</p>
+
+<div class="fsn-stats">
+  <div class="fsn-stat"><div class="k">एकूण लिटर</div><div class="v">{{ n(totals.litres) }}</div></div>
+  <div class="fsn-stat"><div class="k">गाय / म्हैस लिटर</div><div class="v" style="font-size:16px">{{ n(totals.cow_l) }} / {{ n(totals.buffalo_l) }}</div></div>
+  <div class="fsn-stat"><div class="k">दुधाची रक्कम</div><div class="v">{{ m(totals.fsn + totals.general) }}</div></div>
+  <div class="fsn-stat"><div class="k">खाद्य</div><div class="v">{{ m(totals.food) }}</div></div>
+  <div class="fsn-stat"><div class="k">ॲडव्हान्स वजा</div><div class="v">{{ m(totals.deduction) }}</div></div>
+  <div class="fsn-stat"><div class="k">अंतिम देय</div><div class="v">{{ m(totals.final) }}</div></div>
+</div>
+{% if totals.general %}
+<div class="fsn-notice">या कालावधीत लिटर-दर पद्धतीच्या जुन्या नोंदीही आहेत ({{ m(totals.general) }}); त्या "लिटर-दर रक्कम" स्तंभात जोडल्या आहेत.</div>
+{% endif %}
+
+<div class="section">
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead>
+        <tr>
+          <th rowspan="2">आयडी</th><th rowspan="2">नाव</th><th rowspan="2">दूध</th>
+          <th colspan="5" class="text-center">सकाळ</th><th colspan="5" class="text-center">संध्याकाळ</th>
+          <th rowspan="2" class="num">दूध रक्कम</th><th rowspan="2" class="num">लिटर-दर रक्कम</th>
+          <th rowspan="2" class="num">खाद्य</th><th rowspan="2" class="num">ॲडव्हान्स वजा</th>
+          <th rowspan="2" class="num">अंतिम देय</th><th rowspan="2" class="num">शिल्लक ॲडव्हान्स</th>
+        </tr>
+        <tr>
+          <th class="num">लिटर</th><th class="num">FAT</th><th class="num">SNF</th><th class="num">दर</th><th class="num">रक्कम</th>
+          <th class="num">लिटर</th><th class="num">FAT</th><th class="num">SNF</th><th class="num">दर</th><th class="num">रक्कम</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for st in statements %}
+          {% set secs = st.sections if st.sections else [none] %}
+          {% for sec in secs %}
+          <tr>
+            {% if loop.first %}
+            <td rowspan="{{ secs|length }}">{{ st.vendor.vendor_id }}</td>
+            <td rowspan="{{ secs|length }}"><a href="{{ url_for('fat_snf.receipt', vendor_id=st.vendor.vendor_id, from_date=start.isoformat(), to_date=end.isoformat(), generate=1) }}">{{ st.vendor.name }}</a></td>
+            {% endif %}
+            {% if sec %}
+            <td>{{ sec.label }}</td>
+            {% for slot in [sec.morning, sec.evening] %}
+            <td class="num">{{ n(slot.litres) if slot.count else '–' }}</td>
+            <td class="num">{{ n(slot.avg_fat) }}</td>
+            <td class="num">{{ n(slot.avg_snf) }}</td>
+            <td class="num">{{ m(slot.avg_rate) }}</td>
+            <td class="num">{{ m(slot.amount) if slot.count else '–' }}</td>
+            {% endfor %}
+            {% else %}
+            <td>–</td>{% for i in range(10) %}<td class="num">–</td>{% endfor %}
+            {% endif %}
+            {% if loop.first %}
+            <td rowspan="{{ secs|length }}" class="num">{{ m(st.fsn_total) }}</td>
+            <td rowspan="{{ secs|length }}" class="num">{{ m(st.general_total) if st.general_total else '–' }}</td>
+            <td rowspan="{{ secs|length }}" class="num">{{ m(st.food.total) }}</td>
+            <td rowspan="{{ secs|length }}" class="num">{{ m(st.period_deduction) }}</td>
+            <td rowspan="{{ secs|length }}" class="num"><b>{{ m(st.final) }}</b></td>
+            <td rowspan="{{ secs|length }}" class="num">{{ m(st.remaining_advance) }}</td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="19" class="text-center text-muted">या कालावधीत नोंद नाही.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="fsn-help">एका कालावधीसाठी FAT/SNF हे दुधाच्या प्रमाणानुसार सरासरी (weighted average) आहेत; "दर" = रक्कम ÷ लिटर.</p>
+
+  {% if pages > 1 %}
+  <nav class="fsn-pager no-print" aria-label="पाने">
+    {% set args = request.args.to_dict() %}
+    {% if page > 1 %}{% set _ = args.update({'page': page - 1}) %}<a class="btn btn-secondary btn-sm" href="?{{ args|urlencode }}">← मागे</a>{% endif %}
+    <span>पान {{ page }} / {{ pages }}</span>
+    {% if page < pages %}{% set _ = args.update({'page': page + 1}) %}<a class="btn btn-secondary btn-sm" href="?{{ args|urlencode }}">पुढे →</a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

@@ -44,7 +44,7 @@ STAFF_ALLOWED_ENDPOINTS = {
     "fat_snf.collection_page", "fat_snf.api_rate", "fat_snf.api_entries",
     "fat_snf.api_save_entry", "fat_snf.api_get_entry", "fat_snf.api_update_entry",
     "fat_snf.api_finalize", "fat_snf.api_request_status",
-    "fat_snf.edit_entries_page", "fat_snf.milk_summary",
+    "fat_snf.edit_entries_page", "fat_snf.milk_summary", "fat_snf.api_get_mode",
 }
 
 

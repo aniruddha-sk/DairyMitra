@@ -5,6 +5,7 @@
 <h2 class="page-title">🥛 एकूण दूध संकलन</h2>
 
 <form method="POST" action="{{ url_for('milk_summary') }}" class="grid gap-4 md:grid-cols-3 mb-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
         <label class="form-label">पासून तारीख</label>
         <input type="date" name="from_date" required value="{{ from_date }}" class="form-input">

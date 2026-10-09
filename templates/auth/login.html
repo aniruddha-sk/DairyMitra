@@ -31,6 +31,8 @@
     rel="stylesheet"
 >
 
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
 </head>
 
 
@@ -54,6 +56,7 @@
                 action="{{ url_for('login') }}"
                 class="auth-card border-0 shadow-none p-0"
             >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <!-- LOGO -->
 
@@ -227,6 +230,7 @@
                 action="{{ url_for('signup') }}"
                 class="auth-card border-0 shadow-none p-0"
             >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 
                 <!-- LOGO -->

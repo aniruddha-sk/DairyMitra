@@ -60,6 +60,8 @@
 
   {% block head %}{% endblock %}
 
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
 </head>
 
 
@@ -1311,6 +1313,7 @@
                        */
 
                       if (
+                          this.hasAttribute("data-no-loader") ||
                           this.id ===
                           "bankReportForm"
                       ) {

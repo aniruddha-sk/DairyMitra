@@ -10,6 +10,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
 </head>
 
 <body class="auth-body">
@@ -35,6 +37,7 @@
     {% endwith %}
 
     <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Dairy ID -->
         <div class="form-floating">

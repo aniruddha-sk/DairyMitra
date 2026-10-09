@@ -3,7 +3,7 @@
    Production Ready v23
 ===================================== */
 
-const CACHE_NAME = "dairy-mitr-cache-v23";
+const CACHE_NAME = "dairy-mitr-cache-v24";
 
 
 /* =====================================

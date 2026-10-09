@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}FAT/SNF दर चार्ट{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="fsn-head">
+  <div>
+    <h2 class="page-title">
+      {% if chart %}✏️ दर चार्ट संपादन{% elif revise_id %}🆕 चार्टची नवीन आवृत्ती{% else %}➕ नवीन FAT/SNF दर चार्ट{% endif %}
+    </h2>
+    <div class="fsn-sub">
+      {% if chart %}बदल फक्त पुढील नोंदींना लागू होतील; आधी सेव्ह झालेल्या नोंदींचा दर तसाच राहतो.
+      {% elif revise_id %}जुना चार्ट तसाच राहील. नवीन आवृत्ती निवडलेल्या "लागू तारखे"पासून वापरली जाईल.
+      {% else %}श्रेणी व दर नियम भरा → "तक्ता तयार करा" → हवे ते दर बदला → सेव्ह करा.{% endif %}
+    </div>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('fat_snf.charts_page') }}">← सर्व चार्ट</a>
+</div>
+
+<div id="editorAlert" aria-live="polite"></div>
+
+<!-- 1. Chart information -->
+<div class="section mb-4">
+  <h3 class="mb-4">1. चार्ट माहिती</h3>
+  <div class="fsn-form-grid">
+    <div class="fsn-field" data-field="chart_name">
+      <label for="chartName">चार्टचे नाव</label>
+      <input id="chartName" class="form-input" maxlength="150" placeholder="उदा. गाय दर - ऑक्टोबर">
+      <div class="fsn-err"></div>
+    </div>
+    <div class="fsn-field" data-field="milk_type">
+      <label for="milkType">दुधाचा प्रकार</label>
+      <select id="milkType" class="form-select">
+        <option value="cow">🐄 गाय</option>
+        <option value="buffalo">🐃 म्हैस</option>
+        <option value="both">गाय व म्हैस (एकच चार्ट)</option>
+      </select>
+      <div class="fsn-err"></div>
+    </div>
+    <div class="fsn-field" data-field="effective_from">
+      <label for="effectiveFrom">लागू तारीख (पासून)</label>
+      <input id="effectiveFrom" type="date" class="form-input">
+      <div class="fsn-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Generation rules -->
+<div class="section mb-4">
+  <h3 class="mb-4">2. तक्ता आपोआप तयार करा</h3>
+  <div class="fsn-form-grid">
+    <div class="fsn-field" data-field="fat_min"><label for="fat_min">FAT किमान</label><input id="fat_min" class="form-input" inputmode="decimal" value="3.2"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="fat_max"><label for="fat_max">FAT कमाल</label><input id="fat_max" class="form-input" inputmode="decimal" value="5.0"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="fat_step"><label for="fat_step">FAT वाढ (step)</label><input id="fat_step" class="form-input" inputmode="decimal" value="0.1"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="snf_min"><label for="snf_min">SNF किमान</label><input id="snf_min" class="form-input" inputmode="decimal" value="8.3"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="snf_max"><label for="snf_max">SNF कमाल</label><input id="snf_max" class="form-input" inputmode="decimal" value="8.7"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="snf_step"><label for="snf_step">SNF वाढ (step)</label><input id="snf_step" class="form-input" inputmode="decimal" value="0.1"><div class="fsn-err"></div></div>
+  </div>
+  <div class="fsn-form-grid mt-4">
+    <div class="fsn-field" data-field="std_fat"><label for="std_fat">मानक FAT</label><input id="std_fat" class="form-input" inputmode="decimal" value="3.5"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="std_snf"><label for="std_snf">मानक SNF</label><input id="std_snf" class="form-input" inputmode="decimal" value="8.5"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="std_rate"><label for="std_rate">मानक दर (₹/लि.)</label><input id="std_rate" class="form-input" inputmode="decimal" value="27.00"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="fat_rate_step"><label for="fat_rate_step">प्रत्येक FAT step ला दर बदल (₹)</label><input id="fat_rate_step" class="form-input" inputmode="decimal" value="0.30"><div class="fsn-err"></div></div>
+    <div class="fsn-field" data-field="snf_rate_step"><label for="snf_rate_step">प्रत्येक SNF step ला दर बदल (₹)</label><input id="snf_rate_step" class="form-input" inputmode="decimal" value="0.30"><div class="fsn-err"></div></div>
+  </div>
+  <p class="fsn-help" id="ruleExplain"></p>
+  <button type="button" id="generateBtn" class="btn btn-primary mt-4">⚡ तक्ता तयार करा (Preview)</button>
+</div>
+
+<!-- 3. Matrix -->
+<div class="section mb-4" id="matrixSection" hidden>
+  <div class="fsn-head">
+    <h3>3. दर तक्ता <span class="fsn-sub" id="matrixInfo"></span></h3>
+    <div class="fsn-actions">
+      <input id="addFat" class="form-input" style="width:110px" inputmode="decimal" placeholder="FAT उदा. 5.1" aria-label="नवीन FAT मूल्य">
+      <button type="button" class="btn btn-secondary btn-sm" id="addFatBtn">+ FAT ओळ</button>
+      <input id="addSnf" class="form-input" style="width:110px" inputmode="decimal" placeholder="SNF उदा. 8.8" aria-label="नवीन SNF मूल्य">
+      <button type="button" class="btn btn-secondary btn-sm" id="addSnfBtn">+ SNF स्तंभ</button>
+    </div>
+  </div>
+  <p class="fsn-help">FAT उभ्या (rows), SNF आडव्या (columns). पिवळा = मानक दर, निळा = बदललेला दर. बाण की (Arrow keys) / Enter ने पुढे जा.</p>
+  <div class="fsn-matrix-wrap">
+    <table class="fsn-matrix" id="matrix" aria-label="FAT SNF rate matrix"></table>
+  </div>
+</div>
+
+<div class="section">
+  <div class="fsn-actions">
+    <button type="button" id="saveBtn" class="btn btn-primary" disabled>💾 चार्ट सेव्ह करा</button>
+    <a class="btn btn-secondary" href="{{ url_for('fat_snf.charts_page') }}">रद्द करा</a>
+  </div>
+  <div id="saveAlert" class="mt-4" aria-live="polite"></div>
+</div>
+
+<script type="application/json" id="chartData">{{ {"chart": chart, "source": source, "revise_id": revise_id, "today": today} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='js/fsn_chart_editor.js') }}?v=1"></script>
+{% endblock %}

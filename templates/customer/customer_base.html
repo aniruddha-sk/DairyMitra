@@ -37,6 +37,8 @@
         href="{{ url_for('static', filename='images/Logo2.png') }}">
 
   {% block head %}{% endblock %}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
 </head>
 
 <body>
@@ -235,7 +237,7 @@ document.querySelectorAll("form").forEach(form => {
     form.addEventListener("submit", function () {
 
         // Bank Report form skip करा
-        if (this.id === "bankReportForm") {
+        if (this.hasAttribute("data-no-loader") || this.id === "bankReportForm") {
             return;
         }
 

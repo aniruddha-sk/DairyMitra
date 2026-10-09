@@ -56,9 +56,16 @@
 
         <form action="{{ url_for('delete_account') }}"
               method="POST"
-              onsubmit="return confirm('Account delete करायचं आहे का?');">
+              onsubmit="return confirm('Account delete करायचं आहे का? सर्व ग्राहक, दूध नोंदी आणि हिशोब कायमचे काढले जातील.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <button type="submit" class="btn btn-danger">
+            <label class="form-label" for="deletePassword">
+                खाते कायमचे delete करण्यासाठी पासवर्ड टाका
+            </label>
+            <input type="password" id="deletePassword" name="password"
+                   class="form-input" autocomplete="current-password" required>
+
+            <button type="submit" class="btn btn-danger mt-2">
                 Delete Account
             </button>
 

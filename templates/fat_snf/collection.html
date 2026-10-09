@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}दूध संकलन (FAT/SNF){% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="fsn-head">
+  <div>
+    <h2 class="page-title">🥛 दूध संकलन (FAT/SNF)</h2>
+    <div class="fsn-sub">
+      दिनांक: <b id="hdrDate"></b> · वेळ: <b id="hdrSlot"></b> · वेळ क्षेत्र: IST
+    </div>
+  </div>
+  <div class="fsn-actions">
+    <span class="fsn-badge {{ 'on' if mode == 'fat_snf' else 'off' }}">FAT/SNF {{ 'चालू' if mode == 'fat_snf' else 'बंद' }}</span>
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.edit_entries_page') }}">नोंदी बदला</a>
+  </div>
+</div>
+
+{% if mode != 'fat_snf' %}
+<div class="fsn-notice error">
+  FAT/SNF पद्धत बंद आहे, त्यामुळे येथे नोंद सेव्ह होणार नाही.
+  {% if is_owner %}<a href="{{ url_for('settings') }}">Settings मध्ये चालू करा</a>{% else %}मालकाला कळवा.{% endif %}
+</div>
+{% endif %}
+
+{% if is_owner %}
+<div class="section mb-4">
+  <label style="display:flex;gap:8px;align-items:center;font-weight:600">
+    <input type="checkbox" id="backdated"> जुनी / दुरुस्ती नोंद (वेगळी तारीख किंवा वेळ)
+  </label>
+  <div class="fsn-form-grid mt-4" id="backdateFields" hidden>
+    <div class="fsn-field"><label for="bdDate">तारीख</label>
+      <input type="date" id="bdDate" class="form-input" max="{{ today }}"></div>
+    <div class="fsn-field"><label for="bdSlot">वेळ</label>
+      <select id="bdSlot" class="form-select">
+        <option value="morning">सकाळ</option>
+        <option value="evening">संध्याकाळ</option>
+      </select></div>
+  </div>
+  <p class="fsn-help">ही नोंद ऑडिट लॉगमध्ये "जुनी नोंद" म्हणून नोंदवली जाते.</p>
+</div>
+{% endif %}
+
+<!-- ENTRY FORM -->
+<div class="section mb-4">
+  <form id="entryForm" autocomplete="off" novalidate data-no-loader>
+    <div class="fsn-form-grid">
+      <div class="fsn-field" data-field="vendor_id" style="grid-column: span 2">
+        <label for="vendor">ग्राहक (आयडी किंवा नाव)</label>
+        <input id="vendor" class="form-input" list="vendorList" placeholder="उदा. 101" required>
+        <datalist id="vendorList"></datalist>
+        <div class="fsn-err" id="vendorInfo"></div>
+      </div>
+      <div class="fsn-field" data-field="milk_type">
+        <label for="milkType">दूध</label>
+        <select id="milkType" class="form-select">
+          <option value="cow">गाय</option>
+          <option value="buffalo">म्हैस</option>
+        </select>
+        <div class="fsn-err"></div>
+      </div>
+      <div class="fsn-field" data-field="fat">
+        <label for="fat">FAT %</label>
+        <input id="fat" class="form-input" inputmode="decimal" placeholder="3.5" required>
+        <div class="fsn-err"></div>
+      </div>
+      <div class="fsn-field" data-field="snf">
+        <label for="snf">SNF %</label>
+        <input id="snf" class="form-input" inputmode="decimal" placeholder="8.5" required>
+        <div class="fsn-err"></div>
+      </div>
+      <div class="fsn-field" data-field="litres">
+        <label for="litres">लिटर</label>
+        <input id="litres" class="form-input" inputmode="decimal" placeholder="18.0" required>
+        <div class="fsn-err"></div>
+      </div>
+    </div>
+
+    <div class="fsn-preview mt-4" id="preview" aria-live="polite">
+      <span>दर/लि.: <b id="pvRate">–</b></span>
+      <span>रक्कम: <b id="pvAmount">–</b></span>
+      <span class="fsn-sub" id="pvChart"></span>
+    </div>
+
+    <div id="entryAlert" class="mt-4" aria-live="polite"></div>
+    <div id="warnActions" class="fsn-actions" hidden>
+      <button type="button" class="btn btn-warning" id="confirmWarnBtn">तरीही सेव्ह करा</button>
+      <button type="button" class="btn btn-secondary" id="cancelWarnBtn">बदल करा</button>
+    </div>
+
+    <div class="fsn-actions mt-4">
+      <button type="submit" class="btn btn-primary" id="saveBtn" {{ 'disabled' if mode != 'fat_snf' }}>
+        💾 सेव्ह करा व पुढे (Enter)
+      </button>
+      <button type="reset" class="btn btn-secondary" id="clearBtn">साफ करा</button>
+    </div>
+  </form>
+</div>
+
+<!-- DAY SUMMARY -->
+<div class="fsn-stats">
+  <div class="fsn-stat"><div class="k">नोंदी</div><div class="v" id="stCount">0</div></div>
+  <div class="fsn-stat"><div class="k">एकूण लिटर</div><div class="v" id="stLitres">0.00</div></div>
+  <div class="fsn-stat"><div class="k">एकूण रक्कम</div><div class="v" id="stAmount">₹0.00</div></div>
+  <div class="fsn-stat"><div class="k">अंतिम न केलेल्या</div><div class="v" id="stSaved">0</div></div>
+</div>
+
+<div class="section">
+  <div class="fsn-head">
+    <h3>या वेळेच्या नोंदी</h3>
+    <div class="fsn-actions">
+      <button type="button" class="btn btn-secondary btn-sm" id="refreshBtn">↻ Refresh</button>
+      <button type="button" class="btn btn-primary" id="finalBtn" {{ 'disabled' if mode != 'fat_snf' }}>✅ अंतिम सबमिट</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead>
+        <tr>
+          <th>आयडी</th><th>नाव</th><th>दूध</th>
+          <th class="num">FAT%</th><th class="num">SNF%</th><th class="num">लिटर</th>
+          <th class="num">दर/लि.</th><th class="num">रक्कम</th><th>स्थिती</th><th>कृती</th>
+        </tr>
+      </thead>
+      <tbody id="entryRows"><tr><td colspan="10" class="text-center text-muted">लोड होत आहे...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FINAL SUBMIT REVIEW -->
+<div class="fsn-modal" id="finalModal" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
+  <div class="backdrop" data-close></div>
+  <div class="box">
+    <h3 id="finalTitle">अंतिम सबमिट – तपासणी</h3>
+    <div id="finalBody"></div>
+    <div class="fsn-actions mt-4">
+      <button type="button" class="btn btn-primary" id="finalConfirmBtn">होय, अंतिम करा</button>
+      <button type="button" class="btn btn-secondary" data-close>मागे जा</button>
+    </div>
+    <div id="finalAlert" class="mt-4" aria-live="polite"></div>
+  </div>
+</div>
+
+<script type="application/json" id="collectionData">{{ {"vendors": vendors, "today": today, "slot": slot, "mode": mode, "is_owner": is_owner, "edit_url": url_for('fat_snf.edit_entries_page')} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='js/fsn_collection.js') }}?v=1"></script>
+{% endblock %}

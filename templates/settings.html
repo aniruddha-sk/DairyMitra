@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Settings{% endblock %}
 
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">{% endblock %}
+
 {% block content %}
 
 <style>
@@ -114,6 +116,57 @@ margin-bottom:16px;
 
 <h2 class="page-title">⚙ Settings</h2>
 
+<div class="section-title">MILK CALCULATION MODE</div>
+
+<div class="settings-card" style="padding:18px 20px">
+  <div style="display:flex;gap:16px;align-items:flex-start;justify-content:space-between">
+    <div>
+      <div style="font-weight:700;font-size:16px">FAT/SNF पद्धत (Milk Calculation Mode)</div>
+      <p class="text-muted" style="font-size:13px;margin-top:6px;line-height:1.5">
+        <b>बंद (OFF):</b> सध्याची लिटर × दर पद्धत.<br>
+        <b>चालू (ON):</b> दूध संकलनात FAT%, SNF% व लिटर भरायचे; दर FAT/SNF चार्टमधून आपोआप येतो.<br>
+        पद्धत बदलल्याने जुन्या नोंदी किंवा पावत्या बदलत नाहीत.
+      </p>
+    </div>
+    <label class="fsn-switch" title="Milk Calculation Mode">
+      <input type="checkbox" id="modeToggle" {{ 'checked' if fsn.calculation_mode == 'fat_snf' }}
+             aria-label="FAT/SNF पद्धत चालू/बंद">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div id="modeState" style="margin-top:8px;font-weight:700">
+    स्थिती: <span id="modeLabel">{{ 'चालू (FAT/SNF)' if fsn.calculation_mode == 'fat_snf' else 'बंद (लिटर-दर)' }}</span>
+  </div>
+  {% if not active_charts %}
+  <div class="fsn-notice" style="margin-top:10px">अजून सक्रिय FAT/SNF दर चार्ट नाही. पद्धत चालू करण्यापूर्वी चार्ट तयार करा.</div>
+  {% endif %}
+  <div id="modeAlert" style="margin-top:10px" aria-live="polite"></div>
+</div>
+
+<div class="settings-card">
+  <a href="{{ url_for('fat_snf.charts_page') }}" class="setting-item">
+    <div class="setting-left"><div class="setting-icon icon2">📊</div>FAT/SNF दर चार्ट ({{ active_charts|length }} सक्रिय)</div>
+    <div class="arrow">›</div>
+  </a>
+</div>
+
+<div class="settings-card" style="padding:18px 20px">
+  <div style="font-weight:700;margin-bottom:8px">दूध नोंद इशारा मर्यादा (FAT/SNF)</div>
+  <p class="text-muted" style="font-size:13px;margin-bottom:10px">
+    या मर्यादेबाहेरील नोंदीवर फक्त इशारा दिसतो; खात्री करून नोंद सेव्ह करता येते.
+  </p>
+  <form id="thresholdForm" class="fsn-form-grid" data-no-loader>
+    <div class="fsn-field"><label for="warn_low_litres">किमान लिटर</label>
+      <input id="warn_low_litres" class="form-input" inputmode="decimal" value="{{ fsn.warn_low_litres }}"></div>
+    <div class="fsn-field"><label for="warn_high_litres">कमाल लिटर</label>
+      <input id="warn_high_litres" class="form-input" inputmode="decimal" value="{{ fsn.warn_high_litres }}"></div>
+    <div class="fsn-field"><label for="warn_deviation_pct">सरासरीपासून फरक (%)</label>
+      <input id="warn_deviation_pct" class="form-input" inputmode="numeric" value="{{ fsn.warn_deviation_pct }}"></div>
+    <div><button type="submit" class="btn btn-primary">सेव्ह करा</button></div>
+  </form>
+  <div id="thresholdAlert" style="margin-top:10px" aria-live="polite"></div>
+</div>
+
 <div class="section-title">ACCOUNT</div>
 
 <div class="settings-card">
@@ -206,7 +259,7 @@ Terms & Conditions
 <div class="arrow">›</div>
 </a>
 
-<a href="#" class="setting-item" onclick="openThemeModal()">
+<a href="#" class="setting-item" onclick="return openThemeModal()">
 <div class="setting-left">
 <div class="setting-icon icon6">🎨</div>
 Theme
@@ -224,6 +277,50 @@ Theme
 
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
+<script>
+(function () {
+  var toggle = document.getElementById("modeToggle");
+  toggle.addEventListener("change", function () {
+    var on = toggle.checked;
+    var msg = on
+      ? "FAT/SNF पद्धत चालू करायची?
+
+यापुढे दूध संकलनात FAT, SNF व लिटर भरावे लागतील आणि दर चार्टमधून येईल. लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही. जुन्या नोंदी बदलणार नाहीत."
+      : "FAT/SNF पद्धत बंद करायची?
+
+यापुढे लिटर × दर पद्धत वापरली जाईल. FAT/SNF नोंदी जतन राहतील आणि हिशोबात जोडल्या जातील.";
+    if (!confirm(msg)) { toggle.checked = !on; return; }
+    toggle.disabled = true;
+    FSN.api("/api/fat_snf/calculation_mode", { method: "POST",
+      body: { calculation_mode: on ? "fat_snf" : "general" } }).then(function (r) {
+      toggle.disabled = false;
+      if (!r.ok) { toggle.checked = !on; FSN.notice("modeAlert", r.data.message, "error"); return; }
+      document.getElementById("modeLabel").textContent = on ? "चालू (FAT/SNF)" : "बंद (लिटर-दर)";
+      FSN.notice("modeAlert", r.data.message + (r.data.needs_chart ? " आता सक्रिय दर चार्ट तयार करा." : ""),
+                 r.data.needs_chart ? "" : "ok");
+    });
+  });
+
+  document.getElementById("thresholdForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    FSN.api("/api/fat_snf/settings/thresholds", { method: "POST", body: {
+      warn_low_litres: document.getElementById("warn_low_litres").value,
+      warn_high_litres: document.getElementById("warn_high_litres").value,
+      warn_deviation_pct: document.getElementById("warn_deviation_pct").value
+    } }).then(function (r) { FSN.notice("thresholdAlert", r.data.message, r.ok ? "ok" : "error"); });
+  });
+})();
+
+// Theme switch (the menu item referenced an undefined function before)
+function openThemeModal() {
+  var dark = document.documentElement.getAttribute("data-theme") === "dark";
+  try { localStorage.setItem("theme", dark ? "light" : "dark"); } catch (e) {}
+  if (dark) { document.documentElement.removeAttribute("data-theme"); }
+  else { document.documentElement.setAttribute("data-theme", "dark"); }
+  return false;
+}
+</script>
 
 
 

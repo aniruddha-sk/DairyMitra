@@ -233,9 +233,14 @@ def validate_chart_payload(data):
     settings = None
     raw = data.get("settings")
     if isinstance(raw, dict) and all(raw.get(k) not in (None, "") for k in SETTING_KEYS):
-        # Validate by generating; the stored matrix may contain manual edits.
-        L.generate_matrix(raw)
-        settings = {k: Decimal(str(raw[k])) for k in SETTING_KEYS}
+        # Generation settings are metadata (the matrix itself is what is
+        # validated and stored, including manual edits). Keep them only if
+        # they are themselves valid.
+        try:
+            L.generate_matrix(raw)
+            settings = {k: Decimal(str(raw[k])) for k in SETTING_KEYS}
+        except (ValidationError, ArithmeticError):
+            settings = None
     return {"chart_name": name, "milk_type": milk_type, "effective_from": effective,
             "fats": fats, "snfs": snfs, "matrix": matrix, "settings": settings}
 

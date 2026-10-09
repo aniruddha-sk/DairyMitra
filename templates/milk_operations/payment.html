@@ -13,6 +13,7 @@
 
 <form method="POST"
       class="grid gap-4 md:grid-cols-3 mb-6 section">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div>
 

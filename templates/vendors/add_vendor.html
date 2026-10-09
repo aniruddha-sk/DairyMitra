@@ -27,6 +27,7 @@
 
 <form method="POST"
       class="section grid gap-4 max-w-lg">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <!-- Vendor Name (Marathi) -->
     <div>

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}नोंदी बदला (FAT/SNF){% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="fsn-head">
+  <div>
+    <h2 class="page-title">📝 नोंदी बदला (FAT/SNF)</h2>
+    <div class="fsn-sub">FAT/SNF/लिटर बदलल्यास त्या तारखेच्या चार्टप्रमाणे दर पुन्हा काढला जातो. प्रत्येक बदल ऑडिट लॉगमध्ये जतन होतो.</div>
+  </div>
+  <div class="fsn-actions">
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.collection_page') }}">← दूध संकलन</a>
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('edit_entry', legacy=1) }}">जुन्या (लिटर-दर) नोंदी</a>
+  </div>
+</div>
+
+<form method="GET" class="section mb-4 fsn-form-grid">
+  <div class="fsn-field">
+    <label for="date">तारीख</label>
+    <input type="date" id="date" name="date" class="form-input" value="{{ selected_date }}" max="{{ today }}">
+  </div>
+  <div><button class="btn btn-primary" type="submit">नोंदी दाखवा</button></div>
+</form>
+
+<div id="pageAlert" aria-live="polite"></div>
+
+<div class="section">
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead>
+        <tr>
+          <th>वेळ</th><th>आयडी</th><th>नाव</th><th>दूध</th>
+          <th class="num">FAT%</th><th class="num">SNF%</th><th class="num">लिटर</th>
+          <th class="num">दर/लि.</th><th class="num">रक्कम</th><th>स्थिती</th><th>कृती</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in entries %}
+        <tr id="entry-{{ e.id }}">
+          <td>{{ slot_labels[e.slot] }}</td>
+          <td>{{ e.vendor_id }}</td>
+          <td>{{ e.vendor_name }}</td>
+          <td>{{ type_labels[e.milk_type] }}</td>
+          <td class="num">{{ e.fat }}</td>
+          <td class="num">{{ e.snf }}</td>
+          <td class="num">{{ e.quantity }}</td>
+          <td class="num">₹{{ e.rate }}</td>
+          <td class="num">₹{{ e.amount }}</td>
+          <td><span class="fsn-badge {{ e.status }}">{{ 'अंतिम' if e.status == 'final' else 'सेव्ह' }}</span></td>
+          <td>
+            <div class="fsn-actions">
+              {% if e.status == 'saved' or is_owner %}
+              <button type="button" class="btn btn-secondary btn-sm" data-edit="{{ e.id }}">✏️ बदला</button>
+              {% endif %}
+              {% if is_owner %}
+              <button type="button" class="btn btn-danger btn-sm" data-delete="{{ e.id }}" aria-label="नोंद काढा">🗑</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="11" class="text-center text-muted">या तारखेला FAT/SNF नोंद नाही.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="fsn-modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="backdrop" data-close></div>
+  <div class="box">
+    <h3 id="editTitle">नोंद दुरुस्ती</h3>
+    <p class="fsn-sub" id="editWho"></p>
+    <form id="editForm" novalidate data-no-loader>
+      <div class="fsn-form-grid">
+        <div class="fsn-field" data-field="fat"><label for="eFat">FAT %</label><input id="eFat" class="form-input" inputmode="decimal"><div class="fsn-err"></div></div>
+        <div class="fsn-field" data-field="snf"><label for="eSnf">SNF %</label><input id="eSnf" class="form-input" inputmode="decimal"><div class="fsn-err"></div></div>
+        <div class="fsn-field" data-field="litres"><label for="eLitres">लिटर</label><input id="eLitres" class="form-input" inputmode="decimal"><div class="fsn-err"></div></div>
+      </div>
+      {% if is_owner %}
+      <div class="fsn-form-grid mt-4">
+        <div class="fsn-field" data-field="date"><label for="eDate">तारीख</label><input id="eDate" type="date" class="form-input" max="{{ today }}"><div class="fsn-err"></div></div>
+        <div class="fsn-field" data-field="slot"><label for="eSlot">वेळ</label>
+          <select id="eSlot" class="form-select"><option value="morning">सकाळ</option><option value="evening">संध्याकाळ</option></select>
+          <div class="fsn-err"></div></div>
+      </div>
+      {% endif %}
+      <div class="fsn-field mt-4" data-field="reason">
+        <label for="eReason">दुरुस्तीचे कारण <span id="reasonReq" class="fsn-sub"></span></label>
+        <input id="eReason" class="form-input" maxlength="255" placeholder="उदा. FAT चुकीचा टाकला होता">
+        <div class="fsn-err"></div>
+      </div>
+      <div id="editAlert" class="mt-4" aria-live="polite"></div>
+      <div class="fsn-actions mt-4">
+        <button type="submit" class="btn btn-primary" id="editSave">सेव्ह करा</button>
+        <button type="button" class="btn btn-secondary" data-close>रद्द करा</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
+<script>
+(function () {
+  "use strict";
+  var modal = document.getElementById("editModal");
+  var current = null;
+  function $(id) { return document.getElementById(id); }
+  function close() { modal.classList.remove("open"); }
+  modal.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", close); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { close(); } });
+
+  function clearErrors() {
+    modal.querySelectorAll(".fsn-field").forEach(function (f) {
+      f.classList.remove("invalid"); var e = f.querySelector(".fsn-err"); if (e) { e.textContent = ""; }
+    });
+    FSN.notice("editAlert", "");
+  }
+
+  document.querySelectorAll("[data-edit]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      FSN.api("/api/fat_snf/entries/" + btn.dataset.edit).then(function (r) {
+        if (!r.ok) { FSN.notice("pageAlert", r.data.message, "error"); return; }
+        current = r.data.entry;
+        clearErrors();
+        $("editWho").textContent = current.vendor_id + " " + current.vendor_name + " · " +
+          FSN.TYPE[current.milk_type] + " · " + FSN.SLOT[current.slot] + " · सध्याचा दर " +
+          FSN.money(current.rate) + ", रक्कम " + FSN.money(current.amount);
+        $("eFat").value = current.fat; $("eSnf").value = current.snf; $("eLitres").value = current.quantity;
+        if ($("eDate")) { $("eDate").value = current.collection_date; $("eSlot").value = current.slot; }
+        $("eReason").value = "";
+        $("reasonReq").textContent = current.status === "final" ? "(अंतिम नोंद – आवश्यक)" : "(ऐच्छिक)";
+        modal.classList.add("open");
+        $("eFat").focus();
+      });
+    });
+  });
+
+  $("editForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!current) { return; }
+    clearErrors();
+    var body = { fat: $("eFat").value.trim(), snf: $("eSnf").value.trim(), litres: $("eLitres").value.trim(),
+                 reason: $("eReason").value.trim(), updated_at: current.updated_at };
+    if ($("eDate")) { body.date = $("eDate").value; body.slot = $("eSlot").value; }
+    var btn = $("editSave");
+    btn.disabled = true;
+    FSN.api("/api/fat_snf/entries/" + current.id, { method: "PUT", body: body }).then(function (r) {
+      btn.disabled = false;
+      if (r.ok) {
+        var n = r.data.entry;
+        FSN.notice("editAlert", "दुरुस्त झाले. दर " + FSN.money(r.data.old_rate) + " → " + FSN.money(n.rate) +
+                   ", रक्कम " + FSN.money(r.data.old_amount) + " → " + FSN.money(n.amount), "ok");
+        setTimeout(function () { window.location.reload(); }, 1200);
+        return;
+      }
+      var f = r.data.field === "quantity" ? "litres" : r.data.field;
+      var field = f && modal.querySelector('.fsn-field[data-field="' + f + '"]');
+      if (field) { field.classList.add("invalid"); field.querySelector(".fsn-err").textContent = r.data.message; }
+      else { FSN.notice("editAlert", r.data.message, "error"); }
+    });
+  });
+
+  document.querySelectorAll("[data-delete]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var reason = prompt("ही नोंद कायमची काढायची? कारण लिहा:");
+      if (reason === null) { return; }
+      if (!reason.trim()) { FSN.notice("pageAlert", "नोंद काढण्याचे कारण लिहा.", "error"); return; }
+      btn.disabled = true;
+      FSN.api("/api/fat_snf/entries/" + btn.dataset.delete, { method: "DELETE", body: { reason: reason.trim() } })
+        .then(function (r) {
+          if (r.ok) { window.location.reload(); return; }
+          btn.disabled = false;
+          FSN.notice("pageAlert", r.data.message, "error");
+        });
+    });
+  });
+})();
+</script>
+{% endblock %}

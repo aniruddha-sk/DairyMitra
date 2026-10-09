@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ code }} - DairyMitr</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260918">
+  <style>
+    .err-wrap { max-width: 520px; margin: 12vh auto; padding: 0 16px; text-align: center; }
+    .err-code { font-size: 56px; font-weight: 800; color: var(--primary, #16a34a); }
+    .err-msg { font-size: 18px; margin: 12px 0 24px; }
+    .err-ref { font-size: 12px; opacity: .6; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="err-wrap">
+    <div class="err-code">{{ code }}</div>
+    <p class="err-msg">{{ message }}</p>
+    <a class="btn btn-primary" href="{{ url_for('dashboard') }}">मुख्य पानावर जा</a>
+    {% if request_id %}<p class="err-ref">संदर्भ क्रमांक: {{ request_id }}</p>{% endif %}
+  </div>
+</body>
+</html>

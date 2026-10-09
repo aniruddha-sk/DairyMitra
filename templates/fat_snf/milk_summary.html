@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}दूध सारांश (FAT/SNF){% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=1">
+{% endblock %}
+
+{% macro m(v) %}₹{{ "{:,.2f}".format(v) }}{% endmacro %}
+{% macro n(v) %}{% if v is not none %}{{ "%.2f"|format(v) }}{% else %}–{% endif %}{% endmacro %}
+
+{% block content %}
+<div class="fsn-head">
+  <div>
+    <h2 class="page-title">🥛 दूध सारांश (FAT/SNF)</h2>
+    <div class="fsn-sub">{{ start | date_indian }} ते {{ end | date_indian }} · FAT/SNF ही दुधाच्या प्रमाणानुसार सरासरी (weighted) आहेत.</div>
+  </div>
+  <a class="btn btn-secondary btn-sm" href="{{ url_for('milk_summary', legacy=1) }}">जुना (लिटर-दर) सारांश</a>
+</div>
+
+<form method="GET" class="section mb-4 fsn-form-grid">
+  <div class="fsn-field"><label for="from_date">पासून</label>
+    <input type="date" id="from_date" name="from_date" class="form-input" value="{{ start.isoformat() }}"></div>
+  <div class="fsn-field"><label for="to_date">पर्यंत</label>
+    <input type="date" id="to_date" name="to_date" class="form-input" value="{{ end.isoformat() }}"></div>
+  <div><button class="btn btn-primary w-full" type="submit">सारांश पहा</button></div>
+</form>
+
+<div class="fsn-stats">
+  {% for t in ['cow', 'buffalo'] %}{% for s in ['morning', 'evening'] %}
+  {% set b = data.type_slot[t ~ '_' ~ s] %}
+  <div class="fsn-stat">
+    <div class="k">{{ slot_labels[s] }} – {{ type_labels[t] }}</div>
+    <div class="v">{{ n(b.litres) }} लि.</div>
+    <div class="fsn-sub">FAT {{ n(b.avg_fat) }} · SNF {{ n(b.avg_snf) }}{% if show_money %} · {{ m(b.amount) }}{% endif %}</div>
+  </div>
+  {% endfor %}{% endfor %}
+</div>
+<div class="fsn-stats">
+  {% for t in ['cow', 'buffalo'] %}
+  <div class="fsn-stat"><div class="k">एकूण {{ type_labels[t] }}</div><div class="v">{{ n(data.type[t].litres) }} लि.</div>
+    <div class="fsn-sub">FAT {{ n(data.type[t].avg_fat) }} · SNF {{ n(data.type[t].avg_snf) }}{% if show_money %} · {{ m(data.type[t].amount) }}{% endif %}</div></div>
+  {% endfor %}
+  <div class="fsn-stat"><div class="k">एकूण दूध</div><div class="v">{{ n(data.grand.litres) }} लि.</div>
+    {% if show_money %}<div class="fsn-sub">{{ m(data.grand.amount) }}</div>{% endif %}</div>
+</div>
+
+<div class="section mb-4">
+  <h3 class="mb-4">दिवसानुसार</h3>
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead><tr><th>तारीख</th>
+        <th class="num">गाय लि.</th><th class="num">FAT</th><th class="num">SNF</th>
+        <th class="num">म्हैस लि.</th><th class="num">FAT</th><th class="num">SNF</th>
+        {% if show_money %}<th class="num">रक्कम</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for r in data.dates %}
+        <tr><td>{{ r.date | date_indian }}</td>
+          <td class="num">{{ n(r.cow.litres) }}</td><td class="num">{{ n(r.cow.avg_fat) }}</td><td class="num">{{ n(r.cow.avg_snf) }}</td>
+          <td class="num">{{ n(r.buffalo.litres) }}</td><td class="num">{{ n(r.buffalo.avg_fat) }}</td><td class="num">{{ n(r.buffalo.avg_snf) }}</td>
+          {% if show_money %}<td class="num">{{ m(r.cow.amount + r.buffalo.amount) }}</td>{% endif %}</tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted">या कालावधीत नोंद नाही.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h3 class="mb-4">ग्राहकानुसार</h3>
+  <div class="table-wrap">
+    <table class="table fsn-table">
+      <thead><tr><th>आयडी</th><th>नाव</th>
+        <th class="num">गाय लि.</th><th class="num">FAT</th><th class="num">SNF</th>
+        <th class="num">म्हैस लि.</th><th class="num">FAT</th><th class="num">SNF</th>
+        {% if show_money %}<th class="num">रक्कम</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for v in data.vendors %}
+        <tr><td>{{ v.vendor_id }}</td><td>{{ v.name }}</td>
+          <td class="num">{{ n(v.cow.litres) }}</td><td class="num">{{ n(v.cow.avg_fat) }}</td><td class="num">{{ n(v.cow.avg_snf) }}</td>
+          <td class="num">{{ n(v.buffalo.litres) }}</td><td class="num">{{ n(v.buffalo.avg_fat) }}</td><td class="num">{{ n(v.buffalo.avg_snf) }}</td>
+          {% if show_money %}<td class="num">{{ m(v.amount) }}</td>{% endif %}</tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted">या कालावधीत नोंद नाही.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

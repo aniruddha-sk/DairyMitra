@@ -90,10 +90,17 @@
     <div class="sidebar-section">
       <span class="section-title">SYSTEM</span>
 
+      {% if calc_mode == 'fat_snf' %}
+      <a href="{{ url_for('fat_snf.charts_page') }}" class="sidebar-link">
+        <i data-lucide="table"></i>
+        <span>FAT/SNF दर चार्ट</span>
+      </a>
+      {% else %}
       <a href="{{ url_for('milk_rate') }}" class="sidebar-link">
         <i data-lucide="tag"></i>
         <span>दूध दर</span>
       </a>
+      {% endif %}
 
       <a href="{{ url_for('food_sack_rate') }}" class="sidebar-link">
         <i data-lucide="leaf"></i>

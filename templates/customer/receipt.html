@@ -10,6 +10,7 @@
     <!-- ================= Receipt Filter Form ================= -->
     <section class="section">
         <form method="POST" action="{{ url_for('generate_receipt', vendor_id=vendor.vendor_id) }}" class="receipt-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div>
                 <label class="form-label" for="from_date">From Date</label>

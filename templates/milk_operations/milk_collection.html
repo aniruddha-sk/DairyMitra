@@ -43,6 +43,7 @@ align-items:center;
 
 <!-- Set Date and Slot -->
 <form method="POST" class="mb-4 flex flex-wrap items-center gap-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
       <label class="form-label">दिनांक</label>
       <input type="date" class="form-input" name="date" value="{{ today_date }}" required>
@@ -76,6 +77,7 @@ margin-bottom:10px;">
 <!-- Milk Entry Table -->
 <div class="table-wrap">
 <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <input type="hidden" name="total_vendors" value="{{ vendors|length }}">
 
@@ -308,11 +310,24 @@ async function syncOfflineEntries(){
 
             try{
 
-                await fetch("/submit_milk_ajax",{
+                const res = await fetch("/submit_milk_ajax",{
                     method:"POST",
                     headers:{"Content-Type":"application/json"},
                     body:JSON.stringify(entry)
                 });
+
+                let data = {};
+                try { data = await res.json(); } catch (e) {}
+
+                // Remove the offline copy ONLY when the server stored it
+                // (200) or already has it (409 duplicate). Previously it was
+                // deleted after any response — including errors — losing data.
+                const stored = res.ok && !data.warning;
+                const alreadyThere = res.status === 409 && !data.code;
+                if (!stored && !alreadyThere) {
+                    console.log("Sync kept offline entry:", res.status, data.message);
+                    continue;
+                }
 
                 const deleteTx = db.transaction("milk_entries","readwrite");
                 const deleteStore = deleteTx.objectStore("milk_entries");

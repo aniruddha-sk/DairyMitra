@@ -71,6 +71,7 @@
   <div class="border-t pt-6">
     <h2 class="text-2xl font-semibold text-slate-800 mb-3">Feedback</h2>
     <form method="POST" class="space-y-4 max-w-md">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input
         name="name"
         placeholder="तुमचं नाव"

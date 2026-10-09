@@ -12,6 +12,7 @@
 <!-- ================= DATE FORM ================= -->
 
 <form method="post" class="receipt-form no-print">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <label for="from_date">
         पासून तारीख निवडा

@@ -49,8 +49,17 @@
 
 <h2 class="page-title">💾 Backup & Restore</h2>
 
+{% if not is_admin %}
 <div class="section">
-    <h3 class="mb-4">User Backup & Restore</h3>
+    <p>
+        Backup आणि Restore संपूर्ण डेटाबेसवर (सर्व डेअरी) चालतात, म्हणून ते फक्त
+        DairyMitr प्लॅटफॉर्म ॲडमिनसाठी उपलब्ध आहेत. तुमच्या डेटाचा बॅकअप हवा असल्यास
+        <a href="{{ url_for('contact') }}">आमच्याशी संपर्क साधा</a>.
+    </p>
+</div>
+{% else %}
+<div class="section">
+    <h3 class="mb-4">Database Backup & Restore (Admin)</h3>
 
     <div class="flex gap-3 flex-wrap mb-4">
         <button class="btn btn-primary" onclick="backupData()">
@@ -99,6 +108,9 @@
     </div>
 </div>
 
+{% endif %}
+
+{% if is_admin %}
 <script>
 // --- UI Helper Functions ---
 function showProcessBox(title, s1, s2, s3, s4) {
@@ -133,8 +145,12 @@ function backupData() {
     }, 1200);
 
     // Actual API Call
-    fetch("/backup_my_data")
-    .then(res => res.json())
+    fetch("/backup_my_data", { method: "POST" })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) { throw new Error(data.message || "Backup failed"); }
+        return data;
+    })
     .then(data => {
         setTimeout(() => {
             document.getElementById("step3").innerText = "✅ Compressing backup";
@@ -169,10 +185,14 @@ function restoreFile(file) {
     }, 700);
 
     // Actual API Call
-    fetch("/restore_backup/" + file, {
+    fetch("/restore_backup/" + encodeURIComponent(file), {
     method: "POST"
 })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) { throw new Error(data.message || "Restore failed"); }
+        return data;
+    })
     .then(data => {
         setTimeout(() => {
             document.getElementById("step2").innerText = "✅ Preparing database";
@@ -209,15 +229,18 @@ function loadBackups() {
         }
 
         data.files.forEach(file => {
-            table.innerHTML += `
-            <tr>
-                <td>${file}</td>
-                <td>
-                    <button class="btn btn-secondary btn-sm" onclick="restoreFile('${file}')">
-                        Restore
-                    </button>
-                </td>
-            </tr>`;
+            const tr = document.createElement("tr");
+            const name = document.createElement("td");
+            name.textContent = file;
+            const action = document.createElement("td");
+            const btn = document.createElement("button");
+            btn.className = "btn btn-secondary btn-sm";
+            btn.textContent = "Restore";
+            btn.addEventListener("click", () => restoreFile(file));
+            action.appendChild(btn);
+            tr.appendChild(name);
+            tr.appendChild(action);
+            table.appendChild(tr);
         });
     });
 }
@@ -225,5 +248,6 @@ function loadBackups() {
 // Initial Load
 loadBackups();
 </script>
+{% endif %}
 
 {% endblock %}

@@ -92,36 +92,26 @@
                         <!-- ENABLE / DISABLE -->
                         {% if s.is_active %}
 
-                        <a href="{{ url_for('disable_staff', staff_id=s.id) }}"
-                           class="btn btn-danger btn-sm"
-                           title="Disable">
-
-                            <i class="fa fa-ban"></i>
-
-                        </a>
+                        <form method="POST" action="{{ url_for('disable_staff', staff_id=s.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Disable"><i class="fa fa-ban"></i></button>
+                        </form>
 
                         {% else %}
 
-                        <a href="{{ url_for('enable_staff', staff_id=s.id) }}"
-                           class="btn btn-success btn-sm"
-                           title="Enable">
-
-                            <i class="fa fa-check"></i>
-
-                        </a>
+                        <form method="POST" action="{{ url_for('enable_staff', staff_id=s.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success btn-sm" title="Enable"><i class="fa fa-check"></i></button>
+                        </form>
 
                         {% endif %}
 
 
                         <!-- DELETE -->
-                        <a href="{{ url_for('delete_staff', staff_id=s.id) }}"
-                           class="btn btn-danger btn-sm"
-                           title="Delete"
-                           onclick="return confirm('हा staff कायमचा delete करायचा आहे का? Delete केल्यानंतर या account चा access बंद होईल.');">
-
-                            <i class="fa fa-trash"></i>
-
-                        </a>
+                        <form method="POST" action="{{ url_for('delete_staff', staff_id=s.id) }}" style="display:inline" onsubmit="return confirm('हा staff कायमचा delete करायचा आहे का? Delete केल्यानंतर या account चा access बंद होईल.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Delete"><i class="fa fa-trash"></i></button>
+                        </form>
 
                     </td>
 

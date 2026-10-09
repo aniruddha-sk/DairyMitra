@@ -635,6 +635,8 @@
 
     </style>
 
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
 </head>
 
 
@@ -723,6 +725,7 @@
         class="signup-form"
         id="signupForm"
     >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 
         <!-- =================================================

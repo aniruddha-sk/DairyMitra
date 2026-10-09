@@ -8,6 +8,7 @@
 <div class="section mb-6">
     <h4 class="mb-3">➕ नवीन खाद्य पोती जोडा</h4>
     <form method="POST" action="{{ url_for('add_food_sack') }}" class="grid gap-4 md:grid-cols-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="text" name="name" class="form-input" placeholder="कंपनीचे नाव" required>
         <input type="number" name="rate" step="0.01" class="form-input" placeholder="दर (₹)" required>
         <button type="submit" class="btn btn-primary">जोडा</button>
@@ -34,6 +35,7 @@
                     <td>
                         <form action="{{ url_for('delete_food_sack_rate', sack_id=sack.id) }}" method="POST"
                               onsubmit="return confirm('तुम्हाला खात्री आहे का की हा खाद्य पोती दर काढायचा आहे?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
                         </form>
                     </td>
@@ -52,6 +54,7 @@
 <div class="section">
     <h4 class="mb-3">✏️ खाद्य पोती दर अपडेट करा</h4>
     <form method="POST" action="{{ url_for('update_food_sack_rate') }}" class="grid gap-4 md:grid-cols-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <select name="sack_id" class="form-select" required>
             <option value="" disabled selected>खाद्य पोती निवडा</option>
             {% for sack in food_sacks %}

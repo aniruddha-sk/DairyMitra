@@ -7,6 +7,14 @@
   {{ session.get("dairy_name","My Dairy") }}
 </h2>
 
+{% if calc_mode == 'fat_snf' %}
+<p class="text-center mb-4">
+  <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:700;font-size:13px">
+    FAT/SNF पद्धत चालू
+  </span>
+</p>
+{% endif %}
+
 <!-- TODAY ACTIONS -->
 <section class="section">
   <h4 class="section-title">आजचं काम</h4>
@@ -113,6 +121,12 @@
 
 
 
+    {% if calc_mode == 'fat_snf' %}
+    <a class="card card-action" href="{{ url_for('fat_snf.charts_page') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:table-chart-outline"></span>
+      <span>FAT/SNF दर चार्ट</span>
+    </a>
+    {% else %}
     <a class="card card-action" href="{{ url_for('milk_rate') }}">
       <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
       <span>दूध दर</span>
@@ -122,6 +136,7 @@
       <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
       <span>Customer नुसार दूध दर</span>
     </a>
+    {% endif %}
 
     <a class="card card-action" href="{{ url_for('food_sack_rate') }}">
       <span class="iconify icon-green" data-icon="material-symbols:eco-outline"></span>

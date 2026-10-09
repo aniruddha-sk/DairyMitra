@@ -11,6 +11,7 @@
     <h2 class="page-title">Vendor Special Milk Rate</h2>
 
     <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Vendor -->
         <div>
@@ -146,6 +147,7 @@
                             method="POST"
                             action="{{ url_for('vendor_rate') }}"
                             onsubmit="return confirm('हा vendor special rate delete करायचा आहे का?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                             <input
                                 type="hidden"

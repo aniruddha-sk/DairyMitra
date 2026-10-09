@@ -10,6 +10,7 @@
         <div class="card-header fw-bold">➕ नवीन दर जोडा</div>
         <div class="card-body">
             <form method="POST" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="col-md-3">
                     <label class="form-label">पासून तारीख</label>
                     <input type="date" name="date" required class="form-input">
@@ -60,6 +61,7 @@
                             <td>
                                 <form action="{{ url_for('delete_milk_rate', rate_id=r.id) }}" method="POST"
                                       onsubmit="return confirm('तुम्हाला हा दर खरोखर हटवायचा आहे का?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <!-- confirm hidden field -->
                                     <input type="hidden" name="confirm" value="1">
                                     <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>

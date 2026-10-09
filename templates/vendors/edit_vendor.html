@@ -5,6 +5,7 @@
 <h2 class="page-title">✏️ विक्रेता संपादित करा</h2>
 
 <form method="POST" class="section grid gap-4 max-w-lg">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div>
         <label class="form-label">नाव</label>
