@@ -1,179 +1,1065 @@
 /* =========================================================
-   DairyMitr 2.0 — FAT/SNF screens
-   Uses the existing theme variables from style.css.
+   DairyMitr — FAT/SNF Responsive UI
+   Clean, compact & production-ready
+   Desktop + Tablet + Mobile + Print
    ========================================================= */
 
-/* Class rules like `.fsn-actions {display:flex}` would otherwise override
-   the [hidden] attribute and show elements that should be hidden. */
-[hidden] { display: none !important; }
+/* ---------------------------------------------------------
+   1. GLOBAL HELPERS
+--------------------------------------------------------- */
+[hidden] {
+    display: none !important;
+}
 
-#vendorInfo { color: var(--muted); }
+#vendorInfo {
+    color: var(--muted, #64748b);
+}
 
+.num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.w-full {
+    width: 100%;
+}
+
+/* ---------------------------------------------------------
+   2. TYPOGRAPHY
+--------------------------------------------------------- */
+.fsn-sub {
+    color: var(--muted, #64748b);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+.fsn-help {
+    color: var(--muted, #64748b);
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+/* ---------------------------------------------------------
+   3. PAGE HEADER
+--------------------------------------------------------- */
 .fsn-head {
-  display: flex; flex-wrap: wrap; gap: 12px;
-  align-items: center; justify-content: space-between; margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
 }
-.fsn-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
 
-.fsn-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-  background: var(--dm-soft, #f4f1ff); color: var(--primary); border: 1px solid var(--border);
+.fsn-head > div:first-child {
+    flex: 1 1 260px;
+    min-width: 0;
 }
-.fsn-badge.on  { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.fsn-badge.off { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
-.fsn-badge.saved { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
-.fsn-badge.final { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.fsn-badge.inactive { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
+.fsn-head .page-title {
+    margin: 0;
+    font-size: clamp(20px, 2.4vw, 26px);
+    line-height: 1.35;
+    font-weight: 800;
+    color: var(--text, #211b36);
+    overflow-wrap: anywhere;
+}
+
+.fsn-head .fsn-sub {
+    max-width: 760px;
+}
+
+/* ---------------------------------------------------------
+   4. BUTTONS — COMPACT & CONSISTENT
+--------------------------------------------------------- */
+.btn-sm,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 8px 14px;
+    min-height: 38px;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease,
+                background .16s ease, border-color .16s ease;
+}
+
+.btn-sm {
+    padding: 6px 11px;
+    min-height: 32px;
+    font-size: 12.5px;
+    border-radius: 9px;
+}
+
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, #7950dc, #4c1d95);
+    box-shadow: 0 3px 10px rgba(91, 45, 180, .18);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 5px 14px rgba(91, 45, 180, .26);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    color: #4c1d95;
+    background: #f5f1ff;
+    border-color: #ddd1ff;
+}
+
+.btn-secondary:hover {
+    background: #ece4ff;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    color: #fff;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 5px 14px rgba(220, 38, 38, .28);
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn:disabled,
+button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Header action row */
+.fsn-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* ---------------------------------------------------------
+   5. NOTICES
+--------------------------------------------------------- */
 .fsn-notice {
-  border-radius: var(--radius, 14px); padding: 12px 14px; margin-bottom: 14px;
-  border: 1px solid #fde68a; background: #fffbeb; color: #78350f; font-size: 14px;
+    margin-bottom: 14px;
+    padding: 11px 14px;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    background: #fffbeb;
+    color: #78350f;
+    font-size: 13.5px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
 }
-.fsn-notice.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
-.fsn-notice.ok { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
-.fsn-notice ul { margin: 6px 0 0 18px; }
 
+.fsn-notice.error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.fsn-notice.ok {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.fsn-notice ul {
+    margin: 6px 0 0 20px;
+}
+
+/* ---------------------------------------------------------
+   6. BADGES
+--------------------------------------------------------- */
+.fsn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    padding: 4px 10px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 999px;
+
+    background: #f4f1ff;
+    color: #5b21b6;
+
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.fsn-badge.on,
+.fsn-badge.final {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.fsn-badge.off {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.fsn-badge.saved {
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde68a;
+}
+
+.fsn-badge.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+/* ---------------------------------------------------------
+   7. FORMS
+--------------------------------------------------------- */
 .fsn-form-grid {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  align-items: end;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    align-items: end;
+    gap: 14px;
 }
-.fsn-field label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 4px; }
-.fsn-field .form-input, .fsn-field .form-select { width: 100%; }
-.fsn-field .fsn-err { color: #b91c1c; font-size: 12px; min-height: 16px; margin-top: 3px; }
-.fsn-field.invalid .form-input, .fsn-field.invalid .form-select { border-color: #ef4444; }
-.fsn-help { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+.fsn-field {
+    min-width: 0;
+}
+
+.fsn-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--text, #312e45);
+}
+
+.fsn-field .form-input,
+.fsn-field .form-select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 11px;
+
+    border: 1px solid var(--border, #ddd6ee);
+    border-radius: 10px;
+
+    background: var(--card, #fff);
+    color: var(--text, #312e45);
+
+    font: inherit;
+    font-size: 13.5px;
+    box-sizing: border-box;
+}
+
+.fsn-field .form-input:focus,
+.fsn-field .form-select:focus {
+    outline: 2px solid rgba(124, 58, 237, .22);
+    border-color: #8b5cf6;
+}
+
+.fsn-field .fsn-err {
+    min-height: 15px;
+    margin-top: 3px;
+    color: #b91c1c;
+    font-size: 11.5px;
+    line-height: 1.4;
+}
+
+.fsn-field.invalid .form-input,
+.fsn-field.invalid .form-select {
+    border-color: #ef4444;
+}
+
+/* ---------------------------------------------------------
+   8. STAT CARDS
+--------------------------------------------------------- */
 .fsn-stats {
-  display: grid; gap: 12px; margin-bottom: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
 }
+
 .fsn-stat {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius, 14px);
-  padding: 12px 14px; box-shadow: var(--shadow-sm);
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border, #e9e2f5);
+    border-radius: 15px;
+    background: var(--card, #fff);
+    box-shadow: 0 3px 12px rgba(41, 24, 76, .05);
+    overflow-wrap: anywhere;
 }
-.fsn-stat .k { font-size: 12px; color: var(--muted); }
-.fsn-stat .v { font-size: 22px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
 
+.fsn-stat .k {
+    color: var(--muted, #6b6480);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.fsn-stat .v {
+    margin-top: 4px;
+    color: var(--text, #28213d);
+    font-size: clamp(18px, 2vw, 23px);
+    font-weight: 850;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.fsn-stat .fsn-sub {
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+/* ---------------------------------------------------------
+   9. TABLES
+--------------------------------------------------------- */
+.table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+}
+
+.fsn-table,
+.table.fsn-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+.fsn-table th,
+.fsn-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border, #eee8f7);
+    vertical-align: middle;
+}
+
+.fsn-table thead th {
+    background: #f5f1ff;
+    color: #51436f;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.45;
+    white-space: nowrap;
+}
+
+.fsn-table tbody tr {
+    background: var(--card, #fff);
+    transition: background .15s ease;
+}
+
+.fsn-table tbody tr:hover {
+    background: #faf8ff;
+}
+
+.fsn-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.fsn-table tfoot th,
+.fsn-table tfoot td {
+    background: rgba(87, 48, 187, .07);
+    font-weight: 800;
+}
+
+.fsn-table a {
+    color: #6d28d9;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.fsn-table a:hover {
+    text-decoration: underline;
+}
+
+/* ---------------------------------------------------------
+   10. PAGINATION
+--------------------------------------------------------- */
+.fsn-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.fsn-pager span {
+    color: var(--muted, #64748b);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------
+   11. PREVIEW STRIP
+--------------------------------------------------------- */
 .fsn-preview {
-  display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
-  padding: 10px 14px; border-radius: 12px; background: var(--dm-soft, #f4f1ff);
-  border: 1px dashed var(--border); font-variant-numeric: tabular-nums; min-height: 46px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    min-height: 44px;
+    padding: 10px 14px;
+
+    border: 1px dashed var(--border, #ddd6ee);
+    border-radius: 12px;
+    background: #f6f2ff;
+
+    font-variant-numeric: tabular-nums;
 }
-.fsn-preview b { font-size: 18px; }
 
-.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.fsn-table td, .fsn-table th { vertical-align: middle; }
-.fsn-table tfoot td, .fsn-table tfoot th { font-weight: 800; background: rgba(87, 48, 187, .06); }
-.fsn-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.btn-sm { padding: 6px 10px; font-size: 13px; }
-
-.fsn-pager { display: flex; gap: 6px; justify-content: center; align-items: center; margin-top: 14px; }
-
-/* ---------- rate matrix ---------- */
-.fsn-matrix-wrap { overflow: auto; max-height: 70vh; border: 1px solid var(--border); border-radius: 12px; }
-.fsn-matrix { border-collapse: separate; border-spacing: 0; min-width: 100%; }
-.fsn-matrix th, .fsn-matrix td {
-  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  padding: 4px; text-align: center; background: var(--card);
+.fsn-preview b {
+    color: #5b21b6;
+    font-size: 17px;
 }
-.fsn-matrix thead th { position: sticky; top: 0; z-index: 2; background: #dbeafe; font-weight: 800; }
-.fsn-matrix tbody th { position: sticky; left: 0; z-index: 1; background: #dbeafe; font-weight: 800; }
-.fsn-matrix thead th.corner { left: 0; z-index: 3; }
+
+/* ---------------------------------------------------------
+   12. RATE MATRIX
+--------------------------------------------------------- */
+.fsn-matrix-wrap {
+    max-width: 100%;
+    max-height: 70vh;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+}
+
+.fsn-matrix {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.fsn-matrix th,
+.fsn-matrix td {
+    padding: 5px;
+    border-right: 1px solid var(--border, #e2e8f0);
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    background: var(--card, #fff);
+    text-align: center;
+}
+
+.fsn-matrix thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #ede7ff;
+    color: #4c1d95;
+    font-weight: 800;
+}
+
+.fsn-matrix tbody th {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #ede7ff;
+    color: #4c1d95;
+    font-weight: 800;
+}
+
+.fsn-matrix thead th.corner {
+    left: 0;
+    z-index: 3;
+}
+
 .fsn-matrix input {
-  width: 74px; padding: 6px 4px; text-align: right; border: 1px solid transparent;
-  border-radius: 6px; font-variant-numeric: tabular-nums; background: transparent; font-size: 14px;
+    width: 72px;
+    max-width: 100%;
+    padding: 6px 5px;
+
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+
+    font-size: 13.5px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    box-sizing: border-box;
 }
-.fsn-matrix input:focus { outline: 2px solid var(--primary); background: #fff; }
-.fsn-matrix td.std { background: #fef3c7; }
-.fsn-matrix td.std input { font-weight: 800; }
-.fsn-matrix td.changed { background: #e0f2fe; }
-.fsn-matrix td.bad { background: #fee2e2; }
+
+.fsn-matrix input:focus {
+    outline: 2px solid var(--primary, #6d28d9);
+    background: #fff;
+}
+
+.fsn-matrix td.std {
+    background: #fef3c7;
+}
+
+.fsn-matrix td.std input {
+    font-weight: 800;
+}
+
+.fsn-matrix td.changed {
+    background: #e0f2fe;
+}
+
+.fsn-matrix td.bad {
+    background: #fee2e2;
+}
+
 .fsn-matrix .axis-remove {
-  border: 0; background: none; color: #b91c1c; cursor: pointer; font-size: 13px; padding: 0 2px;
+    padding: 2px 4px;
+    border: 0;
+    background: transparent;
+    color: #b91c1c;
+    font-size: 12.5px;
+    cursor: pointer;
 }
 
-/* ---------- modal ---------- */
-.fsn-modal { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; padding: 16px; }
-.fsn-modal.open { display: flex; }
-.fsn-modal .backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .5); }
+/* ---------------------------------------------------------
+   13. MODAL
+--------------------------------------------------------- */
+.fsn-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.fsn-modal.open {
+    display: flex;
+}
+
+.fsn-modal .backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .58);
+    backdrop-filter: blur(3px);
+}
+
 .fsn-modal .box {
-  position: relative; background: var(--card); border-radius: var(--radius-lg, 20px);
-  padding: 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow: auto; box-shadow: var(--shadow);
-}
-.fsn-modal h3 { margin-top: 0; }
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow: auto;
+    padding: 20px;
 
-/* ---------- toggle switch ---------- */
-.fsn-switch { position: relative; display: inline-block; width: 58px; height: 32px; flex-shrink: 0; }
-.fsn-switch input { opacity: 0; width: 0; height: 0; }
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 18px;
+    background: var(--card, #fff);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, .2);
+}
+
+.fsn-modal h3 {
+    margin-top: 0;
+    color: var(--text, #312e45);
+    font-size: 18px;
+}
+
+/* ---------------------------------------------------------
+   14. TOGGLE SWITCH
+--------------------------------------------------------- */
+.fsn-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.fsn-switch input {
+    width: 0;
+    height: 0;
+    opacity: 0;
+}
+
 .fsn-switch .slider {
-  position: absolute; inset: 0; cursor: pointer; border-radius: 999px;
-  background: #cbd5e1; transition: background .2s;
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: background .2s;
 }
+
 .fsn-switch .slider::before {
-  content: ""; position: absolute; width: 24px; height: 24px; left: 4px; top: 4px;
-  border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
-}
-.fsn-switch input:checked + .slider { background: #16a34a; }
-.fsn-switch input:checked + .slider::before { transform: translateX(26px); }
-.fsn-switch input:focus-visible + .slider { outline: 3px solid var(--primary); outline-offset: 2px; }
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
 
-/* =========================================================
-   FAT/SNF RECEIPT (screen + A4 print)
-   ========================================================= */
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+
+    content: "";
+    transition: transform .2s;
+}
+
+.fsn-switch input:checked + .slider {
+    background: #16a34a;
+}
+
+.fsn-switch input:checked + .slider::before {
+    transform: translateX(24px);
+}
+
+.fsn-switch input:focus-visible + .slider {
+    outline: 3px solid var(--primary, #6d28d9);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   15. RECEIPT
+--------------------------------------------------------- */
 .fsn-receipt {
-  background: #fff; color: #000; border: 2px solid #000; padding: 14px 16px;
-  margin: 0 auto 24px; max-width: 1000px;
-  font-family: "Noto Sans Devanagari", "Mangal", "Nirmala UI", "Times New Roman", serif;
-  font-size: 13px;
-}
-.fsn-receipt h2 { text-align: center; margin: 2px 0 10px; font-size: 20px; }
-.fsn-receipt .meta p { margin: 3px 0; font-size: 14px; }
-.fsn-receipt table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
-.fsn-receipt th, .fsn-receipt td {
-  border: 1px solid #000; padding: 3px 4px; font-size: 12px; line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-.fsn-receipt td.num, .fsn-receipt th.num { text-align: right; }
-.fsn-receipt .type-head { text-align: center; font-size: 14px; font-weight: 800; }
-.fsn-receipt .day { text-align: center; width: 6%; }
-.fsn-receipt tfoot td { font-weight: 800; }
-.fsn-receipt .avg { font-weight: 600; font-size: 11px; text-align: center; }
-.fsn-receipt .summary { margin-top: 14px; }
-.fsn-receipt .summary th { text-align: center; font-size: 14px; }
-.fsn-receipt .summary td { font-size: 14px; padding: 5px 8px; }
-.fsn-receipt .summary tr.strong td { font-weight: 800; }
-.fsn-receipt .details { margin-top: 12px; }
-.fsn-receipt .foot { display: flex; justify-content: space-between; margin-top: 26px; font-size: 13px; }
-.fsn-receipt .empty { color: #555; text-align: center; }
+    max-width: 1000px;
+    margin: 0 auto 24px;
+    padding: 14px 16px;
 
+    border: 2px solid #000;
+    background: #fff;
+    color: #000;
+
+    font-family: "Noto Sans Devanagari", "Mangal", "Nirmala UI", serif;
+    font-size: 13px;
+}
+
+.fsn-receipt h2 {
+    margin: 2px 0 10px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.fsn-receipt .meta p {
+    margin: 3px 0;
+    font-size: 13.5px;
+}
+
+.fsn-receipt table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.fsn-receipt th,
+.fsn-receipt td {
+    padding: 3px 4px;
+    border: 1px solid #000;
+    font-size: 12px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.fsn-receipt td.num,
+.fsn-receipt th.num {
+    text-align: right;
+}
+
+.fsn-receipt .type-head {
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.fsn-receipt .day {
+    width: 6%;
+    text-align: center;
+}
+
+.fsn-receipt tfoot td {
+    font-weight: 800;
+}
+
+.fsn-receipt .avg {
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.fsn-receipt .summary {
+    margin-top: 14px;
+}
+
+.fsn-receipt .summary th {
+    font-size: 13.5px;
+    text-align: center;
+}
+
+.fsn-receipt .summary td {
+    padding: 5px 8px;
+    font-size: 13.5px;
+}
+
+.fsn-receipt .summary tr.strong td {
+    font-weight: 800;
+}
+
+.fsn-receipt .details {
+    margin-top: 12px;
+}
+
+.fsn-receipt .foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 24px;
+    font-size: 12.5px;
+}
+
+.fsn-receipt .empty {
+    color: #555;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------
+   16. TABLET (701–1024px)
+--------------------------------------------------------- */
+@media (min-width: 701px) and (max-width: 1024px) {
+    .fsn-head {
+        align-items: flex-start;
+    }
+
+    .fsn-head .fsn-actions {
+        flex: 1 1 100%;
+    }
+
+    .fsn-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .fsn-table th,
+    .fsn-table td {
+        padding: 9px 10px;
+    }
+}
+
+/* ---------------------------------------------------------
+   17. MOBILE (≤700px)
+--------------------------------------------------------- */
 @media (max-width: 700px) {
-  .fsn-receipt-scroll { overflow-x: auto; }
-  .fsn-receipt { min-width: 720px; }
+
+    .fsn-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .fsn-head > div:first-child {
+        width: 100%;
+        flex: none;
+    }
+
+    .fsn-head .page-title {
+        font-size: 20px;
+        line-height: 1.4;
+    }
+
+    .fsn-head .fsn-sub {
+        font-size: 12.5px;
+    }
+
+    /* Action buttons — compact 2-column grid */
+    .fsn-head .fsn-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+    }
+
+    .fsn-head .fsn-actions > .btn,
+    .fsn-head .fsn-actions > a,
+    .fsn-head .fsn-actions > button {
+        width: 100%;
+        min-height: 38px;
+        padding: 8px 10px;
+        font-size: 12.5px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+    }
+
+    /* Form stacks to 2 cols, last child full width */
+    .fsn-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .fsn-form-grid > div:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .fsn-field .form-input,
+    .fsn-field .form-select {
+        min-height: 42px;
+        font-size: 13.5px;
+    }
+
+    /* Stats: 2 per row */
+    .fsn-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .fsn-stat {
+        padding: 12px;
+        border-radius: 13px;
+    }
+
+    .fsn-stat .k {
+        font-size: 11px;
+    }
+
+    .fsn-stat .v {
+        font-size: 18px;
+    }
+
+    .fsn-stat .fsn-sub {
+        font-size: 11px;
+    }
+
+    /* Tables scroll horizontally */
+    .table-wrap {
+        overflow-x: auto;
+        border-radius: 10px;
+    }
+
+    .fsn-table {
+        width: max-content;
+        min-width: 100%;
+        font-size: 12.5px;
+    }
+
+    .fsn-table th,
+    .fsn-table td {
+        padding: 8px;
+    }
+
+    .fsn-table thead th {
+        font-size: 11px;
+    }
+
+    .fsn-pager {
+        gap: 6px;
+    }
+
+    .fsn-preview {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .fsn-preview b {
+        font-size: 15px;
+    }
+
+    .fsn-modal {
+        padding: 10px;
+    }
+
+    .fsn-modal .box {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .fsn-actions {
+        gap: 6px;
+    }
+
+    .fsn-matrix-wrap {
+        max-height: 65vh;
+    }
+
+    .fsn-matrix th,
+    .fsn-matrix td {
+        padding: 4px;
+    }
+
+    .fsn-matrix input {
+        width: 62px;
+        padding: 6px 4px;
+        font-size: 12.5px;
+    }
 }
 
-@media print {
-  @page { size: A4 portrait; margin: 8mm; }
+/* ---------------------------------------------------------
+   18. EXTRA NARROW (≤380px)
+--------------------------------------------------------- */
+@media (max-width: 380px) {
+    .fsn-head .page-title {
+        font-size: 18px;
+    }
 
-  /* receipt.css hides everything except .receipt-wrapper; override for
-     this page with more specific selectors. */
-  .fsn-print-area, .fsn-print-area * { visibility: visible !important; }
-  header, #sidebar, #overlay, #offline-banner, #global-loader, .no-print,
-  #dairyAiButton, #dairyAiChat, #installBanner, .flash-messages { display: none !important; }
-  html, body { background: #fff !important; }
-  main#app-content { margin: 0 !important; padding: 0 !important; max-width: none !important; }
-  .fsn-print-area { position: static !important; width: 100% !important; }
-  .fsn-receipt-scroll { overflow: visible !important; }
-  .fsn-receipt {
-    border: 1.5px solid #000; margin: 0; padding: 6mm; max-width: none; min-width: 0;
-    box-shadow: none; page-break-after: always; break-after: page;
-  }
-  .fsn-receipt:last-child { page-break-after: auto; break-after: auto; }
-  .fsn-receipt th, .fsn-receipt td { font-size: 9.5pt; padding: 2px 3px; }
-  .fsn-receipt thead { display: table-header-group; }   /* repeat headings */
-  .fsn-receipt tfoot { display: table-row-group; }
-  .fsn-receipt tr { page-break-inside: avoid; break-inside: avoid; }
-  .fsn-receipt .summary, .fsn-receipt .foot { page-break-inside: avoid; break-inside: avoid; }
-  .fsn-receipt.landscape-hint { font-size: 9pt; }
+    .fsn-head .fsn-actions {
+        gap: 6px;
+    }
+
+    .fsn-head .fsn-actions > .btn,
+    .fsn-head .fsn-actions > a,
+    .fsn-head .fsn-actions > button {
+        padding: 7px 6px;
+        font-size: 11.5px;
+        min-height: 36px;
+    }
+
+    .fsn-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fsn-form-grid > div:last-child {
+        grid-column: auto;
+    }
+
+    .fsn-stats {
+        gap: 8px;
+    }
+
+    .fsn-stat {
+        padding: 10px;
+    }
+
+    .fsn-stat .v {
+        font-size: 16px;
+    }
+}
+
+/* ---------------------------------------------------------
+   19. PRINT
+--------------------------------------------------------- */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm;
+    }
+
+    .fsn-print-area,
+    .fsn-print-area * {
+        visibility: visible !important;
+    }
+
+    header,
+    #sidebar,
+    #overlay,
+    #offline-banner,
+    #global-loader,
+    .no-print,
+    #dairyAiButton,
+    #dairyAiChat,
+    #installBanner,
+    .flash-messages {
+        display: none !important;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+    }
+
+    main#app-content {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .fsn-print-area {
+        position: static !important;
+        width: 100% !important;
+    }
+
+    .fsn-receipt-scroll {
+        overflow: visible !important;
+    }
+
+    .fsn-receipt {
+        max-width: none;
+        min-width: 0;
+        margin: 0;
+        padding: 6mm;
+        border: 1.5px solid #000;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+    }
+
+    .fsn-receipt:last-child {
+        page-break-after: auto;
+        break-after: auto;
+    }
+
+    .fsn-receipt th,
+    .fsn-receipt td {
+        padding: 2px 3px;
+        font-size: 9.5pt;
+    }
+
+    .fsn-receipt thead {
+        display: table-header-group;
+    }
+
+    .fsn-receipt tfoot {
+        display: table-row-group;
+    }
+
+    .fsn-receipt tr,
+    .fsn-receipt .summary,
+    .fsn-receipt .foot {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+}
+
+/* ---------------------------------------------------------
+   20. REDUCED MOTION
+--------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
 }

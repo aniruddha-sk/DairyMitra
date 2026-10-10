@@ -53,20 +53,60 @@ class Forbidden(Exception):
 # ======================================================================
 # Settings / calculation mode
 # ======================================================================
+
+
 def get_settings(user_id, cur=None):
     own = cur is None
     cur = cur or db.cursor()
-    cur.execute(
-        "SELECT calculation_mode, warn_low_litres, warn_high_litres, "
-        "warn_deviation_pct, updated_at FROM fat_snf_calculation_settings "
-        "WHERE user_id = %s", (user_id,))
-    row = cur.fetchone()
-    if own:
-        cur.close()
-    result = {"calculation_mode": "general", **DEFAULT_THRESHOLDS, "updated_at": None}
-    if row:
-        result.update(row)
-    return result
+
+    try:
+        # Check database connection
+        cur.execute("""
+            SELECT DATABASE() AS db_name,
+                   @@hostname AS hostname,
+                   @@port AS port
+        """)
+        print("FAT_SNF DB:", cur.fetchone())
+
+        # Check columns visible to Flask
+        cur.execute("""
+            SELECT COLUMN_NAME, COLUMN_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = %s
+            ORDER BY ORDINAL_POSITION
+        """, ("fat_snf_calculation_settings",))
+
+        print("ACTUAL FLASK COLUMNS:", cur.fetchall())
+
+        # Fetch settings
+        cur.execute("""
+            SELECT calculation_mode,
+                   warn_low_litres,
+                   warn_high_litres,
+                   warn_deviation_pct,
+                   updated_at
+            FROM fat_snf_calculation_settings
+            WHERE user_id = %s
+        """, (user_id,))
+
+        row = cur.fetchone()
+
+        result = {
+            "calculation_mode": "general",
+            **DEFAULT_THRESHOLDS,
+            "updated_at": None,
+        }
+
+        if row:
+            result.update(row)
+
+        return result
+
+    finally:
+        if own:
+            cur.close()
+
 
 
 def get_mode(user_id):
@@ -578,33 +618,31 @@ def _insert_entry(user_id, data, staff_id, request_id, vendor_id, milk_type, fat
     return {"entry": entry, "replayed": False, "warnings": warnings}
 
 
+
 def resolve_date_slot(data, now=None, allow_backdate=False):
     """
-    Server-side date/slot rule:
-      * Normal entry: date must be today (IST) and slot the automatic slot.
-      * Backdated/correction entry (owner only, explicit `backdated: true`):
-        any past or current date and either slot; never a future date.
+    Both owner and staff may save entries for any past or current date.
+    The selected slot is accepted for the selected date.
+    Future dates are never allowed.
     """
     now = now or L.now_ist()
     today = L.today_ist(now)
-    auto = L.auto_slot(now)
-    on_date = L.parse_date(data.get("date") or today.isoformat())
-    slot = L.parse_slot(data.get("slot") or auto)
+
+    on_date = L.parse_date(
+        data.get("date") or today.isoformat()
+    )
+    slot = L.parse_slot(
+        data.get("slot") or L.auto_slot(now)
+    )
+
     if on_date > today:
-        raise ValidationError("भविष्यातील तारखेची नोंद करता येणार नाही.", "date")
-    if data.get("backdated"):
-        if not allow_backdate:
-            raise Forbidden("जुनी/दुरुस्ती नोंद फक्त मालक करू शकतो.")
-        return on_date, slot
-    if on_date != today:
-        raise Conflict("date_changed",
-                       f"तारीख बदलली आहे. आजची तारीख {today.strftime('%d/%m/%Y')} आहे. "
-                       "पान रिफ्रेश करा.", date=today.isoformat(), slot=auto)
-    if slot != auto:
-        raise Conflict("slot_changed",
-                       f"वेळ बदलली आहे: आता {L.SLOT_LABELS_MR[auto]} आहे. पान रिफ्रेश करा.",
-                       date=today.isoformat(), slot=auto)
+        raise ValidationError(
+            "भविष्यातील तारखेची नोंद करता येणार नाही.",
+            "date"
+        )
+
     return on_date, slot
+
 
 
 def update_entry(user_id, entry_id, data, is_owner):

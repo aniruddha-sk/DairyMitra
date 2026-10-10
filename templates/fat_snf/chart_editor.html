@@ -1,103 +1,751 @@
 {% extends "base.html" %}
+
+
+
 {% block title %}FAT/SNF दर चार्ट{% endblock %}
+
+
+
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=2">
+
+<link rel="stylesheet"
+
+      href="{{ url_for('static', filename='css/fat_snf.css') }}?v=2">
+
+
+
+<style>
+
+    .fsn-editor {
+
+        width: 100%;
+
+        min-width: 0;
+
+    }
+
+
+
+    .fsn-head {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        flex-wrap: wrap;
+
+        gap: 16px;
+
+        margin-bottom: 20px;
+
+    }
+
+
+
+    .fsn-sub {
+
+        color: var(--muted);
+
+        font-size: 13px;
+
+        line-height: 1.7;
+
+        margin-top: 5px;
+
+    }
+
+
+
+    .fsn-form-grid {
+
+        display: grid;
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 18px;
+
+        align-items: start;
+
+    }
+
+
+
+    .fsn-field {
+
+        min-width: 0;
+
+    }
+
+
+
+    .fsn-field label {
+
+        display: block;
+
+        margin-bottom: 7px;
+
+        font-size: 13px;
+
+        font-weight: 600;
+
+    }
+
+
+
+    .fsn-field .form-input,
+
+    .fsn-field .form-select {
+
+        width: 100%;
+
+        min-width: 0;
+
+    }
+
+
+
+    .fsn-field .fsn-err {
+
+        color: #dc2626;
+
+        font-size: 12px;
+
+        margin-top: 5px;
+
+    }
+
+
+
+    .fsn-help {
+
+        color: var(--muted);
+
+        font-size: 12px;
+
+        line-height: 1.7;
+
+        margin-top: 12px;
+
+    }
+
+
+
+    .fsn-actions {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+
+    }
+
+
+
+    .fsn-matrix-wrap {
+
+        width: 100%;
+
+        overflow: auto;
+
+        border: 1px solid var(--border);
+
+        border-radius: 12px;
+
+        -webkit-overflow-scrolling: touch;
+
+    }
+
+
+
+    .fsn-matrix {
+
+        width: 100%;
+
+        min-width: 650px;
+
+        border-collapse: separate;
+
+        border-spacing: 0;
+
+    }
+
+
+
+    .fsn-matrix th,
+
+    .fsn-matrix td {
+
+        padding: 8px;
+
+        text-align: center;
+
+        border-right: 1px solid var(--border);
+
+        border-bottom: 1px solid var(--border);
+
+        white-space: nowrap;
+
+    }
+
+
+
+    .fsn-matrix thead th {
+
+        background: #f5f2ff;
+
+        color: var(--text);
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+    }
+
+
+
+    .fsn-matrix input {
+
+        width: 82px;
+
+        min-width: 70px;
+
+        height: 38px;
+
+        padding: 6px;
+
+        border: 1px solid var(--border);
+
+        border-radius: 8px;
+
+        text-align: center;
+
+        font: inherit;
+
+        font-size: 13px;
+
+        background: #fff;
+
+    }
+
+
+
+    .fsn-matrix input:focus {
+
+        outline: none;
+
+        border-color: var(--primary);
+
+        box-shadow: 0 0 0 3px rgba(87, 48, 187, .12);
+
+    }
+
+
+
+    .fsn-matrix .standard-rate {
+
+        background: #fff8d8;
+
+    }
+
+
+
+    .fsn-matrix .changed-rate {
+
+        background: #eff6ff;
+
+    }
+
+
+
+    .fsn-editor #editorAlert,
+
+    .fsn-editor #saveAlert {
+
+        margin-bottom: 14px;
+
+    }
+
+
+
+    .fsn-editor .section > h3 {
+
+        font-size: 17px;
+
+        font-weight: 700;
+
+    }
+
+
+
+    @media (max-width: 800px) {
+
+        .fsn-form-grid {
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        }
+
+    }
+
+
+
+    @media (max-width: 520px) {
+
+        .fsn-form-grid {
+
+            grid-template-columns: 1fr;
+
+        }
+
+
+
+        .fsn-head {
+
+            align-items: flex-start;
+
+        }
+
+
+
+        .fsn-head > .btn {
+
+            width: 100%;
+
+        }
+
+
+
+        .fsn-actions {
+
+            width: 100%;
+
+        }
+
+
+
+        .fsn-actions .btn {
+
+            flex: 1;
+
+        }
+
+
+
+        .fsn-matrix input {
+
+            width: 70px;
+
+            min-width: 65px;
+
+        }
+
+    }
+
+</style>
+
 {% endblock %}
+
+
 
 {% block content %}
-<div class="fsn-head">
-  <div>
-    <h2 class="page-title">
-      {% if chart %}✏️ दर चार्ट संपादन{% elif revise_id %}🆕 चार्टची नवीन आवृत्ती{% else %}➕ नवीन FAT/SNF दर चार्ट{% endif %}
-    </h2>
-    <div class="fsn-sub">
-      {% if chart %}बदल फक्त पुढील नोंदींना लागू होतील; आधी सेव्ह झालेल्या नोंदींचा दर तसाच राहतो.
-      {% elif revise_id %}जुना चार्ट तसाच राहील. नवीन आवृत्ती निवडलेल्या "लागू तारखे"पासून वापरली जाईल.
-      {% else %}श्रेणी व दर नियम भरा → "तक्ता तयार करा" → हवे ते दर बदला → सेव्ह करा.{% endif %}
+
+
+
+<div class="fsn-editor">
+
+
+
+    <!-- HEADER -->
+
+    <div class="fsn-head">
+
+        <div>
+
+            <h2 class="page-title">
+
+                {% if chart %}
+
+                    ✏️ दर चार्ट संपादन
+
+                {% elif revise_id %}
+
+                    🆕 चार्टची नवीन आवृत्ती
+
+                {% else %}
+
+                    ➕ नवीन FAT/SNF दर चार्ट
+
+                {% endif %}
+
+            </h2>
+
+
+
+            <div class="fsn-sub">
+
+                {% if chart %}
+
+                    बदल फक्त पुढील नोंदींना लागू होतील;
+
+                    आधी सेव्ह झालेल्या नोंदींचा दर तसाच राहतो.
+
+                {% elif revise_id %}
+
+                    जुना चार्ट तसाच राहील. नवीन आवृत्ती निवडलेल्या
+
+                    लागू तारखेपासून वापरली जाईल.
+
+                {% else %}
+
+                    FAT, SNF आणि दरांची माहिती भरा. मग तक्ता तयार करा,
+
+                    गरज असल्यास दर बदला आणि सेव्ह करा.
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+
+        <a class="btn btn-secondary"
+
+           href="{{ url_for('fat_snf.charts_page') }}">
+
+            ← सर्व चार्ट
+
+        </a>
+
     </div>
-  </div>
-  <a class="btn btn-secondary" href="{{ url_for('fat_snf.charts_page') }}">← सर्व चार्ट</a>
+
+
+
+    <div id="editorAlert" aria-live="polite"></div>
+
+
+
+    <!-- 1. CHART INFORMATION -->
+
+    <div class="section mb-4">
+
+
+
+        <h3 class="mb-4">1. चार्टची माहिती</h3>
+
+
+
+        <div class="fsn-form-grid">
+
+
+
+            <div class="fsn-field" data-field="chart_name">
+
+                <label for="chartName">या चार्टचे नाव</label>
+
+
+
+                <input
+
+                    id="chartName"
+
+                    class="form-input"
+
+                    maxlength="150"
+
+                    placeholder="उदा. गाय दर - ऑक्टोबर"
+
+                >
+
+
+
+                <div class="fsn-err"></div>
+
+            </div>
+
+
+
+            <div class="fsn-field" data-field="milk_type">
+
+                <label for="milkType">कोणत्या दुधासाठी दर हवेत?</label>
+
+
+
+                <select id="milkType" class="form-select">
+
+                    <option value="cow">🐄 गाय</option>
+
+                    <option value="buffalo">🐃 म्हैस</option>
+
+                    <option value="both">गाय व म्हैस (एकच चार्ट)</option>
+
+                </select>
+
+
+
+                <div class="fsn-err"></div>
+
+            </div>
+
+
+
+            <div class="fsn-field" data-field="effective_from">
+
+                <label for="effectiveFrom">हे दर कोणत्या तारखेपासून लागू होतील?</label>
+
+
+
+                <input
+
+                    id="effectiveFrom"
+
+                    type="date"
+
+                    class="form-input"
+
+                >
+
+
+
+                <div class="fsn-err"></div>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- 2. RATE GENERATION: only three user inputs -->
+    <div class="section mb-4">
+        <h3 class="mb-3">2. दर तयार करण्यासाठी माहिती</h3>
+        <div class="fsn-form-grid">
+            <div class="fsn-field" data-field="std_rate">
+                <label for="std_rate">FAT 3.5 आणि SNF 8.5 साठी आधार दर (₹/लिटर)</label>
+                <input id="std_rate" class="form-input" type="number" min="0" step="0.01" inputmode="decimal" value="27.00">
+                <div class="fsn-err"></div>
+            </div>
+            <div class="fsn-field" data-field="fat_rate_step">
+                <label for="fat_rate_step">FAT किंवा SNF प्रत्येक 0.1 बदलल्यावर दरात बदल (₹)</label>
+                <input id="fat_rate_step" class="form-input" type="number" step="0.01" inputmode="decimal" value="0.30">
+                <div class="fsn-err"></div>
+            </div>
+        </div>
+        <p class="fsn-help" id="ruleExplain">आधार FAT 3.5 आणि आधार SNF 8.5 निश्चित आहेत. FAT किंवा SNF प्रत्येक 0.1 ने वाढल्यास दिलेल्या रकमेइतका दर वाढेल; कमी झाल्यास तितकाच कमी होईल.</p>
+        <!-- Keep the old backend payload fields, but fix the values so existing API/database code stays compatible. -->
+        <div hidden aria-hidden="true">
+            <input id="fat_min" value="3.0"><input id="fat_max" value="5.0"><input id="fat_step" value="0.1">
+            <input id="snf_min" value="8.1"><input id="snf_max" value="9.0"><input id="snf_step" value="0.1">
+            <input id="std_fat" value="3.5"><input id="std_snf" value="8.5">
+            <input id="snf_rate_step" value="0.30">
+        </div>
+        <button type="button" id="generateBtn" class="btn btn-primary mt-3">⚡ दरांचा तक्ता तयार करा</button>
+    </div>
+
+    <!-- 3. RATE MATRIX -->
+
+    <div class="section mb-4" id="matrixSection" hidden>
+
+
+
+        <div class="fsn-head">
+
+            <h3>
+
+                3. दर तक्ता
+
+                <span class="fsn-sub" id="matrixInfo"></span>
+
+            </h3>
+
+
+
+            <div class="fsn-actions">
+
+
+
+                <input
+
+                    id="addFat"
+
+                    class="form-input"
+
+                    style="width:110px"
+
+                    inputmode="decimal"
+
+                    placeholder="नवीन FAT उदा. 5.1"
+
+                    aria-label="नवीन FAT मूल्य भरा"
+
+                >
+
+
+
+                <button
+
+                    type="button"
+
+                    class="btn btn-secondary"
+
+                    id="addFatBtn">
+
+                    + FAT ची ओळ जोडा
+
+                </button>
+
+
+
+                <input
+
+                    id="addSnf"
+
+                    class="form-input"
+
+                    style="width:110px"
+
+                    inputmode="decimal"
+
+                    placeholder="नवीन SNF उदा. 8.8"
+
+                    aria-label="नवीन SNF मूल्य भरा"
+
+                >
+
+
+
+                <button
+
+                    type="button"
+
+                    class="btn btn-secondary"
+
+                    id="addSnfBtn">
+
+                    + SNF चा स्तंभ जोडा
+
+                </button>
+
+
+
+            </div>
+
+        </div>
+
+
+
+        <p class="fsn-help">
+
+            तक्त्यात FAT डाव्या बाजूला आणि SNF वरच्या बाजूला दिसेल.
+
+            पिवळ्या रंगात आधार दर आणि निळ्या रंगात बदललेले दर दिसतील.
+
+            दर बदलण्यासाठी चौकटीत आकडा लिहा. पुढच्या चौकटीत जाण्यासाठी Tab दाबा.
+
+        </p>
+
+
+
+        <div class="fsn-matrix-wrap">
+
+            <table
+
+                class="fsn-matrix"
+
+                id="matrix"
+
+                aria-label="FAT SNF rate matrix">
+
+            </table>
+
+        </div>
+
+
+
+    </div>
+
+
+
+    <!-- SAVE -->
+
+    <div class="section">
+
+
+
+        <div class="fsn-actions">
+
+
+
+            <button
+
+                type="button"
+
+                id="saveBtn"
+
+                class="btn btn-primary"
+
+                disabled>
+
+                💾 चार्ट सेव्ह करा
+
+            </button>
+
+
+
+            <a
+
+                class="btn btn-secondary"
+
+                href="{{ url_for('fat_snf.charts_page') }}">
+
+                रद्द करा
+
+            </a>
+
+
+
+        </div>
+
+
+
+        <div id="saveAlert"
+
+             class="mt-4"
+
+             aria-live="polite">
+
+        </div>
+
+
+
+    </div>
+
+
+
 </div>
 
-<div id="editorAlert" aria-live="polite"></div>
 
-<!-- 1. Chart information -->
-<div class="section mb-4">
-  <h3 class="mb-4">1. चार्ट माहिती</h3>
-  <div class="fsn-form-grid">
-    <div class="fsn-field" data-field="chart_name">
-      <label for="chartName">चार्टचे नाव</label>
-      <input id="chartName" class="form-input" maxlength="150" placeholder="उदा. गाय दर - ऑक्टोबर">
-      <div class="fsn-err"></div>
-    </div>
-    <div class="fsn-field" data-field="milk_type">
-      <label for="milkType">दुधाचा प्रकार</label>
-      <select id="milkType" class="form-select">
-        <option value="cow">🐄 गाय</option>
-        <option value="buffalo">🐃 म्हैस</option>
-        <option value="both">गाय व म्हैस (एकच चार्ट)</option>
-      </select>
-      <div class="fsn-err"></div>
-    </div>
-    <div class="fsn-field" data-field="effective_from">
-      <label for="effectiveFrom">लागू तारीख (पासून)</label>
-      <input id="effectiveFrom" type="date" class="form-input">
-      <div class="fsn-err"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 2. Generation rules -->
-<div class="section mb-4">
-  <h3 class="mb-4">2. तक्ता आपोआप तयार करा</h3>
-  <div class="fsn-form-grid">
-    <div class="fsn-field" data-field="fat_min"><label for="fat_min">FAT किमान</label><input id="fat_min" class="form-input" inputmode="decimal" value="3.2"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="fat_max"><label for="fat_max">FAT कमाल</label><input id="fat_max" class="form-input" inputmode="decimal" value="5.0"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="fat_step"><label for="fat_step">FAT वाढ (step)</label><input id="fat_step" class="form-input" inputmode="decimal" value="0.1"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="snf_min"><label for="snf_min">SNF किमान</label><input id="snf_min" class="form-input" inputmode="decimal" value="8.3"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="snf_max"><label for="snf_max">SNF कमाल</label><input id="snf_max" class="form-input" inputmode="decimal" value="8.7"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="snf_step"><label for="snf_step">SNF वाढ (step)</label><input id="snf_step" class="form-input" inputmode="decimal" value="0.1"><div class="fsn-err"></div></div>
-  </div>
-  <div class="fsn-form-grid mt-4">
-    <div class="fsn-field" data-field="std_fat"><label for="std_fat">मानक FAT</label><input id="std_fat" class="form-input" inputmode="decimal" value="3.5"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="std_snf"><label for="std_snf">मानक SNF</label><input id="std_snf" class="form-input" inputmode="decimal" value="8.5"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="std_rate"><label for="std_rate">मानक दर (₹/लि.)</label><input id="std_rate" class="form-input" inputmode="decimal" value="27.00"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="fat_rate_step"><label for="fat_rate_step">प्रत्येक FAT step ला दर बदल (₹)</label><input id="fat_rate_step" class="form-input" inputmode="decimal" value="0.30"><div class="fsn-err"></div></div>
-    <div class="fsn-field" data-field="snf_rate_step"><label for="snf_rate_step">प्रत्येक SNF step ला दर बदल (₹)</label><input id="snf_rate_step" class="form-input" inputmode="decimal" value="0.30"><div class="fsn-err"></div></div>
-  </div>
-  <p class="fsn-help" id="ruleExplain"></p>
-  <button type="button" id="generateBtn" class="btn btn-primary mt-4">⚡ तक्ता तयार करा (Preview)</button>
-</div>
-
-<!-- 3. Matrix -->
-<div class="section mb-4" id="matrixSection" hidden>
-  <div class="fsn-head">
-    <h3>3. दर तक्ता <span class="fsn-sub" id="matrixInfo"></span></h3>
-    <div class="fsn-actions">
-      <input id="addFat" class="form-input" style="width:110px" inputmode="decimal" placeholder="FAT उदा. 5.1" aria-label="नवीन FAT मूल्य">
-      <button type="button" class="btn btn-secondary btn-sm" id="addFatBtn">+ FAT ओळ</button>
-      <input id="addSnf" class="form-input" style="width:110px" inputmode="decimal" placeholder="SNF उदा. 8.8" aria-label="नवीन SNF मूल्य">
-      <button type="button" class="btn btn-secondary btn-sm" id="addSnfBtn">+ SNF स्तंभ</button>
-    </div>
-  </div>
-  <p class="fsn-help">FAT उभ्या (rows), SNF आडव्या (columns). पिवळा = मानक दर, निळा = बदललेला दर. बाण की (Arrow keys) / Enter ने पुढे जा.</p>
-  <div class="fsn-matrix-wrap">
-    <table class="fsn-matrix" id="matrix" aria-label="FAT SNF rate matrix"></table>
-  </div>
-</div>
-
-<div class="section">
-  <div class="fsn-actions">
-    <button type="button" id="saveBtn" class="btn btn-primary" disabled>💾 चार्ट सेव्ह करा</button>
-    <a class="btn btn-secondary" href="{{ url_for('fat_snf.charts_page') }}">रद्द करा</a>
-  </div>
-  <div id="saveAlert" class="mt-4" aria-live="polite"></div>
-</div>
 
 <script type="application/json" id="chartData">{{ {"chart": chart, "source": source, "revise_id": revise_id, "today": today} | tojson }}</script>
+
+
+
 {% endblock %}
 
+
+
 {% block scripts %}
+
 <script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
-<script src="{{ url_for('static', filename='js/fsn_chart_editor.js') }}?v=1"></script>
+
+<script src="{{ url_for('static', filename='js/fsn_chart_editor.js') }}?v=2"></script>
+
 {% endblock %}

@@ -279,14 +279,35 @@ def api_rate(uid):
 @bp.route("/fat_snf/milk_collection", methods=["GET"])
 @page()
 def collection_page(uid):
+    """Render the simple row-based FAT/SNF collection page."""
     now = L.now_ist()
+    today = L.today_ist(now)
+    auto_slot = L.auto_slot(now)
+    # Keep the old page's date/slot query-string behavior, while the save API
+    # remains the authority for current-slot/backdated permissions.
+    try:
+        selected_date = L.parse_date(request.args.get("date") or today.isoformat())
+        if selected_date > today:
+            selected_date = today
+    except ValidationError:
+        selected_date = today
+    try:
+        selected_slot = L.parse_slot(request.args.get("slot") or auto_slot)
+    except ValidationError:
+        selected_slot = auto_slot
     return render_template(
         "fat_snf/collection.html",
         vendors=jsonable(S.list_vendors(uid)),
-        today=L.today_ist(now).isoformat(), slot=L.auto_slot(now),
-        mode=S.get_mode(uid), is_owner=is_owner(),
+        today=today.isoformat(),
+        slot=selected_slot,
+        selected_date=selected_date.isoformat(),
+        mode=S.get_mode(uid),
+        is_owner=is_owner(),
+        backdated=(request.args.get("backdated") == "1" and is_owner()),
         settings=jsonable(S.get_settings(uid)),
-        slot_labels=L.SLOT_LABELS_MR)
+        slot_labels=L.SLOT_LABELS_MR,
+    )
+
 
 
 @bp.route("/api/fat_snf/entries", methods=["GET"])

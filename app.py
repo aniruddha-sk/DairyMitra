@@ -2622,33 +2622,6 @@ def get_milk_data():
 
     return jsonify(cursor.fetchall())
 
-# ------------------------------
-# Advance (safe add/update)
-# ------------------------------
-# ==============================================================================
-# ADVANCE MANAGEMENT SYSTEM
-# ------------------------------------------------------------------------------
-# Ledger-based advance system.
-#
-# transaction_type:
-#   advance  = money given to vendor
-#   deduction = money recovered/cut from vendor's advance
-#
-# Remaining balance is ALWAYS calculated:
-#
-#   Total Advance Given - Total Deduction = Remaining Advance
-#
-# IMPORTANT:
-# - Old `advance` table is NOT deleted.
-# - Existing old data has already been migrated into
-#   `advance_transactions`.
-# - All queries are restricted by session['id'].
-# - Vendor ownership is verified before every operation.
-# - Vendor row is locked during financial mutations to avoid
-#   concurrent balance corruption.
-# - Amounts use Decimal/DECIMAL-safe values.
-# ==============================================================================
-
 
 from decimal import Decimal, InvalidOperation
 
@@ -10351,4 +10324,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     # Never run the interactive debugger in production (it allows remote
     # code execution). Opt in locally with FLASK_DEBUG=1.
-    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")
+    app.run(host="0.0.0.0", port=port, debug=True)

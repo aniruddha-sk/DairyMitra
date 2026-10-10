@@ -7,34 +7,62 @@
       <span>HOME</span>
     </a>
 
-    <!-- ✅ STAFF MENU (NOW FOR BOTH) -->
+    <!-- MENU -->
     <div class="sidebar-section">
       <span class="section-title">MENU</span>
 
+      <!-- दूध जमा -->
       <a href="{{ url_for('milk_collection') }}" class="sidebar-link">
         <i data-lucide="milk"></i>
         <span>दूध जमा</span>
       </a>
 
+      <!-- MILK SUMMARY AND CUSTOMER REPORT -->
+      {% if calc_mode == 'fat_snf' %}
+
+      <!-- FAT/SNF MODE: दिवसानुसार -->
+      <a href="{{ url_for('fat_snf.milk_summary', view='daily') }}"
+         class="sidebar-link">
+        <i data-lucide="bar-chart-3"></i>
+        <span>दूध सारांश</span>
+      </a>
+
+      <!-- FAT/SNF MODE: ग्राहकानुसार -->
+      <a href="{{ url_for('fat_snf.milk_summary', view='customer') }}"
+         class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>ग्राहक Report</span>
+      </a>
+
+      {% else %}
+
+      <!-- LITER-RATE MODE: जुना दूध सारांश -->
       <a href="{{ url_for('milk_summary') }}" class="sidebar-link">
         <i data-lucide="bar-chart-3"></i>
         <span>दूध सारांश</span>
       </a>
 
-      <a href="{{ url_for('vendor_range_summary') }}" class="sidebar-link">
+      <!-- LITER-RATE MODE: जुना ग्राहक Report -->
+      <a href="{{ url_for('vendor_range_summary') }}"
+         class="sidebar-link">
         <i data-lucide="users"></i>
         <span>ग्राहक Report</span>
       </a>
 
+      {% endif %}
+
+      <!-- पेंड -->
       <a href="{{ url_for('food_sack') }}" class="sidebar-link">
         <i data-lucide="wheat"></i>
         <span>पेंड</span>
       </a>
 
+      <!-- नोंदी बदला -->
       <a href="{{ url_for('edit_entry') }}" class="sidebar-link">
         <i data-lucide="file-pen-line"></i>
         <span>नोंदी बदला</span>
       </a>
+
     </div>
 
     {% if session.get("role") != "staff" %}
@@ -80,7 +108,8 @@
         <span>पेमेंट</span>
       </a>
 
-      <a href="{{ url_for('receipt_all_vendors') }}" class="sidebar-link">
+      <a href="{{ url_for('receipt_all_vendors') }}"
+         class="sidebar-link">
         <i data-lucide="receipt"></i>
         <span>पावती</span>
       </a>
@@ -91,15 +120,20 @@
       <span class="section-title">SYSTEM</span>
 
       {% if calc_mode == 'fat_snf' %}
-      <a href="{{ url_for('fat_snf.charts_page') }}" class="sidebar-link">
+
+      <a href="{{ url_for('fat_snf.charts_page') }}"
+         class="sidebar-link">
         <i data-lucide="table"></i>
         <span>FAT/SNF दर चार्ट</span>
       </a>
+
       {% else %}
+
       <a href="{{ url_for('milk_rate') }}" class="sidebar-link">
         <i data-lucide="tag"></i>
         <span>दूध दर</span>
       </a>
+
       {% endif %}
 
       <a href="{{ url_for('food_sack_rate') }}" class="sidebar-link">
@@ -112,11 +146,13 @@
     <div class="sidebar-section">
       <span class="section-title">ANALYSIS</span>
 
-      <a href="{{ url_for('milk_prediction_page') }}" class="sidebar-link">
+      <a href="{{ url_for('milk_prediction_page') }}"
+         class="sidebar-link">
         <span>🧠 Milk Prediction</span>
       </a>
 
-      <a href="{{ url_for('vendor_performance') }}" class="sidebar-link">
+      <a href="{{ url_for('vendor_performance') }}"
+         class="sidebar-link">
         <span>📊 Vendor Performance</span>
       </a>
     </div>
@@ -132,7 +168,8 @@
     {% endif %}
 
     <!-- LOGOUT -->
-    <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+    <a href="{{ url_for('logout') }}"
+       class="sidebar-link logout-link">
       <i data-lucide="log-out"></i>
       <span>Logout</span>
     </a>

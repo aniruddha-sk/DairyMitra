@@ -1,152 +1,539 @@
 {% extends "base.html" %}
-{% block title %}दूध संकलन (FAT/SNF){% endblock %}
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v=2">
-{% endblock %}
-
+{% block title %}दूध संकलन (FAT/SNF) - DairyMitr{% endblock %}
 {% block content %}
-<div class="fsn-head">
-  <div>
-    <h2 class="page-title">🥛 दूध संकलन (FAT/SNF)</h2>
-    <div class="fsn-sub">
-      दिनांक: <b id="hdrDate"></b> · वेळ: <b id="hdrSlot"></b> · वेळ क्षेत्र: IST
-    </div>
+
+<!-- =============================================
+     OFFLINE BANNER
+============================================= -->
+<div id="dm-offline-banner" class="offline-banner">
+  🔴 इंटरनेट उपलब्ध नाही. FAT/SNF नोंदीसाठी इंटरनेट पुन्हा सुरू झाल्यावर प्रयत्न करा.
+</div>
+
+<!-- =============================================
+     LOADER
+============================================= -->
+<div id="dm-loader" class="loader-overlay">
+  <div class="loader-box">⏳ सेव्ह होत आहे...</div>
+</div>
+
+<!-- =============================================
+     PAGE TITLE
+============================================= -->
+<h2 class="page-title flex items-center gap-2">
+  <div class="icon-milk icon-purple" data-lucide="milk"></div>
+  दूध संकलन (FAT/SNF)
+</h2>
+
+<!-- =============================================
+     DATE + SLOT FORM
+============================================= -->
+<form id="dm-date-slot-form"
+      method="GET"
+      action="{{ url_for('fat_snf.collection_page') }}"
+      class="section date-slot-form mb-4 flex flex-wrap items-center gap-4">
+
+  <div class="form-group">
+    <label class="form-label" for="dm-collection-date">दिनांक</label>
+    <input type="date"
+           class="form-input"
+           id="dm-collection-date"
+           name="date"
+           value="{{ selected_date or today }}"
+           max="{{ today }}"
+           required>
   </div>
-  <div class="fsn-actions">
-    <span class="fsn-badge {{ 'on' if mode == 'fat_snf' else 'off' }}">FAT/SNF {{ 'चालू' if mode == 'fat_snf' else 'बंद' }}</span>
-    <a class="btn btn-secondary btn-sm" href="{{ url_for('fat_snf.edit_entries_page') }}">नोंदी बदला</a>
+
+  <div class="form-group">
+    <label class="form-label" for="dm-collection-slot">वेळ</label>
+    <select class="form-select"
+            id="dm-collection-slot"
+            name="slot"
+            required>
+      <option value="morning" {% if slot == 'morning' %}selected{% endif %}>सकाळ</option>
+      <option value="evening" {% if slot == 'evening' %}selected{% endif %}>संध्याकाळ</option>
+    </select>
   </div>
+
+  <input type="hidden" id="dm-csrf-token" value="{{ csrf_token() }}">
+</form>
+
+<!-- =============================================
+     SEARCH FILTER
+============================================= -->
+<div class="search-wrap mb-4">
+  <input type="text"
+         id="dm-vendor-search"
+         class="form-input w-full"
+         placeholder="ग्राहक आयडी किंवा नाव शोधा"
+         aria-label="ग्राहक आयडी किंवा नाव शोधा"
+         onkeyup="filterVendors()">
 </div>
 
-{% if mode != 'fat_snf' %}
-<div class="fsn-notice error">
-  FAT/SNF पद्धत बंद आहे, त्यामुळे येथे नोंद सेव्ह होणार नाही.
-  {% if is_owner %}<a href="{{ url_for('settings') }}">Settings मध्ये चालू करा</a>{% else %}मालकाला कळवा.{% endif %}
-</div>
-{% endif %}
+<!-- =============================================
+     OFFLINE COUNTER + PAGE MESSAGE
+============================================= -->
+<div id="dm-offline-counter" class="offline-counter"></div>
+<div id="dm-page-message" class="page-message" aria-live="polite"></div>
 
-{% if is_owner %}
-<div class="section mb-4">
-  <label style="display:flex;gap:8px;align-items:center;font-weight:600">
-    <input type="checkbox" id="backdated"> जुनी / दुरुस्ती नोंद (वेगळी तारीख किंवा वेळ)
-  </label>
-  <div class="fsn-form-grid mt-4" id="backdateFields" hidden>
-    <div class="fsn-field"><label for="bdDate">तारीख</label>
-      <input type="date" id="bdDate" class="form-input" max="{{ today }}"></div>
-    <div class="fsn-field"><label for="bdSlot">वेळ</label>
-      <select id="bdSlot" class="form-select">
-        <option value="morning">सकाळ</option>
-        <option value="evening">संध्याकाळ</option>
-      </select></div>
-  </div>
-  <p class="fsn-help">ही नोंद ऑडिट लॉगमध्ये "जुनी नोंद" म्हणून नोंदवली जाते.</p>
-</div>
-{% endif %}
+<!-- =============================================
+     MILK ENTRY TABLE
+============================================= -->
+<div class="table-wrap section">
+  <table class="table" id="dm-vendor-table">
+    <thead>
+      <tr>
+        <th>ग्राहक आयडी</th>
+        <th>नाव</th>
+        <th>दूध प्रकार</th>
+        <th>FAT %</th>
+        <th>SNF %</th>
+        <th>प्रमाण (लिटर)</th>
+        <th>कारवाई</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for v in vendors %}
+      {% set allowed_type = v.milk_type or 'cow' %}
+      <tr id="dm-row-{{ loop.index0 }}"
+          class="vendor-row"
+          data-vendor-id="{{ v.vendor_id }}"
+          data-vendor-name="{{ v.name|e }}"
+          data-vendor-type="{{ allowed_type }}">
 
-<!-- ENTRY FORM -->
-<div class="section mb-4">
-  <form id="entryForm" autocomplete="off" novalidate data-no-loader>
-    <div class="fsn-form-grid">
-      <div class="fsn-field" data-field="vendor_id" style="grid-column: span 2">
-        <label for="vendor">ग्राहक (आयडी किंवा नाव)</label>
-        <input id="vendor" class="form-input" list="vendorList" placeholder="उदा. 101" required>
-        <datalist id="vendorList"></datalist>
-        <div class="fsn-err" id="vendorInfo"></div>
-      </div>
-      <div class="fsn-field" data-field="milk_type">
-        <label for="milkType">दूध</label>
-        <select id="milkType" class="form-select">
-          <option value="cow">गाय</option>
-          <option value="buffalo">म्हैस</option>
-        </select>
-        <div class="fsn-err"></div>
-      </div>
-      <div class="fsn-field" data-field="fat">
-        <label for="fat">FAT %</label>
-        <input id="fat" class="form-input" inputmode="decimal" placeholder="3.5" required>
-        <div class="fsn-err"></div>
-      </div>
-      <div class="fsn-field" data-field="snf">
-        <label for="snf">SNF %</label>
-        <input id="snf" class="form-input" inputmode="decimal" placeholder="8.5" required>
-        <div class="fsn-err"></div>
-      </div>
-      <div class="fsn-field" data-field="litres">
-        <label for="litres">लिटर</label>
-        <input id="litres" class="form-input" inputmode="decimal" placeholder="18.0" required>
-        <div class="fsn-err"></div>
-      </div>
-    </div>
+        <td class="vendor-id-cell">
+          {{ v.vendor_id }}
+          <input type="hidden" id="dm-vendor-id-{{ loop.index0 }}" value="{{ v.vendor_id }}">
+        </td>
 
-    <div class="fsn-preview mt-4" id="preview" aria-live="polite">
-      <span>दर/लि.: <b id="pvRate">–</b></span>
-      <span>रक्कम: <b id="pvAmount">–</b></span>
-      <span class="fsn-sub" id="pvChart"></span>
-    </div>
+        <td class="vendor-name-cell">{{ v.name }}</td>
 
-    <div id="entryAlert" class="mt-4" aria-live="polite"></div>
-    <div id="warnActions" class="fsn-actions" hidden>
-      <button type="button" class="btn btn-warning" id="confirmWarnBtn">तरीही सेव्ह करा</button>
-      <button type="button" class="btn btn-secondary" id="cancelWarnBtn">बदल करा</button>
-    </div>
+        <td class="milk-type-cell">
+          {% if allowed_type == 'cow' %}
+            <span class="milk-type-fixed">गाय</span>
+            <input type="hidden" id="dm-milk-type-{{ loop.index0 }}" class="milk-type" value="cow">
+          {% elif allowed_type == 'buffalo' %}
+            <span class="milk-type-fixed">म्हैस</span>
+            <input type="hidden" id="dm-milk-type-{{ loop.index0 }}" class="milk-type" value="buffalo">
+          {% else %}
+            <select id="dm-milk-type-{{ loop.index0 }}"
+                    class="form-select milk-type"
+                    aria-label="दूध प्रकार - {{ v.name }}">
+              <option value="cow">गाय</option>
+              <option value="buffalo">म्हैस</option>
+            </select>
+          {% endif %}
+        </td>
 
-    <div class="fsn-actions mt-4">
-      <button type="submit" class="btn btn-primary" id="saveBtn" {{ 'disabled' if mode != 'fat_snf' }}>
-        💾 सेव्ह करा व पुढे (Enter)
-      </button>
-      <button type="reset" class="btn btn-secondary" id="clearBtn">साफ करा</button>
-    </div>
-  </form>
-</div>
+        <td class="fat-cell">
+          <input type="number"
+                 id="dm-fat-{{ loop.index0 }}"
+                 class="form-input fat"
+                 step="0.01" min="0.10" max="20.00"
+                 inputmode="decimal"
+                 placeholder="3.5"
+                 aria-label="FAT - {{ v.name }}">
+          <div id="dm-warning-{{ loop.index0 }}" class="row-warning"></div>
+        </td>
 
-<!-- DAY SUMMARY -->
-<div class="fsn-stats">
-  <div class="fsn-stat"><div class="k">नोंदी</div><div class="v" id="stCount">0</div></div>
-  <div class="fsn-stat"><div class="k">एकूण लिटर</div><div class="v" id="stLitres">0.00</div></div>
-  <div class="fsn-stat"><div class="k">एकूण रक्कम</div><div class="v" id="stAmount">₹0.00</div></div>
-  <div class="fsn-stat"><div class="k">अंतिम न केलेल्या</div><div class="v" id="stSaved">0</div></div>
-</div>
+        <td class="snf-cell">
+          <input type="number"
+                 id="dm-snf-{{ loop.index0 }}"
+                 class="form-input snf"
+                 step="0.01" min="0.10" max="20.00"
+                 inputmode="decimal"
+                 placeholder="8.5"
+                 aria-label="SNF - {{ v.name }}">
+        </td>
 
-<div class="section">
-  <div class="fsn-head">
-    <h3>या वेळेच्या नोंदी</h3>
-    <div class="fsn-actions">
-      <button type="button" class="btn btn-secondary btn-sm" id="refreshBtn">↻ Refresh</button>
-      <button type="button" class="btn btn-primary" id="finalBtn" {{ 'disabled' if mode != 'fat_snf' }}>✅ अंतिम सबमिट</button>
-    </div>
-  </div>
-  <div class="table-wrap">
-    <table class="table fsn-table">
-      <thead>
-        <tr>
-          <th>आयडी</th><th>नाव</th><th>दूध</th>
-          <th class="num">FAT%</th><th class="num">SNF%</th><th class="num">लिटर</th>
-          <th class="num">दर/लि.</th><th class="num">रक्कम</th><th>स्थिती</th><th>कृती</th>
-        </tr>
-      </thead>
-      <tbody id="entryRows"><tr><td colspan="10" class="text-center text-muted">लोड होत आहे...</td></tr></tbody>
-    </table>
-  </div>
+        <td class="quantity-cell">
+          <input type="number"
+                 id="dm-quantity-{{ loop.index0 }}"
+                 class="form-input quantity quantity-input"
+                 step="0.01" min="0.01" max="9999.99"
+                 inputmode="decimal"
+                 aria-label="लिटर - {{ v.name }}">
+        </td>
+
+        <td class="action-cell">
+          <button type="button"
+                  class="btn btn-secondary saveRow row-submit-btn"
+                  onclick="submitVendorMilk({{ loop.index0 }})">सबमिट</button>
+        </td>
+
+      </tr>
+    {% else %}
+      <tr><td colspan="7">ग्राहक उपलब्ध नाहीत.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
 </div>
 
-<!-- FINAL SUBMIT REVIEW -->
-<div class="fsn-modal" id="finalModal" role="dialog" aria-modal="true" aria-labelledby="finalTitle">
-  <div class="backdrop" data-close></div>
-  <div class="box">
-    <h3 id="finalTitle">अंतिम सबमिट – तपासणी</h3>
-    <div id="finalBody"></div>
-    <div class="fsn-actions mt-4">
-      <button type="button" class="btn btn-primary" id="finalConfirmBtn">होय, अंतिम करा</button>
-      <button type="button" class="btn btn-secondary" data-close>मागे जा</button>
-    </div>
-    <div id="finalAlert" class="mt-4" aria-live="polite"></div>
-  </div>
+<!-- =============================================
+     FINAL SUBMIT
+============================================= -->
+<div class="mt-4 final-submit-wrap">
+  <button type="button"
+          class="btn btn-primary final-submit-btn"
+          id="dm-final-submit-button"
+          onclick="finalSubmit()">
+    अंतिम सबमिट (सर्व नोंद करा)
+  </button>
 </div>
 
-<script type="application/json" id="collectionData">{{ {"vendors": vendors, "today": today, "slot": slot, "mode": mode, "is_owner": is_owner, "edit_url": url_for('fat_snf.edit_entries_page')} | tojson }}</script>
+<script type="application/json" id="dm-collection-data">{{ {"today": today, "slot": slot, "selected_date": selected_date or today, "mode": mode, "is_owner": is_owner, "vendors": vendors} | tojson }}</script>
 {% endblock %}
+
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/fsn_common.js') }}?v=1"></script>
-<script src="{{ url_for('static', filename='js/fsn_collection.js') }}?v=1"></script>
+<script>
+'use strict';
+
+/* =============================================
+   CONFIG + STATE
+============================================= */
+const fsnfConfig = JSON.parse(document.getElementById('dm-collection-data').textContent || '{}');
+const fsnfRows = Array.from(document.querySelectorAll('#dm-vendor-table tbody tr[data-vendor-id]'));
+const fsnfSaved = new Map();
+let fsnfBusy = false;
+
+const fsnfMoney = n => '₹' + Number(n || 0).toFixed(2);
+
+/* =============================================
+   LOADER / MESSAGE HELPERS
+============================================= */
+function showLoader(){ document.getElementById('dm-loader').style.display = 'flex'; }
+function hideLoader(){ document.getElementById('dm-loader').style.display = 'none'; }
+
+function showMessage(text, kind=''){
+  const el = document.getElementById('dm-page-message');
+  el.textContent = text || '';
+  el.style.color = kind==='err' ? '#b91c1c' : kind==='ok' ? '#15803d' : '';
+}
+
+/* =============================================
+   CSRF + HEADERS
+============================================= */
+function getCsrf(){
+  return document.getElementById('dm-csrf-token')?.value
+      || document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
+function reqHeaders(extra={}) {
+  const h = Object.assign(
+    {'Content-Type':'application/json','Accept':'application/json'},
+    extra
+  );
+  const t = getCsrf();
+  if(t){ h['X-CSRFToken'] = t; h['X-CSRF-Token'] = t; }
+  return h;
+}
+
+/* =============================================
+   API HELPER
+============================================= */
+async function fsnfApi(url, options={}) {
+  const response = await fetch(url, Object.assign(
+    {credentials:'same-origin'},
+    options,
+    {headers:reqHeaders(options.headers||{})}
+  ));
+  let data={}; try { data = await response.json(); } catch (_) {}
+  if(!response.ok || data.success===false){
+    const err = new Error(data.message||data.error||`Request failed (${response.status})`);
+    err.data = data; err.status = response.status;
+    throw err;
+  }
+  return data;
+}
+
+/* =============================================
+   ROW DATA EXTRACTOR
+============================================= */
+function rowData(row, confirmWarnings=false) {
+  const index = row.id.replace('dm-row-','');
+  if(!row.dataset.requestId){
+    row.dataset.requestId = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : ('r'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+  }
+  return {
+    vendor_id: document.getElementById('dm-vendor-id-'+index).value,
+    milk_type: document.getElementById('dm-milk-type-'+index).value,
+    fat:       document.getElementById('dm-fat-'+index).value.trim(),
+    snf:       document.getElementById('dm-snf-'+index).value.trim(),
+    litres:    document.getElementById('dm-quantity-'+index).value.trim(),
+    date:      document.getElementById('dm-collection-date').value,
+    slot:      document.getElementById('dm-collection-slot').value,
+    request_id: row.dataset.requestId,
+    confirm_warnings: confirmWarnings
+  };
+}
+
+/* =============================================
+   SAVED STATE PER ROW
+============================================= */
+function entryKey(vendorId, milkType){
+  return String(vendorId)+'|'+String(milkType);
+}
+
+function setRowSavedState(row){
+  const index = row.id.replace('dm-row-','');
+  const type  = document.getElementById('dm-milk-type-'+index).value;
+  const entry = fsnfSaved.get(entryKey(row.dataset.vendorId, type));
+  const btn   = row.querySelector('.saveRow');
+  const fat   = document.getElementById('dm-fat-'+index);
+  const snf   = document.getElementById('dm-snf-'+index);
+  const qty   = document.getElementById('dm-quantity-'+index);
+  const warning = document.getElementById('dm-warning-'+index);
+
+  if(entry){
+    fat.value = entry.fat ?? '';
+    snf.value = entry.snf ?? '';
+    qty.value = entry.quantity ?? '';
+    btn.disabled = true;
+    btn.textContent = entry.status === 'final' ? 'अंतिम झाले' : 'सेव्ह झाले';
+    [fat,snf,qty].forEach(el => el.readOnly = true);
+    warning.textContent = '';
+  } else {
+    btn.disabled = fsnfConfig.mode !== 'fat_snf';
+    btn.textContent = 'सबमिट';
+    [fat,snf,qty].forEach(el => el.readOnly = false);
+    warning.textContent = '';
+  }
+}
+
+/* =============================================
+   LOAD EXISTING ENTRIES
+============================================= */
+async function loadSavedMilkData(){
+  const date = document.getElementById('dm-collection-date').value;
+  const slot = document.getElementById('dm-collection-slot').value;
+  fsnfSaved.clear();
+  try {
+    const data = await fsnfApi(
+      `/api/fat_snf/entries?date=${encodeURIComponent(date)}&slot=${encodeURIComponent(slot)}`,
+      {method:'GET', headers:{}}
+    );
+    (data.entries||[]).forEach(entry =>
+      fsnfSaved.set(entryKey(entry.vendor_id, entry.milk_type), entry)
+    );
+    fsnfRows.forEach(row => setRowSavedState(row));
+  } catch(err) {
+    showMessage('आधीच्या नोंदी लोड करता आल्या नाहीत: '+err.message, 'err');
+  }
+}
+
+/* =============================================
+   VALIDATION  (UNCHANGED)
+============================================= */
+function validateRow(d, index){
+  const fat = Number(d.fat), snf = Number(d.snf), litres = Number(d.litres);
+  const maxTwoDecimals = value =>
+    /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/.test(String(value).trim());
+
+  if(!d.fat  || !Number.isFinite(fat)  || fat  < 0.10 || fat  > 20      || !maxTwoDecimals(d.fat))   return 'FAT 0.10 ते 20.00 दरम्यान आणि जास्तीत जास्त 2 दशांश असावा.';
+  if(!d.snf  || !Number.isFinite(snf)  || snf  < 0.10 || snf  > 20      || !maxTwoDecimals(d.snf))   return 'SNF 0.10 ते 20.00 दरम्यान आणि जास्तीत जास्त 2 दशांश असावा.';
+  if(!d.litres || !Number.isFinite(litres) || litres < 0.01 || litres > 9999.99 || !maxTwoDecimals(d.litres)) return 'लिटर 0.01 ते 9999.99 दरम्यान आणि जास्तीत जास्त 2 दशांश असावेत.';
+  return '';
+}
+
+/* =============================================
+   SUBMIT SINGLE VENDOR
+============================================= */
+async function submitVendorMilk(index, forceConfirm=false, quiet=false, fromBulk=false){
+  const row = document.getElementById('dm-row-'+index);
+  if(!row || (fsnfBusy && !fromBulk)) return false;
+
+  const btn = row.querySelector('.saveRow');
+  if(btn.disabled && !forceConfirm) return !!row.dataset.savedEntryId;
+
+  const d = rowData(row, forceConfirm);
+  const warning = document.getElementById('dm-warning-'+index);
+
+  const invalid = validateRow(d, index);
+  if(invalid){
+    warning.textContent = invalid;
+    if(!quiet) showMessage(`${row.dataset.vendorName||d.vendor_id}: ${invalid}`, 'err');
+    return false;
+  }
+
+  if(fsnfSaved.has(entryKey(d.vendor_id, d.milk_type))){
+    setRowSavedState(row);
+    if(!quiet) showMessage('या ग्राहकाची या प्रकाराची नोंद आधीच सेव्ह आहे.', 'err');
+    return false;
+  }
+
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = 'सेव्ह होत आहे...';
+  if(!quiet) showLoader();
+
+  try{
+    const result = await fsnfApi('/api/fat_snf/entries', {
+      method: 'POST',
+      headers: {'X-Request-ID': d.request_id},
+      body: JSON.stringify(d)
+    });
+
+    const entry = result.entry || {};
+    fsnfSaved.set(entryKey(d.vendor_id, d.milk_type), entry);
+    row.dataset.savedEntryId = entry.id || '1';
+
+    document.getElementById('dm-fat-'+index).value      = entry.fat      ?? d.fat;
+    document.getElementById('dm-snf-'+index).value      = entry.snf      ?? d.snf;
+    document.getElementById('dm-quantity-'+index).value = entry.quantity ?? d.litres;
+
+    warning.textContent = `दर ${fsnfMoney(entry.rate)} / लिटर · रक्कम ${fsnfMoney(entry.amount)}`;
+    setRowSavedState(row);
+
+    if(!quiet) showMessage(
+      `${row.dataset.vendorName}: नोंद सेव्ह झाली. दर ${fsnfMoney(entry.rate)} / लिटर · रक्कम ${fsnfMoney(entry.amount)}`,
+      'ok'
+    );
+    return true;
+
+  }catch(err){
+    const info = err.data || {};
+    if(info.code === 'needs_confirmation' && !forceConfirm){
+      const warnings = Array.isArray(info.warnings)
+        ? info.warnings.join('\n')
+        : 'दूध प्रमाणाबाबत इशारा आहे.';
+      warning.textContent = '⚠ ' + warnings;
+      if(confirm(warnings + '\n\nतरीही ही नोंद सेव्ह करायची का?')){
+        btn.disabled = false; btn.textContent = old;
+        return await submitVendorMilk(index, true, quiet, fromBulk);
+      }
+      if(!quiet) showMessage('इशारा स्वीकारला नाही; नोंद सेव्ह केलेली नाही.', 'err');
+    } else {
+      warning.textContent = err.message;
+      if(!quiet) showMessage(`${row.dataset.vendorName||d.vendor_id}: ${err.message}`, 'err');
+    }
+    return false;
+  }finally{
+    if(!quiet) hideLoader();
+    if(!row.dataset.savedEntryId){
+      btn.disabled = fsnfConfig.mode !== 'fat_snf';
+      btn.textContent = 'सबमिट';
+    }
+  }
+}
+
+/* =============================================
+   SEARCH FILTER
+============================================= */
+function filterVendors(){
+  const q = document.getElementById('dm-vendor-search').value.trim().toLocaleLowerCase();
+  fsnfRows.forEach(row => {
+    const id = row.dataset.vendorId.toLocaleLowerCase();
+    const name = row.dataset.vendorName.toLocaleLowerCase();
+    row.style.display = (id.includes(q) || name.includes(q)) ? '' : 'none';
+  });
+}
+
+/* =============================================
+   FINAL BULK SUBMIT
+============================================= */
+async function finalSubmit(){
+  const finalBtn = document.getElementById('dm-final-submit-button');
+  if(fsnfBusy || finalBtn.disabled) return;
+
+  const date = document.getElementById('dm-collection-date').value;
+  const slot = document.getElementById('dm-collection-slot').value;
+
+  if(!confirm(`${date} (${slot==='morning'?'सकाळ':'संध्याकाळ'}) या वेळेच्या नोंदी सेव्ह करून अंतिम करायच्या?`)) return;
+
+  fsnfBusy = true; finalBtn.disabled = true; showLoader();
+
+  try{
+    for(const row of fsnfRows){
+      if(row.style.display === 'none') continue;
+      const i = row.id.replace('dm-row-','');
+      const qty = document.getElementById('dm-quantity-'+i).value.trim();
+      if(!qty) continue;
+      const type = document.getElementById('dm-milk-type-'+i).value;
+      if(fsnfSaved.has(entryKey(row.dataset.vendorId, type))) continue;
+
+      const saved = await submitVendorMilk(Number(i), false, true, true);
+      if(!saved){
+        throw new Error(`ग्राहक ${row.dataset.vendorId} ची नोंद सेव्ह झाली नाही. इशारा/चूक तपासून पुन्हा प्रयत्न करा.`);
+      }
+    }
+    const data = await fsnfApi('/api/fat_snf/finalize', {
+      method: 'POST',
+      body: JSON.stringify({date, slot})
+    });
+    showMessage(data.message || 'नोंदी अंतिम केल्या.', 'ok');
+    await loadSavedMilkData();
+  }catch(err){
+    showMessage(err.message, 'err');
+  }finally{
+    hideLoader();
+    fsnfBusy = false;
+    finalBtn.disabled = fsnfConfig.mode !== 'fat_snf';
+  }
+}
+
+/* =============================================
+   DATE / SLOT CHANGE → RELOAD PAGE
+============================================= */
+function reloadCollectionPage() {
+    const date = document.getElementById('dm-collection-date').value;
+    const slot = document.getElementById('dm-collection-slot').value;
+    const today = fsnfConfig.today;
+
+    if (!date) {
+        showMessage('कृपया तारीख निवडा.', 'err');
+        return;
+    }
+
+    if (date > today) {
+        document.getElementById('dm-collection-date').value = today;
+        showMessage('भविष्यातील तारीख निवडता येणार नाही.', 'err');
+        return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('date', date);
+    url.searchParams.set('slot', slot);
+    url.searchParams.delete('backdated');
+
+    window.location.href = url.toString();
+}
+
+document.getElementById('dm-collection-date')
+    .addEventListener('change', reloadCollectionPage);
+
+document.getElementById('dm-collection-slot')
+    .addEventListener('change', reloadCollectionPage);
+
+/* =============================================
+   MILK TYPE CHANGE → REFRESH SAVED STATE
+============================================= */
+document.querySelectorAll('.milk-type').forEach(el =>
+  el.addEventListener('change', () => setRowSavedState(el.closest('tr')))
+);
+
+/* =============================================
+   OFFLINE / ONLINE BANNER
+============================================= */
+window.addEventListener('online', () => {
+  document.getElementById('dm-offline-banner').style.display = 'none';
+});
+window.addEventListener('offline', () => {
+  document.getElementById('dm-offline-banner').style.display = 'block';
+});
+if(!navigator.onLine){
+  document.getElementById('dm-offline-banner').style.display = 'block';
+}
+
+/* =============================================
+   MODE CHECK + INITIAL LOAD
+============================================= */
+if(fsnfConfig.mode !== 'fat_snf'){
+  document.getElementById('dm-final-submit-button').disabled = true;
+  showMessage('FAT/SNF पद्धत बंद आहे. Settings मध्ये ती चालू करा.', 'err');
+}
+
+loadSavedMilkData();
+</script>
 {% endblock %}
