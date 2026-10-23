@@ -5912,462 +5912,496 @@ def calculation():
         results=results
     )
     
-    
-@app.route('/payment', methods=['GET', 'POST'])
-def payment():
+# ============================================================
+# DAIRYMITR - OPTIMIZED FINAL PAYMENT REPORT
+# Replace the existing /payment route with this block.
+# Add the Excel route below it.
+#
+# Uses existing helpers:
+#   SafeCursor, mysql, get_vendor_rate, session, render_template
+# Excel imports:
+#   from io import BytesIO
+#   from openpyxl import Workbook
+#   from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+#   from openpyxl.utils import get_column_letter
+#   from flask import send_file
+# ============================================================
+
+from io import BytesIO
+from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+from flask import send_file
+
+
+def _build_final_payment_report(user_id, start_date, end_date):
     """
-    Payment calculation for all vendors.
+    Shared report calculation used by both HTML and Excel.
+    SQL is batched; no query is executed inside the vendor/milk loops.
 
-    Advance ledger logic:
-
-    1. advance:
-       Money given to vendor.
-
-    2. deduction:
-       Money recovered from vendor.
-
-    3. Current-period deduction:
-       Only deduction transactions inside the selected
-       start_date -> end_date period.
-
-    4. Remaining advance:
-       All advances up to end_date
-       minus
-       all deductions up to end_date.
-
-    5. Final payment:
-       Milk payment
-       - Food cost
-       - Current-period deduction
-
-    Old unpaid advance is carried forward and is NOT
-    deducted again from the next payment.
+    Accounting behavior retained from the existing /payment route:
+      final payment = milk payment - period food cost - period deduction
+      remaining advance = all advances up to end_date
+                          minus all deductions up to end_date
     """
+    cursor = SafeCursor(mysql.connection.cursor())
 
-    if 'id' not in session:
-        flash('Please login first.', 'danger')
-        return redirect(url_for('login'))
+    try:
+        # Query 1: Dairy/owner contact information.
+        # The existing users schema shown in the app contains dairy_name,
+        # email and phone. Owner name falls back to the logged-in session
+        # because the supplied schema does not show a dedicated owner_name.
+        cursor.execute("""
+            SELECT dairy_name, email, phone
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+        """, (user_id,))
+        account = cursor.fetchone() or {}
 
-    # ---------------------------------------------------------
-    # POST -> redirect
-    # ---------------------------------------------------------
+        dairy_info = {
+            "dairy_name": " ".join(str(account.get("dairy_name") or session.get("dairy_name") or "DairyMitr").split()).upper(),
+            "owner_name": (
+                " ".join(str(session.get("owner_name") or session.get("name") or "Not configured in owner profile").split()).upper()
+            ),
+            "email": account.get("email") or session.get("email") or "",
+            "phone": account.get("phone") or "",
+            "start_date": start_date,
+            "end_date": end_date,
+        }
 
-    if request.method == 'POST':
-
-        start_date = request.form.get(
-            'start_date'
-        )
-
-        end_date = request.form.get(
-            'end_date'
-        )
-
-        return redirect(
-            url_for(
-                'payment',
-                start_date=start_date,
-                end_date=end_date
-            )
-        )
-
-    # ---------------------------------------------------------
-    # GET parameters
-    # ---------------------------------------------------------
-
-    start_date = request.args.get(
-        'start_date'
-    )
-
-    end_date = request.args.get(
-        'end_date'
-    )
-
-    cursor = SafeCursor(
-        mysql.connection.cursor(
-            MySQLdb.cursors.DictCursor
-        )
-    )
-
-    data = []
-
-    # ---------------------------------------------------------
-    # Only calculate when valid date range is available
-    # ---------------------------------------------------------
-
-    if start_date and end_date:
-
-        user_id = session['id']
-
-        # =====================================================
-        # LOAD VENDORS
-        # =====================================================
-
+        # Query 2: Vendor list. Prefer English name where available.
         cursor.execute("""
             SELECT
                 vendor_id,
-                name
+                name_en,
+                name,
+                UPPER(
+                    COALESCE(
+                        NULLIF(TRIM(name_en), ''),
+                        TRIM(name)
+                    )
+                ) AS vendor_name
             FROM vendors
-            WHERE user_id=%s
+            WHERE user_id = %s
             ORDER BY vendor_id ASC
         """, (user_id,))
-
         vendors = cursor.fetchall()
+        # IMPORTANT: this list is filtered by the logged-in owner's user_id.
+        # vendor_name is explicitly based on name_en (fallback to name only if blank).
+        # If Excel still shows Marathi, ensure this exact route is the only active
+        # /payment/export-excel route and restart the Flask app.
 
-        # =====================================================
-        # BULK MILK DATA
-        # =====================================================
-
+        # Query 3: Aggregate milk rows by vendor/date/type.
+        # Date is retained because applied rates can change over time.
         cursor.execute("""
             SELECT
                 vendor_id,
                 date,
-                milk_type,
+                LOWER(milk_type) AS milk_type,
                 SUM(quantity) AS qty
             FROM milk_collection
-            WHERE user_id=%s
-              AND date BETWEEN %s AND %s
-            GROUP BY
-                vendor_id,
-                date,
-                milk_type
-        """, (
-            user_id,
-            start_date,
-            end_date
-        ))
+            WHERE user_id = %s
+              AND date >= %s
+              AND date <= %s
+            GROUP BY vendor_id, date, LOWER(milk_type)
+        """, (user_id, start_date, end_date))
+        milk_rows = cursor.fetchall()
 
         milk_map = {}
+        for row in milk_rows:
+            vid = int(row["vendor_id"])
+            milk_map.setdefault(vid, []).append(row)
 
-        for row in cursor.fetchall():
-
-            vendor_key = str(
-                row['vendor_id']
-            )
-
-            milk_map.setdefault(
-                vendor_key,
-                []
-            ).append(row)
-
-        # =====================================================
-        # CURRENT PERIOD DEDUCTION
-        # =====================================================
-
+        # Query 4: Food sack amount per vendor for the selected period.
         cursor.execute("""
-            SELECT
-                vendor_id,
-
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN transaction_type = 'deduction'
-                            THEN amount
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS period_deduction
-
-            FROM advance_transactions
-
-            WHERE user_id=%s
-              AND transaction_date BETWEEN %s AND %s
-
-            GROUP BY vendor_id
-        """, (
-            user_id,
-            start_date,
-            end_date
-        ))
-
-        deduction_map = {}
-
-        for row in cursor.fetchall():
-
-            deduction_map[
-                str(row['vendor_id'])
-            ] = round(
-                float(
-                    row['period_deduction']
-                    or 0
-                ),
-                2
-            )
-
-        # =====================================================
-        # REMAINING ADVANCE BALANCE
-        # =====================================================
-        #
-        # All transactions up to end_date.
-        #
-        # remaining =
-        #     total advance
-        #     -
-        #     total deduction
-        # =====================================================
-
-        cursor.execute("""
-            SELECT
-                vendor_id,
-
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN transaction_type = 'advance'
-                            THEN amount
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS total_advance,
-
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN transaction_type = 'deduction'
-                            THEN amount
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS total_deduction
-
-            FROM advance_transactions
-
-            WHERE user_id=%s
-              AND transaction_date <= %s
-
-            GROUP BY vendor_id
-        """, (
-            user_id,
-            end_date
-        ))
-
-        balance_map = {}
-
-        for row in cursor.fetchall():
-
-            total_advance = float(
-                row['total_advance']
-                or 0
-            )
-
-            total_deduction = float(
-                row['total_deduction']
-                or 0
-            )
-
-            remaining_balance = round(
-                total_advance
-                - total_deduction,
-                2
-            )
-
-            remaining_balance = max(
-                remaining_balance,
-                0
-            )
-
-            balance_map[
-                str(row['vendor_id'])
-            ] = remaining_balance
-
-        # =====================================================
-        # BULK FOOD SACK DATA
-        # =====================================================
-
-        cursor.execute("""
-            SELECT
-                vendor_id,
-                SUM(total_cost) AS total_food
+            SELECT vendor_id, COALESCE(SUM(total_cost), 0) AS food_total
             FROM food_sack
-            WHERE user_id=%s
-              AND date BETWEEN %s AND %s
+            WHERE user_id = %s
+              AND date >= %s
+              AND date <= %s
             GROUP BY vendor_id
-        """, (
-            user_id,
-            start_date,
-            end_date
-        ))
+        """, (user_id, start_date, end_date))
+        food_map = {
+            int(row["vendor_id"]): float(row["food_total"] or 0)
+            for row in cursor.fetchall()
+        }
 
-        food_map = {}
+        # Query 5: Period deduction + running advance balance in one query.
+        # This follows the existing transaction_date column used by /payment.
+        cursor.execute("""
+            SELECT
+                vendor_id,
+                COALESCE(SUM(
+                    CASE
+                        WHEN transaction_type = 'deduction'
+                         AND transaction_date >= %s
+                         AND transaction_date <= %s
+                        THEN amount ELSE 0
+                    END
+                ), 0) AS period_deduction,
+                COALESCE(SUM(
+                    CASE WHEN transaction_type = 'advance'
+                         THEN amount ELSE 0 END
+                ), 0) AS total_advance_to_end,
+                COALESCE(SUM(
+                    CASE WHEN transaction_type = 'deduction'
+                         THEN amount ELSE 0 END
+                ), 0) AS total_deduction_to_end
+            FROM advance_transactions
+            WHERE user_id = %s
+              AND transaction_date <= %s
+            GROUP BY vendor_id
+        """, (start_date, end_date, user_id, end_date))
 
+        advance_map = {}
         for row in cursor.fetchall():
+            total_advance = float(row["total_advance_to_end"] or 0)
+            total_deduction = float(row["total_deduction_to_end"] or 0)
+            advance_map[int(row["vendor_id"])] = {
+                "period_deduction": round(float(row["period_deduction"] or 0), 2),
+                "remaining_advance": round(max(total_advance - total_deduction, 0), 2),
+            }
 
-            food_map[
-                str(row['vendor_id'])
-            ] = float(
-                row['total_food']
-                or 0
-            )
-
-        # =====================================================
-        # PROCESS ALL VENDORS
-        # =====================================================
+        # get_vendor_rate() uses the app's per-request rate cache:
+        # vendor-specific rate first, then default rate. It does not run
+        # a query for every milk row; the cache loads rate tables once.
+        report_rows = []
+        grand = {
+            "cow_litres": 0.0,
+            "buffalo_litres": 0.0,
+            "milk_payment": 0.0,
+            "food_payment": 0.0,
+            "advance_deducted": 0.0,
+            "final_payment": 0.0,
+        }
 
         for vendor in vendors:
+            vid = int(vendor["vendor_id"])
+            cow_litres = 0.0
+            buffalo_litres = 0.0
+            milk_payment = 0.0
 
-            vendor_id = vendor[
-                'vendor_id'
-            ]
+            for milk in milk_map.get(vid, []):
+                milk_type = (milk.get("milk_type") or "").lower()
+                qty = float(milk.get("qty") or 0)
+                if qty <= 0:
+                    continue
 
-            vendor_key = str(
-                vendor_id
-            )
-
-            milk_entries = milk_map.get(
-                vendor_key,
-                []
-            )
-
-            total_cow = 0
-            total_buffalo = 0
-
-            cow_cost = 0
-            buffalo_cost = 0
-
-            # -------------------------------------------------
-            # Calculate milk payment
-            # -------------------------------------------------
-
-            for milk in milk_entries:
-
-                rate = get_vendor_rate(
+                # Keep rate behavior consistent with the existing payment route.
+                rate = float(get_vendor_rate(
                     cursor,
-                    vendor_id,
-                    milk['milk_type'],
-                    milk['date'],
+                    vid,
+                    milk_type,
+                    milk["date"],
                     user_id=user_id
-                )
+                ) or 0)
 
-                qty = float(
-                    milk['qty']
-                    or 0
-                )
+                if milk_type == "cow":
+                    cow_litres += qty
+                    milk_payment += qty * rate
+                elif milk_type == "buffalo":
+                    buffalo_litres += qty
+                    milk_payment += qty * rate
+                # Unknown types are intentionally not silently treated as buffalo.
 
-                if milk['milk_type'] == "cow":
+            milk_payment = round(milk_payment, 2)
+            total_litres = cow_litres + buffalo_litres
+            average_rate = round(milk_payment / total_litres, 2) if total_litres else 0.0
+            food_payment = round(food_map.get(vid, 0.0), 2)
+            adv = advance_map.get(vid, {})
+            advance_deducted = round(adv.get("period_deduction", 0.0), 2)
+            remaining_advance = round(adv.get("remaining_advance", 0.0), 2)
+            final_payment = round(milk_payment - food_payment - advance_deducted, 2)
 
-                    total_cow += qty
+            # Resolve English name from the vendor row fetched for this logged-in user.
+            # name_en is authoritative when non-empty; Marathi name is fallback only.
+            english_vendor_name = " ".join(
+                str(
+                    vendor.get("name_en")
+                    or vendor.get("vendor_name")
+                    or vendor.get("name")
+                    or "—"
+                ).split()
+            ).upper()
 
-                    cow_cost += (
-                        qty * rate
-                    )
-
-                else:
-
-                    total_buffalo += qty
-
-                    buffalo_cost += (
-                        qty * rate
-                    )
-
-            # -------------------------------------------------
-            # Current period deduction
-            # -------------------------------------------------
-
-            deduction = deduction_map.get(
-                vendor_key,
-                0
-            )
-
-            # -------------------------------------------------
-            # Remaining advance
-            # -------------------------------------------------
-
-            remaining_advance = balance_map.get(
-                vendor_key,
-                0
-            )
-
-            # -------------------------------------------------
-            # Food sack total
-            # -------------------------------------------------
-
-            food = food_map.get(
-                vendor_key,
-                0
-            )
-
-            # -------------------------------------------------
-            # Total milk payment
-            # -------------------------------------------------
-
-            total_milk_payment = round(
-                cow_cost
-                + buffalo_cost,
-                2
-            )
-
-            # -------------------------------------------------
-            # Final payable
-            # -------------------------------------------------
-
-            total_payment = round(
-                total_milk_payment
-                - deduction
-                - food,
-                2
-            )
-
-            # -------------------------------------------------
-            # Append vendor result
-            # -------------------------------------------------
-
-            data.append({
-
-                'vendor_id':
-                    vendor_id,
-
-                'vendor_name':
-                    vendor['name'],
-
-                'total_cow':
-                    total_cow,
-
-                'total_buffalo':
-                    total_buffalo,
-
-                'cow_rate':
-                    "-",
-
-                'buffalo_rate':
-                    "-",
-
-                'total_milk_payment':
-                    total_milk_payment,
-
-                # Current period deduction
-                'total_advance':
-                    deduction,
-
-                'total_deduction':
-                    deduction,
-
-                # Carry-forward balance
-                'remaining_advance':
-                    remaining_advance,
-
-                'total_food':
-                    food,
-
-                'total_payment':
-                    total_payment
+            report_rows.append({
+                "vendor_id": vid,
+                "vendor_name_en": english_vendor_name,
+                "vendor_name": english_vendor_name,
+                "cow_litres": round(cow_litres, 2),
+                "buffalo_litres": round(buffalo_litres, 2),
+                "total_litres": round(total_litres, 2),
+                "average_rate": average_rate,
+                "milk_payment": milk_payment,
+                "food_payment": food_payment,
+                "advance_deducted": advance_deducted,
+                "final_payment": final_payment,
+                "remaining_advance": remaining_advance,
             })
 
-    # ---------------------------------------------------------
-    # Close cursor
-    # ---------------------------------------------------------
+            grand["cow_litres"] += cow_litres
+            grand["buffalo_litres"] += buffalo_litres
+            grand["milk_payment"] += milk_payment
+            grand["food_payment"] += food_payment
+            grand["advance_deducted"] += advance_deducted
+            grand["final_payment"] += final_payment
 
-    cursor.close()
+        for key in ("cow_litres", "buffalo_litres", "milk_payment",
+                    "food_payment", "advance_deducted", "final_payment"):
+            grand[key] = round(grand[key], 2)
 
-    # ---------------------------------------------------------
-    # Render payment page
-    # ---------------------------------------------------------
+        total_litres = grand["cow_litres"] + grand["buffalo_litres"]
+        grand["average_rate"] = (
+            round(grand["milk_payment"] / total_litres, 2)
+            if total_litres else 0.0
+        )
+        grand["total_litres"] = round(total_litres, 2)
+
+        return dairy_info, report_rows, grand
+
+    finally:
+        cursor.close()
+
+
+@app.route("/payment", methods=["GET", "POST"])
+def payment():
+    if "id" not in session or session.get("role") == "customer":
+        flash("Please login first.", "danger")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        start_date = (request.form.get("start_date") or "").strip()
+        end_date = (request.form.get("end_date") or "").strip()
+
+        try:
+            start_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Please select valid start and end dates.", "danger")
+            return redirect(url_for("payment"))
+
+        if start_obj > end_obj:
+            flash("Start date cannot be after end date.", "danger")
+            return redirect(url_for("payment"))
+
+        return redirect(url_for(
+            "payment",
+            start_date=start_obj.isoformat(),
+            end_date=end_obj.isoformat()
+        ))
+
+    start_date = request.args.get("start_date", "")
+    end_date = request.args.get("end_date", "")
+    data = []
+    dairy_info = {}
+    grand_totals = {}
+
+    if start_date and end_date:
+        try:
+            start_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+            if start_obj > end_obj:
+                raise ValueError("Invalid date range")
+        except ValueError:
+            flash("Invalid date range. Please select dates again.", "danger")
+            return redirect(url_for("payment"))
+
+        dairy_info, data, grand_totals = _build_final_payment_report(
+            int(session["id"]), start_obj, end_obj
+        )
 
     return render_template(
-        'milk_operations/payment.html',
-        data=data
-    )    
+        "milk_operations/payment.html",
+        data=data,
+        dairy_info=dairy_info,
+        grand_totals=grand_totals,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+
+@app.route("/payment/export-excel", methods=["GET"])
+def export_payment_excel():
+    if "id" not in session or session.get("role") == "customer":
+        flash("Please login first.", "danger")
+        return redirect(url_for("login"))
+
+    start_date = (request.args.get("start_date") or "").strip()
+    end_date = (request.args.get("end_date") or "").strip()
+
+    try:
+        start_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+        if start_obj > end_obj:
+            raise ValueError
+    except ValueError:
+        flash("Select a valid date range before downloading Excel.", "danger")
+        return redirect(url_for("payment"))
+
+    user_id = int(session["id"])
+
+    dairy_info, rows, grand = _build_final_payment_report(
+        user_id, start_obj, end_obj
+    )
+
+    # FIX: Fetch English vendor names again specifically for the Excel export.
+    # This ensures the workbook does not rely on a stale/Marathi name field
+    # from another query or previously assembled report row.
+    name_cursor = SafeCursor(mysql.connection.cursor())
+    try:
+        name_cursor.execute("""
+            SELECT
+                vendor_id,
+                UPPER(
+                    COALESCE(
+                        NULLIF(TRIM(name_en), ''),
+                        TRIM(name)
+                    )
+                ) AS english_vendor_name
+            FROM vendors
+            WHERE user_id = %s
+        """, (user_id,))
+
+        english_name_map = {
+            int(row["vendor_id"]): " ".join(
+                str(row.get("english_vendor_name") or "").split()
+            ).upper()
+            for row in name_cursor.fetchall()
+        }
+    finally:
+        name_cursor.close()
+
+    # Override every report row with the authoritative English name.
+    # Keep the report's current name only as a fallback if no vendor record exists.
+    for item in rows:
+        vendor_id = int(item["vendor_id"])
+        english_name = english_name_map.get(vendor_id, "")
+        if english_name:
+            item["vendor_name_en"] = english_name
+            item["vendor_name"] = english_name
+        else:
+            fallback_name = " ".join(
+                str(item.get("vendor_name_en") or item.get("vendor_name") or "—").split()
+            ).upper()
+            item["vendor_name_en"] = fallback_name
+            item["vendor_name"] = fallback_name
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Final Payment"
+
+    navy = "17365D"
+    light_green = "E2F0D9"
+    white = "FFFFFF"
+    thin_gray = Side(style="thin", color="C8D2DC")
+    all_borders = Border(left=thin_gray, right=thin_gray, top=thin_gray, bottom=thin_gray)
+
+    # Report heading / basic information. Lightweight styling keeps XLSX creation fast.
+    ws.merge_cells("A1:J1")
+    ws["A1"] = dairy_info.get("dairy_name") or "DairyMitr"
+    ws["A1"].font = Font(name="Times New Roman", size=18, bold=True, color=white)
+    ws["A1"].fill = PatternFill("solid", fgColor=navy)
+    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+
+    info_rows = [
+        ("Owner Name", dairy_info.get("owner_name", "")),
+        ("Email", dairy_info.get("email", "")),
+        ("Phone", dairy_info.get("phone", "")),
+        ("Report Period", f"{start_obj.strftime('%d-%b-%Y')} to {end_obj.strftime('%d-%b-%Y')}"),
+        ("Generated On", datetime.now().strftime("%d-%b-%Y %I:%M %p")),
+    ]
+    for row_num, (label, value) in enumerate(info_rows, start=2):
+        ws.cell(row_num, 1, label).font = Font(name="Times New Roman", bold=True, color=navy)
+        ws.cell(row_num, 2, value).font = Font(name="Times New Roman", size=10)
+        ws.merge_cells(start_row=row_num, start_column=2, end_row=row_num, end_column=5)
+
+    header_row = 8
+    headers = [
+        "Vendor ID",
+        "Vendor Name",
+        "Cow Milk (Litres)",
+        "Buffalo Milk (Litres)",
+        "Total Milk (Litres)",
+        "Applied Rate (Average)",
+        "Total Milk Payment (INR)",
+        "Total Food Sack Payment (INR)",
+        "Total Advance Minused (INR)",
+        "Final Payment (INR)",
+    ]
+    for col, title in enumerate(headers, start=1):
+        cell = ws.cell(header_row, col, title)
+        cell.font = Font(name="Times New Roman", bold=True, color=white)
+        cell.fill = PatternFill("solid", fgColor=navy)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = all_borders
+    ws.row_dimensions[header_row].height = 38
+
+    for r_index, item in enumerate(rows, start=header_row + 1):
+        values = [
+            item["vendor_id"], " ".join(str(item.get("vendor_name") or "—").split()).upper(), item["cow_litres"],
+            item["buffalo_litres"], item["total_litres"], item["average_rate"],
+            item["milk_payment"], item["food_payment"],
+            item["advance_deducted"], item["final_payment"],
+        ]
+        for c_index, value in enumerate(values, start=1):
+            cell = ws.cell(r_index, c_index, value)
+            cell.font = Font(name="Times New Roman", size=10)
+            cell.alignment = Alignment(
+                horizontal="left" if c_index == 2 else "center",
+                vertical="center"
+            )
+            if c_index >= 6:
+                cell.number_format = '₹#,##0.00;[Red]-₹#,##0.00'
+            elif c_index >= 3:
+                cell.number_format = '#,##0.00'
+            if r_index % 2 == 0:
+                cell.fill = PatternFill("solid", fgColor="F4F8FC")
+
+    total_row = header_row + len(rows) + 1
+    total_values = [
+        "", "GRAND TOTAL", grand["cow_litres"], grand["buffalo_litres"],
+        grand["total_litres"], grand["average_rate"], grand["milk_payment"],
+        grand["food_payment"], grand["advance_deducted"], grand["final_payment"],
+    ]
+    for c_index, value in enumerate(total_values, start=1):
+        cell = ws.cell(total_row, c_index, value)
+        cell.font = Font(name="Times New Roman", bold=True, color="17365D")
+        cell.fill = PatternFill("solid", fgColor=light_green)
+        cell.border = all_borders
+        cell.alignment = Alignment(horizontal="left" if c_index == 2 else "center")
+        if c_index >= 6:
+            cell.number_format = '₹#,##0.00;[Red]-₹#,##0.00'
+        elif c_index >= 3:
+            cell.number_format = '#,##0.00'
+
+    widths = [13, 28, 18, 21, 19, 21, 24, 27, 25, 21]
+    for col_num, width in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(col_num)].width = width
+
+    ws.freeze_panes = "A9"
+    ws.auto_filter.ref = f"A{header_row}:J{header_row + len(rows)}"
+    ws.sheet_view.showGridLines = False
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.fitToWidth = 1
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.print_title_rows = f"1:{header_row}"
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"DairyMitr_Final_Payment_{start_obj.isoformat()}_to_{end_obj.isoformat()}.xlsx"
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    
+ 
 # ------------------------------
 # Receipt - All Vendors
 # ------------------------------
