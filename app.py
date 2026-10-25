@@ -6238,6 +6238,7 @@ def payment():
     )
 
 
+
 @app.route("/payment/export-excel", methods=["GET"])
 def export_payment_excel():
     if "id" not in session or session.get("role") == "customer":
@@ -6250,22 +6251,24 @@ def export_payment_excel():
     try:
         start_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
         end_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
         if start_obj > end_obj:
             raise ValueError
+
     except ValueError:
         flash("Select a valid date range before downloading Excel.", "danger")
         return redirect(url_for("payment"))
 
     user_id = int(session["id"])
 
+    # Existing report calculation — unchanged
     dairy_info, rows, grand = _build_final_payment_report(
         user_id, start_obj, end_obj
     )
 
-    # FIX: Fetch English vendor names again specifically for the Excel export.
-    # This ensures the workbook does not rely on a stale/Marathi name field
-    # from another query or previously assembled report row.
+    # Fetch authoritative English vendor names — unchanged
     name_cursor = SafeCursor(mysql.connection.cursor())
+
     try:
         name_cursor.execute("""
             SELECT
@@ -6286,134 +6289,283 @@ def export_payment_excel():
             ).upper()
             for row in name_cursor.fetchall()
         }
+
     finally:
         name_cursor.close()
 
-    # Override every report row with the authoritative English name.
-    # Keep the report's current name only as a fallback if no vendor record exists.
+    # Preserve existing vendor-name behavior
     for item in rows:
         vendor_id = int(item["vendor_id"])
         english_name = english_name_map.get(vendor_id, "")
+
         if english_name:
             item["vendor_name_en"] = english_name
             item["vendor_name"] = english_name
         else:
             fallback_name = " ".join(
-                str(item.get("vendor_name_en") or item.get("vendor_name") or "—").split()
+                str(
+                    item.get("vendor_name_en")
+                    or item.get("vendor_name")
+                    or "—"
+                ).split()
             ).upper()
+
             item["vendor_name_en"] = fallback_name
             item["vendor_name"] = fallback_name
+
+    # =====================================================
+    # EXCEL CREATION — SIMPLE WHITE SHEET + BLACK BORDERS
+    # =====================================================
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Final Payment"
 
-    black = "000000"
-    white = "FFFFFF"
-    thin_gray = Side(style="thin", color="B7B7B7")
-    all_borders = Border(left=thin_gray, right=thin_gray, top=thin_gray, bottom=thin_gray)
+    # Plain black thin borders
+    black_side = Side(style="thin", color="000000")
 
-    # Report heading / basic information. Lightweight styling keeps XLSX creation fast.
+    all_borders = Border(
+        left=black_side,
+        right=black_side,
+        top=black_side,
+        bottom=black_side
+    )
+
+    normal_font = Font(
+        name="Arial",
+        size=10,
+        color="000000"
+    )
+
+    bold_font = Font(
+        name="Arial",
+        size=10,
+        bold=True,
+        color="000000"
+    )
+
+    title_font = Font(
+        name="Arial",
+        size=12,
+        bold=True,
+        color="000000"
+    )
+
+    # -------------------------
+    # Dairy title
+    # -------------------------
     ws.merge_cells("A1:K1")
-    ws["A1"] = dairy_info.get("dairy_name") or "DairyMitr"
-    ws["A1"].font = Font(name="Times New Roman", size=18, bold=True, color=black)
-    ws["A1"].fill = PatternFill(fill_type=None)
-    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 30
 
+    ws["A1"] = dairy_info.get("dairy_name") or "DairyMitr"
+    ws["A1"].font = title_font
+    ws["A1"].alignment = Alignment(
+        horizontal="center",
+        vertical="center"
+    )
+    ws["A1"].border = all_borders
+
+    ws.row_dimensions[1].height = 24
+
+    # -------------------------
+    # Owner information
+    # -------------------------
     info_rows = [
         ("Owner Name", dairy_info.get("owner_name", "")),
         ("Email", dairy_info.get("email", "")),
         ("Phone", dairy_info.get("phone", "")),
-        ("Report Period", f"{start_obj.strftime('%d-%b-%Y')} to {end_obj.strftime('%d-%b-%Y')}"),
-        ("Generated On", datetime.now().strftime("%d-%b-%Y %I:%M %p")),
+        (
+            "Report Period",
+            f"{start_obj.strftime('%d-%b-%Y')} to "
+            f"{end_obj.strftime('%d-%b-%Y')}"
+        ),
+        (
+            "Generated On",
+            datetime.now().strftime("%d-%b-%Y %I:%M %p")
+        ),
     ]
-    for row_num, (label, value) in enumerate(info_rows, start=2):
-        ws.cell(row_num, 1, label).font = Font(name="Times New Roman", bold=True, color=black)
-        ws.cell(row_num, 2, value).font = Font(name="Times New Roman", size=10)
-        ws.merge_cells(start_row=row_num, start_column=2, end_row=row_num, end_column=5)
 
+    for row_num, (label, value) in enumerate(info_rows, start=3):
+        ws.cell(row_num, 1, label)
+        ws.cell(row_num, 2, value)
+
+        ws.merge_cells(
+            start_row=row_num,
+            start_column=2,
+            end_row=row_num,
+            end_column=5
+        )
+
+        for col_num in range(1, 6):
+            cell = ws.cell(row_num, col_num)
+
+            cell.font = bold_font if col_num == 1 else normal_font
+            cell.border = all_borders
+            cell.alignment = Alignment(
+                horizontal="left",
+                vertical="center"
+            )
+
+        ws.row_dimensions[row_num].height = 18
+
+    # -------------------------
+    # Table headers
+    # -------------------------
     header_row = 8
+
     headers = [
         "Vendor ID",
         "Vendor Name",
-        "Cow Milk (Litres)",
-        "Buffalo Milk (Litres)",
-        "Total Milk (Litres)",
-        "Cow Rate (Average)",
-        "Buffalo Rate (Average)",
-        "Total Milk Payment (INR)",
-        "Total Food Sack Payment (INR)",
-        "Total Advance Minused (INR)",
-        "Final Payment (INR)",
+        "Cow Milk (Ltr)",
+        "Buffalo Milk (Ltr)",
+        "Total Milk (Ltr)",
+        "Cow Rate",
+        "Buffalo Rate",
+        "Total Milk Payment",
+        "Total Food Sack Payment",
+        "Total Advance Minused",
+        "Final Payment",
     ]
-    for col, title in enumerate(headers, start=1):
-        cell = ws.cell(header_row, col, title)
-        cell.font = Font(name="Times New Roman", bold=True, color=black)
-        cell.fill = PatternFill(fill_type=None)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.border = all_borders
-    ws.row_dimensions[header_row].height = 38
 
+    for col_num, title in enumerate(headers, start=1):
+        cell = ws.cell(header_row, col_num, title)
+
+        cell.font = bold_font
+        cell.border = all_borders
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+            wrap_text=True
+        )
+
+    ws.row_dimensions[header_row].height = 32
+
+    # -------------------------
+    # Vendor data
+    # -------------------------
     for r_index, item in enumerate(rows, start=header_row + 1):
+
         values = [
-            item["vendor_id"], " ".join(str(item.get("vendor_name") or "—").split()).upper(), item["cow_litres"],
-            item["buffalo_litres"], item["total_litres"], item["cow_average_rate"],
-            item["buffalo_average_rate"], item["milk_payment"], item["food_payment"],
-            item["advance_deducted"], item["final_payment"],
+            item["vendor_id"],
+            " ".join(
+                str(item.get("vendor_name") or "—").split()
+            ).upper(),
+            item["cow_litres"],
+            item["buffalo_litres"],
+            item["total_litres"],
+            item["cow_average_rate"],
+            item["buffalo_average_rate"],
+            item["milk_payment"],
+            item["food_payment"],
+            item["advance_deducted"],
+            item["final_payment"],
         ]
+
         for c_index, value in enumerate(values, start=1):
             cell = ws.cell(r_index, c_index, value)
-            cell.font = Font(name="Times New Roman", size=10)
+
+            cell.font = normal_font
+            cell.border = all_borders
+
             cell.alignment = Alignment(
                 horizontal="left" if c_index == 2 else "center",
                 vertical="center"
             )
+
+            # Preserve existing currency and quantity formats
             if c_index >= 6:
                 cell.number_format = '₹#,##0.00;[Red]-₹#,##0.00'
             elif c_index >= 3:
                 cell.number_format = '#,##0.00'
-            cell.fill = PatternFill(fill_type=None)
 
+        ws.row_dimensions[r_index].height = 18
+
+    # -------------------------
+    # Grand total
+    # -------------------------
     total_row = header_row + len(rows) + 1
+
     total_values = [
-        "", "GRAND TOTAL", grand["cow_litres"], grand["buffalo_litres"],
-        grand["total_litres"], grand["cow_average_rate"], grand["buffalo_average_rate"], grand["milk_payment"],
-        grand["food_payment"], grand["advance_deducted"], grand["final_payment"],
+        "",
+        "GRAND TOTAL",
+        grand["cow_litres"],
+        grand["buffalo_litres"],
+        grand["total_litres"],
+        grand["cow_average_rate"],
+        grand["buffalo_average_rate"],
+        grand["milk_payment"],
+        grand["food_payment"],
+        grand["advance_deducted"],
+        grand["final_payment"],
     ]
+
     for c_index, value in enumerate(total_values, start=1):
         cell = ws.cell(total_row, c_index, value)
-        cell.font = Font(name="Times New Roman", bold=True, color=black)
-        cell.fill = PatternFill(fill_type=None)
+
+        cell.font = bold_font
         cell.border = all_borders
-        cell.alignment = Alignment(horizontal="left" if c_index == 2 else "center")
+
+        cell.alignment = Alignment(
+            horizontal="left" if c_index == 2 else "center",
+            vertical="center"
+        )
+
         if c_index >= 6:
             cell.number_format = '₹#,##0.00;[Red]-₹#,##0.00'
         elif c_index >= 3:
             cell.number_format = '#,##0.00'
 
-    widths = [13, 28, 18, 21, 19, 19, 22, 24, 27, 25, 21]
-    for col_num, width in enumerate(widths, start=1):
-        ws.column_dimensions[get_column_letter(col_num)].width = width
+    ws.row_dimensions[total_row].height = 20
 
+    # -------------------------
+    # Column widths
+    # -------------------------
+    widths = [
+        11, 30, 16, 18, 16, 13, 15, 20, 22, 21, 18
+    ]
+
+    for col_num, width in enumerate(widths, start=1):
+        ws.column_dimensions[
+            get_column_letter(col_num)
+        ].width = width
+
+    # -------------------------
+    # Sheet and print settings
+    # -------------------------
     ws.freeze_panes = "A9"
-    ws.auto_filter.ref = f"A{header_row}:K{header_row + len(rows)}"
+
+    ws.auto_filter.ref = (
+        f"A{header_row}:K{header_row + len(rows)}"
+    )
+
     ws.sheet_view.showGridLines = False
+
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+
     ws.sheet_properties.pageSetUpPr.fitToPage = True
     ws.print_title_rows = f"1:{header_row}"
 
+    # -------------------------
+    # Export Excel file
+    # -------------------------
     output = BytesIO()
     wb.save(output)
     output.seek(0)
 
-    filename = f"DairyMitr_Final_Payment_{start_obj.isoformat()}_to_{end_obj.isoformat()}.xlsx"
+    filename = (
+        f"DairyMitr_Final_Payment_"
+        f"{start_obj.isoformat()}_to_{end_obj.isoformat()}.xlsx"
+    )
+
     return send_file(
         output,
         as_attachment=True,
         download_name=filename,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
     )
 
  
