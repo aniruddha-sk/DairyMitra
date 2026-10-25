@@ -6072,6 +6072,8 @@ def _build_final_payment_report(user_id, start_date, end_date):
             "cow_litres": 0.0,
             "buffalo_litres": 0.0,
             "milk_payment": 0.0,
+            "cow_payment": 0.0,
+            "buffalo_payment": 0.0,
             "food_payment": 0.0,
             "advance_deducted": 0.0,
             "final_payment": 0.0,
@@ -6081,6 +6083,8 @@ def _build_final_payment_report(user_id, start_date, end_date):
             vid = int(vendor["vendor_id"])
             cow_litres = 0.0
             buffalo_litres = 0.0
+            cow_payment = 0.0
+            buffalo_payment = 0.0
             milk_payment = 0.0
 
             for milk in milk_map.get(vid, []):
@@ -6100,14 +6104,20 @@ def _build_final_payment_report(user_id, start_date, end_date):
 
                 if milk_type == "cow":
                     cow_litres += qty
+                    cow_payment += qty * rate
                     milk_payment += qty * rate
                 elif milk_type == "buffalo":
                     buffalo_litres += qty
+                    buffalo_payment += qty * rate
                     milk_payment += qty * rate
                 # Unknown types are intentionally not silently treated as buffalo.
 
+            cow_payment = round(cow_payment, 2)
+            buffalo_payment = round(buffalo_payment, 2)
             milk_payment = round(milk_payment, 2)
             total_litres = cow_litres + buffalo_litres
+            cow_average_rate = round(cow_payment / cow_litres, 2) if cow_litres else 0.0
+            buffalo_average_rate = round(buffalo_payment / buffalo_litres, 2) if buffalo_litres else 0.0
             average_rate = round(milk_payment / total_litres, 2) if total_litres else 0.0
             food_payment = round(food_map.get(vid, 0.0), 2)
             adv = advance_map.get(vid, {})
@@ -6133,6 +6143,8 @@ def _build_final_payment_report(user_id, start_date, end_date):
                 "cow_litres": round(cow_litres, 2),
                 "buffalo_litres": round(buffalo_litres, 2),
                 "total_litres": round(total_litres, 2),
+                "cow_average_rate": cow_average_rate,
+                "buffalo_average_rate": buffalo_average_rate,
                 "average_rate": average_rate,
                 "milk_payment": milk_payment,
                 "food_payment": food_payment,
@@ -6144,6 +6156,8 @@ def _build_final_payment_report(user_id, start_date, end_date):
             grand["cow_litres"] += cow_litres
             grand["buffalo_litres"] += buffalo_litres
             grand["milk_payment"] += milk_payment
+            grand["cow_payment"] += cow_payment
+            grand["buffalo_payment"] += buffalo_payment
             grand["food_payment"] += food_payment
             grand["advance_deducted"] += advance_deducted
             grand["final_payment"] += final_payment
@@ -6153,6 +6167,8 @@ def _build_final_payment_report(user_id, start_date, end_date):
             grand[key] = round(grand[key], 2)
 
         total_litres = grand["cow_litres"] + grand["buffalo_litres"]
+        grand["cow_average_rate"] = round(grand["cow_payment"] / grand["cow_litres"], 2) if grand["cow_litres"] else 0.0
+        grand["buffalo_average_rate"] = round(grand["buffalo_payment"] / grand["buffalo_litres"], 2) if grand["buffalo_litres"] else 0.0
         grand["average_rate"] = (
             round(grand["milk_payment"] / total_litres, 2)
             if total_litres else 0.0
@@ -6292,17 +6308,16 @@ def export_payment_excel():
     ws = wb.active
     ws.title = "Final Payment"
 
-    navy = "17365D"
-    light_green = "E2F0D9"
+    black = "000000"
     white = "FFFFFF"
-    thin_gray = Side(style="thin", color="C8D2DC")
+    thin_gray = Side(style="thin", color="B7B7B7")
     all_borders = Border(left=thin_gray, right=thin_gray, top=thin_gray, bottom=thin_gray)
 
     # Report heading / basic information. Lightweight styling keeps XLSX creation fast.
-    ws.merge_cells("A1:J1")
+    ws.merge_cells("A1:K1")
     ws["A1"] = dairy_info.get("dairy_name") or "DairyMitr"
-    ws["A1"].font = Font(name="Times New Roman", size=18, bold=True, color=white)
-    ws["A1"].fill = PatternFill("solid", fgColor=navy)
+    ws["A1"].font = Font(name="Times New Roman", size=18, bold=True, color=black)
+    ws["A1"].fill = PatternFill(fill_type=None)
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 30
 
@@ -6314,7 +6329,7 @@ def export_payment_excel():
         ("Generated On", datetime.now().strftime("%d-%b-%Y %I:%M %p")),
     ]
     for row_num, (label, value) in enumerate(info_rows, start=2):
-        ws.cell(row_num, 1, label).font = Font(name="Times New Roman", bold=True, color=navy)
+        ws.cell(row_num, 1, label).font = Font(name="Times New Roman", bold=True, color=black)
         ws.cell(row_num, 2, value).font = Font(name="Times New Roman", size=10)
         ws.merge_cells(start_row=row_num, start_column=2, end_row=row_num, end_column=5)
 
@@ -6325,7 +6340,8 @@ def export_payment_excel():
         "Cow Milk (Litres)",
         "Buffalo Milk (Litres)",
         "Total Milk (Litres)",
-        "Applied Rate (Average)",
+        "Cow Rate (Average)",
+        "Buffalo Rate (Average)",
         "Total Milk Payment (INR)",
         "Total Food Sack Payment (INR)",
         "Total Advance Minused (INR)",
@@ -6333,8 +6349,8 @@ def export_payment_excel():
     ]
     for col, title in enumerate(headers, start=1):
         cell = ws.cell(header_row, col, title)
-        cell.font = Font(name="Times New Roman", bold=True, color=white)
-        cell.fill = PatternFill("solid", fgColor=navy)
+        cell.font = Font(name="Times New Roman", bold=True, color=black)
+        cell.fill = PatternFill(fill_type=None)
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = all_borders
     ws.row_dimensions[header_row].height = 38
@@ -6342,8 +6358,8 @@ def export_payment_excel():
     for r_index, item in enumerate(rows, start=header_row + 1):
         values = [
             item["vendor_id"], " ".join(str(item.get("vendor_name") or "—").split()).upper(), item["cow_litres"],
-            item["buffalo_litres"], item["total_litres"], item["average_rate"],
-            item["milk_payment"], item["food_payment"],
+            item["buffalo_litres"], item["total_litres"], item["cow_average_rate"],
+            item["buffalo_average_rate"], item["milk_payment"], item["food_payment"],
             item["advance_deducted"], item["final_payment"],
         ]
         for c_index, value in enumerate(values, start=1):
@@ -6357,19 +6373,18 @@ def export_payment_excel():
                 cell.number_format = '₹#,##0.00;[Red]-₹#,##0.00'
             elif c_index >= 3:
                 cell.number_format = '#,##0.00'
-            if r_index % 2 == 0:
-                cell.fill = PatternFill("solid", fgColor="F4F8FC")
+            cell.fill = PatternFill(fill_type=None)
 
     total_row = header_row + len(rows) + 1
     total_values = [
         "", "GRAND TOTAL", grand["cow_litres"], grand["buffalo_litres"],
-        grand["total_litres"], grand["average_rate"], grand["milk_payment"],
+        grand["total_litres"], grand["cow_average_rate"], grand["buffalo_average_rate"], grand["milk_payment"],
         grand["food_payment"], grand["advance_deducted"], grand["final_payment"],
     ]
     for c_index, value in enumerate(total_values, start=1):
         cell = ws.cell(total_row, c_index, value)
-        cell.font = Font(name="Times New Roman", bold=True, color="17365D")
-        cell.fill = PatternFill("solid", fgColor=light_green)
+        cell.font = Font(name="Times New Roman", bold=True, color=black)
+        cell.fill = PatternFill(fill_type=None)
         cell.border = all_borders
         cell.alignment = Alignment(horizontal="left" if c_index == 2 else "center")
         if c_index >= 6:
@@ -6377,12 +6392,12 @@ def export_payment_excel():
         elif c_index >= 3:
             cell.number_format = '#,##0.00'
 
-    widths = [13, 28, 18, 21, 19, 21, 24, 27, 25, 21]
+    widths = [13, 28, 18, 21, 19, 19, 22, 24, 27, 25, 21]
     for col_num, width in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(col_num)].width = width
 
     ws.freeze_panes = "A9"
-    ws.auto_filter.ref = f"A{header_row}:J{header_row + len(rows)}"
+    ws.auto_filter.ref = f"A{header_row}:K{header_row + len(rows)}"
     ws.sheet_view.showGridLines = False
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth = 1
@@ -6400,7 +6415,7 @@ def export_payment_excel():
         download_name=filename,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    
+
  
 # ------------------------------
 # Receipt - All Vendors
