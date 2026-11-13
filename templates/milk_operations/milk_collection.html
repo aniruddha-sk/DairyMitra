@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block title %}{{ _('दूध संकलन') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title flex items-center gap-2">
+  <div class="icon-milk" data-lucide="milk"></div>
+  {{ _('दूध संकलन') }}
+</h2>
+
+<!-- Set Date and Slot -->
+<form method="POST" class="mb-4 flex flex-wrap items-center gap-4" data-offline-ok onsubmit="return false">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <label class="form-label" for="mcDate">{{ _('दिनांक') }}</label>
+      <input type="date" class="form-input" id="mcDate" name="date" value="{{ today_date }}" required>
+    </div>
+    <div>
+      <label class="form-label" for="mcSlot">{{ _('वेळ') }}</label>
+      <select name="slot" id="mcSlot" class="form-select" required>
+          <option value="morning" {% if current_slot == 'morning' %}selected{% endif %}>{{ _('सकाळ') }}</option>
+          <option value="evening" {% if current_slot == 'evening' %}selected{% endif %}>{{ _('संध्याकाळ') }}</option>
+      </select>
+    </div>
+</form>
+
+<input type="hidden" id="selected_date" value="{{ selected_date }}">
+
+<!-- Search Filter -->
+<div class="mb-4">
+  <input type="text"
+         id="vendorSearch"
+         class="form-input w-72"
+         placeholder="{{ _('ग्राहक आयडी किंवा नाव शोधा') }}"
+         aria-label="{{ _('ग्राहक आयडी किंवा नाव शोधा') }}">
+</div>
+
+<div id="offlineCounter" class="dp-note dp-note--warning" hidden></div>
+
+<!-- Milk Entry Table -->
+<div class="table-wrap">
+    <table class="table" id="vendorTable">
+        <thead>
+            <tr>
+                <th>{{ _('ग्राहक आयडी') }}</th>
+                <th>{{ _('नाव') }}</th>
+                <th>{{ _('दूध प्रकार') }}</th>
+                <th>{{ _('प्रमाण (लिटर)') }}</th>
+                <th>{{ _('कारवाई') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for v in vendors %}
+            <tr id="row-{{ loop.index0 }}" data-vendor-id="{{ v.vendor_id }}" data-vendor-name="{{ v.name|e }}">
+                <td>
+                    {{ v.vendor_id }}
+                    <input type="hidden" id="vendor_id_{{ loop.index0 }}" value="{{ v.vendor_id }}">
+                </td>
+                <td>{{ v.name }}</td>
+                <td>
+                    {% if v.milk_type == 'cow' %}
+                        <span class="milk-type-fixed">{{ _('गाय') }}</span>
+                        <input type="hidden" id="milk_type_{{ loop.index0 }}" value="cow">
+                    {% elif v.milk_type == 'buffalo' %}
+                        <span class="milk-type-fixed">{{ _('म्हैस') }}</span>
+                        <input type="hidden" id="milk_type_{{ loop.index0 }}" value="buffalo">
+                    {% else %}
+                        <select id="milk_type_{{ loop.index0 }}" class="form-select" aria-label="{{ _('दूध प्रकार') }} - {{ v.name }}">
+                            <option value="cow">{{ _('गाय') }}</option>
+                            <option value="buffalo">{{ _('म्हैस') }}</option>
+                        </select>
+                    {% endif %}
+                </td>
+                <td>
+                    <input type="number"
+                           id="quantity_{{ loop.index0 }}"
+                           class="form-input w-28"
+                           step="0.01" min="0.01" max="9999.99" inputmode="decimal"
+                           aria-label="{{ _('प्रमाण (लिटर)') }} - {{ v.name }}">
+                    <div id="warning_{{ loop.index0 }}" class="row-warning" style="font-size:13px;margin-top:4px;"></div>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-secondary row-submit-btn" data-index="{{ loop.index0 }}">
+                        <i data-lucide="save"></i> {{ _('सबमिट') }}
+                    </button>
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="5">{{ _('ग्राहक उपलब्ध नाहीत.') }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Final Submit -->
+<div class="mt-4">
+  <button type="button" class="btn btn-primary" id="finalSubmitBtn">
+      <i data-lucide="cloud-upload"></i> {{ _('अंतिम सबमिट (सर्व सेव्ह करा)') }}
+  </button>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+  var rows = Array.prototype.slice.call(document.querySelectorAll("#vendorTable tbody tr[data-vendor-id]"));
+  var busy = false;
+  var dateEl = document.getElementById("mcDate");
+  var slotEl = document.getElementById("mcSlot");
+
+  function $(id) { return document.getElementById(id); }
+  function slotLabel(s) { return s === "evening" ? t("संध्याकाळ") : t("सकाळ"); }
+  function typeLabel(m) { return m === "buffalo" ? t("म्हैस") : t("गाय"); }
+
+  function rowData(i) {
+    return {
+      vendor_id: $("vendor_id_" + i).value,
+      milk_type: $("milk_type_" + i).value,
+      quantity: $("quantity_" + i).value.trim(),
+      date: dateEl.value,
+      slot: slotEl.value
+    };
+  }
+  function validQuantity(q) {
+    var n = Number(q);
+    return q !== "" && /^\d+(\.\d{1,2})?$/.test(q) && n >= 0.01 && n <= 9999.99;
+  }
+  function markRow(i, state, text) {
+    var qty = $("quantity_" + i), warn = $("warning_" + i);
+    qty.style.background = state === "saved" ? "#d4edda" : state === "queued" ? "#ede9fe" : "";
+    warn.textContent = text || "";
+    warn.classList.toggle("is-error", state === "error");
+  }
+
+  /** Save one row. Returns "saved" | "queued" | "skipped" | "error". */
+  function saveRow(i, opts) {
+    opts = opts || {};
+    var d = rowData(i);
+    var row = rows[i] || $("row-" + i);
+    if (!d.quantity) { return Promise.resolve("skipped"); }
+    if (!validQuantity(d.quantity)) {
+      markRow(i, "error", t("लिटर 0.01 ते 9999.99 दरम्यान आणि जास्तीत जास्त 2 दशांश असावेत."));
+      return Promise.resolve("error");
+    }
+    if (opts.force) { d.force_save = true; }
+    var label = t("Milk") + " #" + d.vendor_id + " " + (row ? row.dataset.vendorName : "") + " · " +
+                d.date.split("-").reverse().join("/") + " " + slotLabel(d.slot) + " · " +
+                typeLabel(d.milk_type) + " · " + d.quantity + " L";
+    return DPOffline.submit({
+      type: "milk", endpoint: "/submit_milk_ajax", payload: d,
+      idempotency_key: opts.key, label: label,
+      dedupe_key: "milk|" + d.vendor_id + "|" + d.date + "|" + d.slot + "|" + d.milk_type
+    }).then(function (out) {
+      if (out.mode === "queued") {
+        markRow(i, "queued", t("Saved on this device. Waiting for synchronization."));
+        return "queued";
+      }
+      var c = out.outcome, data = out.res.data || {};
+      if (c.action === "synced") {
+        markRow(i, "saved", data.replayed ? t("This entry was already saved.") : "");
+        return "saved";
+      }
+      if (c.action === "review" && c.kind === "confirm" && !opts.bulk) {
+        markRow(i, "error", "⚠ " + (data.warning || data.message));
+        return DP.confirm((data.warning || data.message) + "\n\n" + t("तरीही ही नोंद सेव्ह करायची का?"),
+                          { type: "warning", okText: t("Save anyway") }).then(function (ok) {
+          if (!ok) { markRow(i, "error", t("इशारा स्वीकारला नाही; नोंद सेव्ह केलेली नाही.")); return "error"; }
+          return saveRow(i, { force: true, key: out.key });
+        });
+      }
+      if (c.action === "keep" || c.action === "retry") {
+        // Session expired / subscription / server busy: keep the entry
+        // safely on this device instead of losing it.
+        return DPOffline.enqueue({
+          type: "milk", endpoint: "/submit_milk_ajax", payload: d, tenant_id: window.DP_SESSION.tenant_id,
+          role: window.DP_SESSION.role, staff_id: window.DP_SESSION.staff_id, idempotency_key: out.key,
+          dedupe_key: "milk|" + d.vendor_id + "|" + d.date + "|" + d.slot + "|" + d.milk_type,
+          label: label, last_error: c.error
+        }).then(function () {
+          markRow(i, "queued", t("Saved on this device. Waiting for synchronization."));
+          if (!opts.bulk) { DP.toast(c.error + " " + t("Saved on this device. Waiting for synchronization."), "warning"); }
+          return "queued";
+        });
+      }
+      markRow(i, "error", data.message || c.error);
+      if (!opts.bulk) { DP.toast(data.message || c.error, "error"); }
+      return "error";
+    }).catch(function (err) {
+      if (err && err.code === "duplicate_local") {
+        markRow(i, "queued", err.message);
+        if (!opts.bulk) { DP.toast(err.message, "warning"); }
+        return "queued";
+      }
+      markRow(i, "error", t("Could not save on this device."));
+      if (!opts.bulk) { DP.toast((err && err.message) || t("Could not save on this device."), "error"); }
+      return "error";
+    });
+  }
+
+  document.querySelectorAll(".row-submit-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var i = Number(btn.getAttribute("data-index"));
+      if (!$("quantity_" + i).value.trim()) { DP.toast(t("कृपया प्रमाण भरवा."), "warning"); $("quantity_" + i).focus(); return; }
+      btn.disabled = true;
+      saveRow(i).then(function (result) {
+        btn.disabled = false;
+        if (result === "saved") { DP.toast(t("नोंद सेव्ह झाली."), "success"); loadSavedMilkData(); }
+        else if (result === "queued" && navigator.onLine === false) {
+          DP.toast(t("Saved on this device. Waiting for synchronization."), "offline");
+        }
+        refreshLocal();
+      });
+    });
+  });
+
+  // Final submit: every filled row, idempotent, 4 at a time.
+  $("finalSubmitBtn").addEventListener("click", function () {
+    if (busy) { return; }
+    var todo = rows.map(function (r, i) { return i; }).filter(function (i) { return $("quantity_" + i).value.trim(); });
+    if (!todo.length) { DP.toast(t("कृपया किमान एक प्रमाण भरा."), "warning"); return; }
+    DP.confirm(t("{date} ({slot}) या वेळेच्या {n} नोंदी सेव्ह करायच्या?",
+                 { date: dateEl.value.split("-").reverse().join("/"), slot: slotLabel(slotEl.value), n: todo.length }))
+      .then(function (ok) {
+        if (!ok) { return; }
+        busy = true;
+        var done = 0, counts = { saved: 0, queued: 0, error: 0, skipped: 0 };
+        DP.loader(true, t("Saving {done}/{total}...", { done: 0, total: todo.length }));
+        var queue = todo.slice();
+        function worker() {
+          var i = queue.shift();
+          if (i === undefined) { return Promise.resolve(); }
+          return saveRow(i, { bulk: true, force: true }).then(function (r) {
+            counts[r] = (counts[r] || 0) + 1;
+            done += 1;
+            DP.loader(true, t("Saving {done}/{total}...", { done: done, total: todo.length }));
+            return worker();
+          });
+        }
+        Promise.all([worker(), worker(), worker(), worker()]).then(function () {
+          busy = false;
+          DP.loader(false);
+          if (counts.saved) { DP.toast(t("{n} entries saved", { n: counts.saved }), "success"); }
+          if (counts.queued) { DP.toast(t("{n} entries saved on this device. Waiting for synchronization.", { n: counts.queued }), "offline"); }
+          if (counts.error) { DP.toast(t("{n} entries could not be saved. Check the rows marked in red.", { n: counts.error }), "error"); }
+          loadSavedMilkData();
+          refreshLocal();
+        });
+      });
+  });
+
+  // Live search
+  $("vendorSearch").addEventListener("input", function () {
+    var q = this.value.toLowerCase();
+    rows.forEach(function (row) {
+      var id = row.cells[0].textContent.toLowerCase(), name = row.cells[1].textContent.toLowerCase();
+      row.style.display = id.indexOf(q) !== -1 || name.indexOf(q) !== -1 ? "" : "none";
+    });
+  });
+
+  // Changing milk type clears the quantity of that row
+  rows.forEach(function (row, i) {
+    var typeEl = $("milk_type_" + i);
+    if (typeEl && typeEl.tagName === "SELECT") {
+      typeEl.addEventListener("change", function () { $("quantity_" + i).value = ""; markRow(i, "", ""); });
+    }
+  });
+
+  // Saved entries for the selected date/slot (server + this device)
+  function loadSavedMilkData() {
+    rows.forEach(function (row, i) { markRow(i, "", ""); $("quantity_" + i).value = ""; });
+    var url = "/get_milk_data?date=" + encodeURIComponent(dateEl.value) + "&slot=" + encodeURIComponent(slotEl.value);
+    var server = navigator.onLine === false ? Promise.resolve(null) : DP.api(url);
+    server.then(function (r) {
+      var list = r && r.ok && Array.isArray(r.data) ? r.data : [];
+      list.forEach(function (item) {
+        rows.forEach(function (row, i) {
+          if (String(row.dataset.vendorId) !== String(item.vendor_id)) { return; }
+          var typeEl = $("milk_type_" + i);
+          if (typeEl.tagName === "SELECT") { typeEl.value = item.milk_type; }
+          else if (typeEl.value !== item.milk_type) { return; }
+          $("quantity_" + i).value = item.quantity;
+          markRow(i, "saved", "");
+        });
+      });
+      return refreshLocal(true);
+    });
+  }
+
+  function refreshLocal(applyToRows) {
+    var s = window.DP_SESSION || {};
+    if (!s.tenant_id || !window.DPOffline) { return Promise.resolve(); }
+    return DPOffline.forTenant(s.tenant_id).then(function (recs) {
+      var waiting = recs.filter(function (r) {
+        return r.type === "milk" && ["pending", "syncing", "failed", "needs_review", "blocked"].indexOf(r.status) !== -1;
+      });
+      var box = $("offlineCounter");
+      box.hidden = waiting.length === 0;
+      box.textContent = t("{n} entries waiting for synchronization", { n: waiting.length });
+      if (applyToRows) {
+        waiting.forEach(function (r) {
+          if (r.payload.date !== dateEl.value || r.payload.slot !== slotEl.value) { return; }
+          rows.forEach(function (row, i) {
+            if (String(row.dataset.vendorId) !== String(r.payload.vendor_id)) { return; }
+            var typeEl = $("milk_type_" + i);
+            if (typeEl.tagName !== "SELECT" && typeEl.value !== r.payload.milk_type) { return; }
+            if (typeEl.tagName === "SELECT") { typeEl.value = r.payload.milk_type; }
+            $("quantity_" + i).value = r.payload.quantity;
+            markRow(i, "queued", t("Saved on this device. Waiting for synchronization."));
+          });
+        });
+      }
+    }).catch(function () {});
+  }
+
+  dateEl.addEventListener("change", loadSavedMilkData);
+  slotEl.addEventListener("change", loadSavedMilkData);
+  window.addEventListener("dp:sync", function (e) {
+    if (e.detail && e.detail.type === "done") { loadSavedMilkData(); }
+  });
+  loadSavedMilkData();
+})();
+</script>
+{% endblock %}

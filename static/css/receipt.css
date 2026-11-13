@@ -1,0 +1,278 @@
+/* =================================================
+   DESIGN TOKENS (FROM APP THEME)
+================================================= */
+
+:root {
+  --indigo-600:#4f46e5;
+  --indigo-50:#eef2ff;
+
+  --slate-50:#f8fafc;
+  --slate-100:#f1f5f9;
+  --slate-200:#e2e8f0;
+  --slate-300:#cbd5e1;
+  --slate-500:#64748b;
+  --slate-700:#334155;
+  --slate-800:#1e293b;
+
+  --white:#ffffff;
+}
+
+/* =================================================
+   RECEIPT – SCREEN (MATCH WITH APP THEME)
+================================================= */
+
+/* ---------- Page Title ---------- */
+.receipt-page-title {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--slate-800);
+  margin: 24px 0;
+}
+
+/* ---------- Date Form ---------- */
+.receipt-form {
+  max-width: 640px;
+  margin: 0 auto 28px;
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: .75rem;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.receipt-form input[type="date"] {
+  width: 100%;
+  padding: .55rem .65rem;
+  border: 1px solid var(--slate-300);
+  border-radius: .5rem;
+  font-size: 14px;
+  color: var(--slate-700);
+  background: var(--white);
+}
+
+.receipt-form input[type="date"]:focus {
+  outline: none;
+  border-color: var(--indigo-600);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+}
+
+.receipt-form button {
+  grid-column: span 2;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .receipt-form {
+    grid-template-columns: 1fr;
+  }
+  .receipt-form button {
+    grid-column: span 1;
+  }
+}
+
+/* ---------- Print Button ---------- */
+.print-btn {
+  background: var(--indigo-600);
+  color: #fff;
+  border: 1px solid var(--indigo-600);
+  padding: .6rem 1.4rem;
+  border-radius: .6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .15s;
+}
+
+.print-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* ---------- Receipt Wrapper ---------- */
+.receipt-wrapper {
+  max-width: 900px;
+  margin: 0 auto 40px;
+}
+
+/* ---------- Receipt Box ---------- */
+.receipt-box {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: .75rem;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.receipt-box h3 {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--slate-800);
+}
+
+.receipt-box p {
+  margin: 3px 0;
+  color: var(--slate-700);
+  font-size: 14px;
+}
+
+/* ================= TABLES ================= */
+
+.receipt-box table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.receipt-box th,
+.receipt-box td {
+  border: 1px solid var(--slate-300);
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.receipt-box thead th {
+  background: var(--slate-100);
+  font-weight: 700;
+}
+
+.rate-table td {
+  text-align: left;
+}
+
+.rate-table td:last-child {
+  text-align: right;
+}
+
+.summary-table td {
+  text-align: left;
+}
+
+.summary-table td:last-child,
+.summary-table th:last-child {
+  text-align: right;
+}
+
+.summary-table tr:last-child th {
+  background: var(--indigo-50);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---------- Empty State ---------- */
+.receipt-empty {
+  text-align: center;
+  color: var(--slate-500);
+  padding: 40px 0;
+}
+
+/* =================================================
+   PRINT STYLES (A4 – PROFESSIONAL & READABLE)
+================================================= */
+/* ===============================
+   PERFECT A4 PRINT FIX
+================================ */
+/* =================================================
+   🔥 FINAL PRINT FORCE FIX (DO NOT REMOVE)
+================================================= */
+/* =================================================
+   🔥 PROFESSIONAL 4 RECEIPTS PER A4 PRINT LAYOUT
+================================================= */
+@media print {
+
+  /* Hide everything except receipts */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .receipt-wrapper,
+  .receipt-wrapper * {
+    visibility: visible !important;
+  }
+
+  .receipt-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  /* A4 setup */
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+
+  html, body {
+    background: #fff !important;
+  }
+
+  /* 4 receipts per page (2x2 grid) */
+  .receipt-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8mm;
+  }
+
+  .receipt-box {
+    border: 2px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 8px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Clean simple heading */
+  .receipt-box h3 {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .receipt-box p {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    margin: 2px 0 !important;
+  }
+
+  /* Tables */
+  .receipt-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px !important;
+    font-size: 13px !important;
+  }
+
+  .receipt-box th,
+  .receipt-box td {
+    border: 2px solid #000 !important;
+    padding: 4px 6px !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  .receipt-box thead th {
+    background: #f0f0f0 !important;
+  }
+
+  .summary-table tr:last-child th {
+    background: #ddd !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+  }
+
+  /* Prevent splitting */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+  }
+
+  /* Hide print button */
+  .no-print {
+    display: none !important;
+  }
+}

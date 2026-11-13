@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}{{ _('पेंड भर') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title flex items-center gap-2"><i data-lucide="wheat"></i> {{ _('पेंड भर') }}</h2>
+
+<!-- DATE -->
+<form method="GET" class="mb-4 flex gap-4 flex-wrap items-end">
+    <div>
+      <label class="form-label" for="fsDate">{{ _('दिनांक') }}</label>
+      <input type="date" id="fsDate" name="date" value="{{ selected_date }}" class="form-input" required>
+    </div>
+    <button class="btn btn-primary"><i data-lucide="calendar-days"></i> {{ _('तारीख सेट करा') }}</button>
+</form>
+
+<input type="hidden" id="selected_date" value="{{ selected_date }}">
+
+<!-- SEARCH -->
+<input type="text" id="vendorSearch" class="form-input mb-3" placeholder="{{ _('शोधा...') }}" aria-label="{{ _('शोधा...') }}">
+
+<div id="fsOffline" class="dp-note dp-note--warning" hidden></div>
+
+<div class="table-wrap">
+<table class="table" id="vendorTable">
+<thead>
+<tr>
+<th>{{ _('ID') }}</th>
+<th>{{ _('नाव') }}</th>
+<th>{{ _('Qty') }}</th>
+<th>{{ _('पेंड') }}</th>
+<th>{{ _('Total') }}</th>
+<th>{{ _('Action') }}</th>
+</tr>
+</thead>
+
+<tbody>
+{% for v in vendors %}
+<tr data-vendor-id="{{ v.vendor_id }}" data-vendor-name="{{ v.name|e }}">
+<td>
+{{ v.vendor_id }}
+<input type="hidden" id="vendor_{{ loop.index0 }}" value="{{ v.vendor_id }}">
+</td>
+
+<td>{{ v.name }}</td>
+
+<td>
+<input type="number" id="qty_{{ loop.index0 }}" class="form-input w-24" min="1" step="1" inputmode="numeric"
+       data-index="{{ loop.index0 }}" aria-label="{{ _('Qty') }} - {{ v.name }}">
+</td>
+
+<td>
+<select id="sack_{{ loop.index0 }}" class="form-select" data-index="{{ loop.index0 }}" aria-label="{{ _('पेंड') }} - {{ v.name }}">
+<option value="">-- {{ _('निवडा') }} --</option>
+{% for s in sack_rates %}
+<option value="{{ s.id }}" data-rate="{{ s.rate }}">
+{{ s.name }} (₹{{ s.rate }})
+</option>
+{% endfor %}
+</select>
+<div id="fs_msg_{{ loop.index0 }}" class="row-warning" style="font-size:12.5px"></div>
+</td>
+
+<td id="total_{{ loop.index0 }}">₹0</td>
+
+<td>
+<button type="button" class="btn btn-secondary fs-submit" data-index="{{ loop.index0 }}">
+<i data-lucide="save"></i> {{ _('सबमिट') }}
+</button>
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<button class="btn btn-primary mt-4" id="fsFinal" type="button">
+<i data-lucide="cloud-upload"></i> {{ _('अंतिम सबमिट') }}
+</button>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+"use strict";
+var rows = Array.prototype.slice.call(document.querySelectorAll("#vendorTable tbody tr"));
+function $(id) { return document.getElementById(id); }
+var date = $("selected_date").value;
+
+function calc(i) {
+  var qty = Number($("qty_" + i).value || 0);
+  var sel = $("sack_" + i);
+  var opt = sel.options[sel.selectedIndex];
+  var rate = Number((opt && opt.dataset.rate) || 0);
+  $("total_" + i).textContent = "₹" + (qty * rate).toFixed(2).replace(/\.00$/, "");
+}
+function msg(i, text, kind) {
+  var m = $("fs_msg_" + i);
+  m.textContent = text || "";
+  m.classList.toggle("is-error", kind === "error");
+  $("qty_" + i).style.background = kind === "queued" ? "#ede9fe" : kind === "saved" ? "#d4edda" : "";
+}
+
+function saveRow(i, bulk) {
+  var row = rows[i];
+  var payload = { vendor_id: $("vendor_" + i).value, quantity: $("qty_" + i).value.trim(),
+                  sack_id: $("sack_" + i).value, date: date };
+  if (!payload.quantity || !payload.sack_id) {
+    if (!bulk) { DP.toast(t("कृपया संख्या आणि पेंड निवडा."), "warning"); }
+    return Promise.resolve("skipped");
+  }
+  if (!/^\d+$/.test(payload.quantity) || Number(payload.quantity) < 1) {
+    msg(i, t("Invalid data"), "error");
+    return Promise.resolve("error");
+  }
+  var sel = $("sack_" + i);
+  var label = t("पेंड") + " #" + payload.vendor_id + " " + row.dataset.vendorName + " · " +
+              date.split("-").reverse().join("/") + " · " + sel.options[sel.selectedIndex].text.trim() + " × " + payload.quantity;
+  var spec = { type: "food_sack", endpoint: "/submit_food_sack_ajax", payload: payload, label: label,
+               dedupe_key: "food|" + payload.vendor_id + "|" + date + "|" + payload.sack_id };
+  return DPOffline.submit(spec).then(function (out) {
+    if (out.mode === "queued") { msg(i, t("Saved on this device. Waiting for synchronization."), "queued"); return "queued"; }
+    var c = out.outcome, data = out.res.data || {};
+    if (c.action === "synced") { msg(i, t("सेव्ह झाले"), "saved"); return "saved"; }
+    if (c.action === "keep" || c.action === "retry") {
+      return DPOffline.enqueue(Object.assign({}, spec, { tenant_id: window.DP_SESSION.tenant_id,
+        role: window.DP_SESSION.role, staff_id: window.DP_SESSION.staff_id,
+        idempotency_key: out.key, last_error: c.error })).then(function () {
+          msg(i, t("Saved on this device. Waiting for synchronization."), "queued");
+          return "queued";
+        });
+    }
+    msg(i, data.message || c.error, "error");
+    return "error";
+  }).catch(function (err) {
+    if (err && err.code === "duplicate_local") {
+      // The same food-sack line is already waiting: replace its quantity.
+      return DPOffline.retry(err.existing.local_id, { quantity: payload.quantity }).then(function () {
+        msg(i, t("Saved on this device. Waiting for synchronization."), "queued");
+        return "queued";
+      });
+    }
+    msg(i, (err && err.message) || t("Could not save on this device."), "error");
+    return "error";
+  });
+}
+
+rows.forEach(function (row, i) {
+  $("qty_" + i).addEventListener("input", function () { calc(i); });
+  $("sack_" + i).addEventListener("change", function () { calc(i); });
+});
+document.querySelectorAll(".fs-submit").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var i = Number(b.getAttribute("data-index"));
+    b.disabled = true;
+    saveRow(i).then(function (r) {
+      b.disabled = false;
+      if (r === "saved") { DP.toast(t("Saved for vendor {vendor}", { vendor: $("vendor_" + i).value }), "success"); }
+      else if (r === "queued") { DP.toast(t("Saved on this device. Waiting for synchronization."), "offline"); }
+      else if (r === "error") { DP.toast($("fs_msg_" + i).textContent, "error"); }
+      refreshLocal();
+    });
+  });
+});
+
+$("fsFinal").addEventListener("click", function () {
+  var todo = rows.map(function (r, i) { return i; }).filter(function (i) { return $("qty_" + i).value.trim() && $("sack_" + i).value; });
+  if (!todo.length) { DP.toast(t("कृपया संख्या आणि पेंड निवडा."), "warning"); return; }
+  var counts = { saved: 0, queued: 0, error: 0, skipped: 0 }, k = 0;
+  DP.loader(true);
+  (function next() {
+    if (k >= todo.length) {
+      DP.loader(false);
+      if (counts.saved) { DP.toast(t("{n} entries saved", { n: counts.saved }), "success"); }
+      if (counts.queued) { DP.toast(t("{n} entries saved on this device. Waiting for synchronization.", { n: counts.queued }), "offline"); }
+      if (counts.error) { DP.toast(t("{n} entries could not be saved. Check the rows marked in red.", { n: counts.error }), "error"); }
+      refreshLocal();
+      return;
+    }
+    var i = todo[k++];
+    DP.loader(true, t("Saving {done}/{total}...", { done: k, total: todo.length }));
+    saveRow(i, true).then(function (r) { counts[r] = (counts[r] || 0) + 1; next(); });
+  })();
+});
+
+$("vendorSearch").addEventListener("input", function () {
+  var val = this.value.toLowerCase();
+  rows.forEach(function (r) { r.style.display = r.innerText.toLowerCase().indexOf(val) !== -1 ? "" : "none"; });
+});
+
+function refreshLocal() {
+  var s = window.DP_SESSION || {};
+  if (!s.tenant_id) { return; }
+  DPOffline.forTenant(s.tenant_id).then(function (recs) {
+    var open = recs.filter(function (r) { return r.type === "food_sack" && ["pending", "syncing", "failed", "needs_review", "blocked"].indexOf(r.status) !== -1; });
+    $("fsOffline").hidden = !open.length;
+    $("fsOffline").textContent = t("{n} entries waiting for synchronization", { n: open.length });
+  }).catch(function () {});
+}
+window.addEventListener("dp:sync", refreshLocal);
+refreshLocal();
+})();
+</script>
+{% endblock %}

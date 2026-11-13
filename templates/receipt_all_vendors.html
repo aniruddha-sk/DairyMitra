@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('पावती मिळवा') }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dp-print.css') }}?v={{ dp_asset_version }}">
+{% endblock %}
+
+{% block content %}
+
+<h2 class="receipt-page-title no-print flex items-center gap-2" style="justify-content:center">
+    <i data-lucide="receipt"></i> {{ _('पावती मिळवा') }}
+</h2>
+
+<!-- ================= DATE FORM ================= -->
+<form method="post" class="receipt-form no-print">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+        <label for="from_date">{{ _('पासून तारीख निवडा') }}</label>
+        <input type="date" name="from_date" id="from_date" value="{{ from_date or '' }}" required>
+    </div>
+    <div>
+        <label for="to_date">{{ _('पर्यंत तारीख निवडा') }}</label>
+        <input type="date" name="to_date" id="to_date" value="{{ to_date or '' }}" required>
+    </div>
+    <div style="grid-column: 1 / -1">
+        <label for="customers">{{ _('ग्राहक क्रमांक (ऐच्छिक)') }}</label>
+        <input type="text" name="customers" id="customers" class="form-input" value="{{ customers or '' }}"
+               placeholder="{{ _('उदा. 1-10, 15, 17, 36-56') }}" autocomplete="off">
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <i data-lucide="receipt"></i> {{ _('पावती मिळवा') }}
+    </button>
+</form>
+
+{% if receipts %}
+<!-- ================= PRINT TOOLBAR ================= -->
+<div class="dp-print-toolbar no-print">
+    <div class="dp-print-toolbar__field">
+        <label for="dpPrintFilter">{{ _('प्रिंटसाठी ग्राहक निवडा') }}</label>
+        <input type="text" id="dpPrintFilter" class="form-input" placeholder="{{ _('उदा. 1-10, 15, 17, 36-56 (रिकामे = सर्व)') }}" autocomplete="off">
+    </div>
+    <button type="button" class="btn btn-secondary" id="dpPrintApply"><i data-lucide="filter"></i> {{ _('लागू करा') }}</button>
+    <button type="button" class="btn btn-secondary" id="dpPrintClear"><i data-lucide="x"></i> {{ _('सर्व') }}</button>
+    <button type="button" class="btn btn-primary print-btn" id="dpPrintBtn"><i data-lucide="printer"></i> {{ _('प्रिंट करा (एका A4 पानावर 4 पावत्या)') }}</button>
+    <div class="dp-print-toolbar__info" id="dpPrintInfo" aria-live="polite"></div>
+</div>
+{% endif %}
+
+<!-- ================= RECEIPTS ================= -->
+<div class="receipt-wrapper dp-print-source" data-print-layout="simple4">
+
+{% if receipts %}
+
+    {% for rec in receipts %}
+
+    <div class="receipt-box dp-receipt" data-customer="{{ rec.vendor_id }}">
+
+        <h3>{{ session.get('dairy_name') or _('दूध संकलन केंद्र') }}</h3>
+
+        <p>
+            <strong>{{ _('नाव') }} :</strong> {{ rec.name }}
+            <span style="float:right"><strong>{{ _('ग्राहक क्र.') }} :</strong> {{ rec.vendor_id }}</span>
+        </p>
+
+        <p>
+            <strong>{{ _('प्रकार') }} :</strong>
+            {% if rec.milk_type == 'cow' %}{{ _('गाय') }}{% elif rec.milk_type == 'buffalo' %}{{ _('म्हैस') }}{% elif rec.milk_type == 'both' %}{{ _('गाय व म्हैस') }}{% else %}-{% endif %}
+        </p>
+
+        <p><strong>{{ _('गाव') }} :</strong> {{ rec.address or '-' }}</p>
+
+        <p><strong>{{ _('कालावधी') }} :</strong> {{ from_date|dmy }} {{ _('ते') }} {{ to_date|dmy }}</p>
+
+        <!-- ================= MILK TABLE ================= -->
+        <table class="milk-table">
+            <thead>
+                <tr>
+                    <th>{{ _('तारीख') }}</th>
+                    <th colspan="2">{{ _('गाय') }}</th>
+                    <th colspan="2">{{ _('म्हैस') }}</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>{{ _('सकाळ') }}</th>
+                    <th>{{ _('संध्याकाळ') }}</th>
+                    <th>{{ _('सकाळ') }}</th>
+                    <th>{{ _('संध्याकाळ') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rec.data %}
+                <tr>
+                    <td>{{ row.day }}</td>
+                    <td>{{ row.cow_morning }}</td>
+                    <td>{{ row.cow_evening }}</td>
+                    <td>{{ row.buffalo_morning }}</td>
+                    <td>{{ row.buffalo_evening }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>{{ _('एकूण') }}</th>
+                    <th>{{ rec.total_cow_morning | round(1) }}</th>
+                    <th>{{ rec.total_cow_evening | round(1) }}</th>
+                    <th>{{ rec.total_buffalo_morning | round(1) }}</th>
+                    <th>{{ rec.total_buffalo_evening | round(1) }}</th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- ================= RATE TABLE ================= -->
+        <table class="rate-table">
+            <tr>
+                <td rowspan="2"><strong>{{ _('दुधाचा दर') }}</strong></td>
+                <td>{{ _('गाय') }}</td>
+                <td>₹{{ rec.cow_rate }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('म्हैस') }}</td>
+                <td>₹{{ rec.buffalo_rate }}</td>
+            </tr>
+        </table>
+
+        <!-- ================= SUMMARY ================= -->
+        <table class="summary-table">
+            <tr>
+                <td>{{ _('एकूण गायीचे दूध') }}</td>
+                <td>{{ rec.total_cow | round(1) }} {{ _('लि') }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('गायीच्या दूधाची रक्कम') }}</td>
+                <td>₹{{ rec.cow_cost | int }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('एकूण म्हशीचे दूध') }}</td>
+                <td>{{ rec.total_buffalo | round(1) }} {{ _('लि') }}</td>
+            </tr>
+            <tr>
+                <td>{{ _('म्हशीच्या दूधाची रक्कम') }}</td>
+                <td>₹{{ rec.buffalo_cost | int }}</td>
+            </tr>
+
+            {% if rec.food_sack_details %}
+                {% for sack in rec.food_sack_details %}
+                <tr>
+                    {% if loop.first %}
+                    <td rowspan="{{ rec.food_sack_details | length }}"><strong>{{ _('खाद्य माहिती') }}</strong></td>
+                    {% endif %}
+                    <td>{{ sack.name }} (₹{{ sack.rate | int }}/{{ _('गोणी') }}) × {{ sack.qty }} = ₹{{ sack.total | int }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+
+            <tr>
+                <td>{{ _('ॲडव्हान्स वजा') }}</td>
+                <td>₹{{ rec.advance | int }}</td>
+            </tr>
+            <tr>
+                <th>{{ _('अंतिम देय रक्कम') }}</th>
+                <th>₹{{ rec.final_payable | int }}</th>
+            </tr>
+            <tr>
+                <td>{{ _('ॲडव्हान्स शिल्लक') }}</td>
+                <td>₹{{ rec.remaining_advance | int }}</td>
+            </tr>
+        </table>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+    {% if from_date %}
+    <div class="receipt-empty">{{ _('निवडलेल्या तारखांमध्ये कोणतीही पावती सापडली नाही.') }}</div>
+    {% endif %}
+
+{% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dp-receipt-print.js') }}?v={{ dp_asset_version }}"></script>
+{% endblock %}

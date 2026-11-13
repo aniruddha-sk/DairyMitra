@@ -1,0 +1,42 @@
+# Local load-test stack (synthetic data only). See README.md in this folder.
+name: dmload
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: loadtest
+      MYSQL_DATABASE: dairymitr_load
+    command: ["--max-connections=300", "--innodb-buffer-pool-size=512M"]
+    cpus: ${DB_CPUS:-2.0}
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ploadtest"]
+      interval: 3s
+      retries: 60
+  app:
+    build:
+      context: ../..
+      dockerfile: tools/loadtest/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      DAIRYMITR_ENV: production
+      SESSION_COOKIE_SECURE: "0"
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: loadtest
+      MYSQL_DB: dairymitr_load
+      PORT: "8000"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-2}
+    cpus: ${APP_CPUS:-2.0}
+    mem_limit: 2g
+  k6:
+    image: grafana/k6:0.54.0
+    profiles: ["k6"]
+    volumes:
+      - ./:/scripts
+    working_dir: /scripts

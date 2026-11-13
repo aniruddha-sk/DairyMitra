@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ _('ग्राहक यादी') }}{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+  <h2 class="page-title flex items-center gap-2" style="margin:0"><i data-lucide="users"></i> {{ _('ग्राहक यादी') }}</h2>
+  <a href="{{ url_for('add_vendor') }}" class="btn btn-primary"><i data-lucide="user-plus"></i> {{ _('नवीन ग्राहक') }}</a>
+</div>
+
+<!-- Live search -->
+<div class="section mb-4 max-w-lg">
+  <label for="vendorSearch" class="sr-only" style="position:absolute;left:-9999px">{{ _('आयडी किंवा नावाने शोधा') }}</label>
+  <input type="text" id="vendorSearch" placeholder="{{ _('आयडी किंवा नावाने शोधा') }}" class="form-input w-full" autocomplete="off">
+</div>
+
+<div class="table-wrap">
+  <table class="table" id="vendorTable">
+    <thead>
+      <tr>
+        <th>{{ _('आयडी') }}</th>
+        <th>{{ _('नाव') }}</th>
+        <th>{{ _('दूधाचा प्रकार') }}</th>
+        <th>{{ _('फोन') }}</th>
+        <th>{{ _('कृती') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for vendor in vendors %}
+      <tr>
+        <td>{{ vendor.vendor_id }}</td>
+        <td>{{ vendor.name }}</td>
+        <td>
+          {% if vendor.milk_type == 'cow' %}{{ _('गाय') }}{% elif vendor.milk_type == 'buffalo' %}{{ _('म्हैस') }}{% else %}{{ _('गाय-म्हैस') }}{% endif %}
+        </td>
+        <td>{{ vendor.phone or '–' }}</td>
+        <td>
+          <div class="flex gap-2 items-center flex-wrap">
+            <a href="{{ url_for('generate_receipt', vendor_id=vendor.vendor_id) }}"
+               class="dp-action dp-action--view" title="{{ _('पावती पहा') }}" aria-label="{{ _('पावती पहा') }} - {{ vendor.name }}">
+              <i data-lucide="eye"></i><span class="dp-action__label">{{ _('पहा') }}</span>
+            </a>
+            <a href="{{ url_for('edit_vendor', vendor_id=vendor.vendor_id) }}"
+               class="dp-action dp-action--edit" title="{{ _('संपादन करा') }}" aria-label="{{ _('संपादन करा') }} - {{ vendor.name }}">
+              <i data-lucide="square-pen"></i><span class="dp-action__label">{{ _('संपादन') }}</span>
+            </a>
+            <form method="POST" action="{{ url_for('delete_vendor', vendor_id=vendor.vendor_id) }}" style="display:inline"
+                  data-confirm="{{ _('हा ग्राहक ({id} - {name}) आणि त्याचा सर्व डेटा कायमचा हटवला जाईल. खात्री आहे का?', id=vendor.vendor_id, name=vendor.name) }}"
+                  data-confirm-danger data-confirm-ok="Delete" data-confirm-title="{{ _('ग्राहक हटवा') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="confirm" value="1">
+              <button type="submit" class="dp-action dp-action--delete" title="{{ _('हटवा') }}" aria-label="{{ _('हटवा') }} - {{ vendor.name }}">
+                <i data-lucide="trash-2"></i><span class="dp-action__label">{{ _('हटवा') }}</span>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">{{ _('ग्राहक उपलब्ध नाहीत.') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById("vendorSearch").addEventListener("input", function () {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll("#vendorTable tbody tr").forEach(function (row) {
+    if (row.cells.length < 2) { return; }
+    var id = row.cells[0].textContent.toLowerCase(), name = row.cells[1].textContent.toLowerCase();
+    row.style.display = id.indexOf(q) !== -1 || name.indexOf(q) !== -1 ? "" : "none";
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,7310 @@
+[
+ {
+  "mr": "'{part}' हा ग्राहक क्रमांक किंवा श्रेणी नाही (उदा. 1-10, 15, 17).",
+  "en": "'{part}' is not a customer number or range (example: 1-10, 15, 17).",
+  "hi": "'{part}' ग्राहक संख्या या श्रेणी नहीं है (उदा. 1-10, 15, 17)।",
+  "js": true
+ },
+ {
+  "mr": "(अंतिम नोंद – आवश्यक)",
+  "en": "(final entry – required)",
+  "hi": "(अंतिम प्रविष्टि – आवश्यक)",
+  "js": true
+ },
+ {
+  "mr": "(ऐच्छिक)",
+  "en": "(optional)",
+  "hi": "(वैकल्पिक)",
+  "js": true
+ },
+ {
+  "mr": "(संध्याकाळ)",
+  "en": "(evening)",
+  "hi": "(शाम)",
+  "js": false
+ },
+ {
+  "mr": "(सकाळ)",
+  "en": "(morning)",
+  "hi": "(सुबह)",
+  "js": false
+ },
+ {
+  "mr": "(हा ID auto आहे, पण तुम्ही बदलू शकता)",
+  "en": "(this ID is automatic, but you can change it)",
+  "hi": "(यह आईडी स्वतः बनी है, पर आप बदल सकते हैं)",
+  "js": false
+ },
+ {
+  "mr": "); त्या \"लिटर-दर रक्कम\" स्तंभात जोडल्या आहेत.",
+  "en": "); they are added in the \"litre-rate amount\" column.",
+  "hi": "); वे \"लीटर-दर राशि\" कॉलम में जोड़ी गई हैं।",
+  "js": false
+ },
+ {
+  "mr": "+ FAT ची ओळ जोडा",
+  "en": "+ Add FAT row",
+  "hi": "+ FAT पंक्ति जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "+ SNF चा स्तंभ जोडा",
+  "en": "+ Add SNF column",
+  "hi": "+ SNF कॉलम जोड़ें",
+  "js": false
+ },
+ {
+  "mr": ", SNF",
+  "en": ", SNF",
+  "hi": ", SNF",
+  "js": false
+ },
+ {
+  "mr": ", रक्कम",
+  "en": ", amount",
+  "hi": ", राशि",
+  "js": true
+ },
+ {
+  "mr": "- DairyPro",
+  "en": "- DairyPro",
+  "hi": "- DairyPro",
+  "js": false
+ },
+ {
+  "mr": "1 महिना",
+  "en": "1 month",
+  "hi": "1 महीना",
+  "js": false
+ },
+ {
+  "mr": "1. आम्ही कोणती माहिती गोळा करतो",
+  "en": "1. What information we collect",
+  "hi": "1. हम कौन-सी जानकारी एकत्र करते हैं",
+  "js": false
+ },
+ {
+  "mr": "1. चार्टची माहिती",
+  "en": "1. Chart details",
+  "hi": "1. चार्ट की जानकारी",
+  "js": false
+ },
+ {
+  "mr": "1. सेवा वापरण्याच्या अटी",
+  "en": "1. Terms of using the service",
+  "hi": "1. सेवा उपयोग की शर्तें",
+  "js": false
+ },
+ {
+  "mr": "2. खाते (Account) जबाबदारी",
+  "en": "2. Account responsibility",
+  "hi": "2. खाते की ज़िम्मेदारी",
+  "js": false
+ },
+ {
+  "mr": "2. दर तयार करण्यासाठी माहिती",
+  "en": "2. Information to generate rates",
+  "hi": "2. दर बनाने के लिए जानकारी",
+  "js": false
+ },
+ {
+  "mr": "2. माहितीचा वापर कसा केला जातो",
+  "en": "2. How the information is used",
+  "hi": "2. जानकारी का उपयोग कैसे होता है",
+  "js": false
+ },
+ {
+  "mr": "3. डेटा व गोपनीयता",
+  "en": "3. Data and privacy",
+  "hi": "3. डेटा और गोपनीयता",
+  "js": false
+ },
+ {
+  "mr": "3. दर तक्ता",
+  "en": "3. Rate table",
+  "hi": "3. दर तालिका",
+  "js": false
+ },
+ {
+  "mr": "3. माहितीची सुरक्षा",
+  "en": "3. Information security",
+  "hi": "3. जानकारी की सुरक्षा",
+  "js": false
+ },
+ {
+  "mr": "4. माहिती शेअर करणे",
+  "en": "4. Sharing information",
+  "hi": "4. जानकारी साझा करना",
+  "js": false
+ },
+ {
+  "mr": "4. सेवेत बदल",
+  "en": "4. Changes to the service",
+  "hi": "4. सेवा में बदलाव",
+  "js": false
+ },
+ {
+  "mr": "5. जबाबदारीची मर्यादा",
+  "en": "5. Limitation of liability",
+  "hi": "5. ज़िम्मेदारी की सीमा",
+  "js": false
+ },
+ {
+  "mr": "5. वापरकर्त्याची जबाबदारी",
+  "en": "5. User responsibility",
+  "hi": "5. उपयोगकर्ता की ज़िम्मेदारी",
+  "js": false
+ },
+ {
+  "mr": "6-अंकी OTP",
+  "en": "6-digit OTP",
+  "hi": "6-अंकों का OTP",
+  "js": false
+ },
+ {
+  "mr": "6. खाते समाप्ती",
+  "en": "6. Account termination",
+  "hi": "6. खाता समाप्ति",
+  "js": false
+ },
+ {
+  "mr": "6. धोरणात बदल",
+  "en": "6. Changes to this policy",
+  "hi": "6. नीति में बदलाव",
+  "js": false
+ },
+ {
+  "mr": "7. कायदा व अधिकारक्षेत्र",
+  "en": "7. Law and jurisdiction",
+  "hi": "7. कानून और क्षेत्राधिकार",
+  "js": false
+ },
+ {
+  "mr": "7. संपर्क",
+  "en": "7. Contact",
+  "hi": "7. संपर्क",
+  "js": false
+ },
+ {
+  "mr": "8. संपर्क",
+  "en": "8. Contact",
+  "hi": "8. संपर्क",
+  "js": false
+ },
+ {
+  "mr": "योग्य माहिती पाठवली नाही.",
+  "en": "A valid JSON request body is required.",
+  "hi": "सही जानकारी नहीं भेजी गई।",
+  "js": false
+ },
+ {
+  "mr": "खाते",
+  "en": "ACCOUNT",
+  "hi": "खाता",
+  "js": false
+ },
+ {
+  "mr": "विश्लेषण",
+  "en": "ANALYSIS",
+  "hi": "विश्लेषण",
+  "js": false
+ },
+ {
+  "mr": "माहिती",
+  "en": "About",
+  "hi": "जानकारी",
+  "js": false
+ },
+ {
+  "mr": "DairyPro बद्दल",
+  "en": "About DairyPro",
+  "hi": "DairyPro के बारे में",
+  "js": false
+ },
+ {
+  "mr": "या इंस्टॉलेशनवर वापरावर मर्यादा नाही.",
+  "en": "Access is not restricted on this installation.",
+  "hi": "इस इंस्टॉलेशन पर उपयोग पर कोई रोक नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "खाते",
+  "en": "Account",
+  "hi": "खाता",
+  "js": false
+ },
+ {
+  "mr": "खाते क्रमांक",
+  "en": "Account Number",
+  "hi": "खाता संख्या",
+  "js": false
+ },
+ {
+  "mr": "खाते आधीच अस्तित्वात आहे!",
+  "en": "Account already exists!",
+  "hi": "खाता पहले से मौजूद है!",
+  "js": false
+ },
+ {
+  "mr": "Account delete करायचं आहे का? सर्व ग्राहक, दूध नोंदी आणि हिशोब कायमचे काढले जातील.",
+  "en": "Delete the account? All customers, milk entries and accounts will be removed permanently.",
+  "hi": "खाता हटाना है? सभी ग्राहक, दूध प्रविष्टियाँ और हिसाब स्थायी रूप से हट जाएँगे।",
+  "js": false
+ },
+ {
+  "mr": "Account delete केला.",
+  "en": "Account deleted.",
+  "hi": "खाता हटा दिया गया।",
+  "js": false
+ },
+ {
+  "mr": "खाते सापडले नाही.",
+  "en": "Account not found.",
+  "hi": "खाता नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "खाते यशस्वीरीत्या सत्यापित झाले! तुमचा डेअरी आयडी {dairy_code} आहे",
+  "en": "Account verified successfully! Your Dairy ID is {dairy_code}",
+  "hi": "खाता सफलतापूर्वक सत्यापित हुआ! आपकी डेयरी आईडी {dairy_code} है",
+  "js": false
+ },
+ {
+  "mr": "कृती",
+  "en": "Action",
+  "hi": "कार्रवाई",
+  "js": false
+ },
+ {
+  "mr": "सक्रिय करा",
+  "en": "Activate",
+  "hi": "सक्रिय करें",
+  "js": true
+ },
+ {
+  "mr": "सक्रिय",
+  "en": "Active",
+  "hi": "सक्रिय",
+  "js": false
+ },
+ {
+  "mr": "सक्रिय प्लॅन: {plan}",
+  "en": "Active plan: {plan}",
+  "hi": "सक्रिय प्लान: {plan}",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ जोडा",
+  "en": "Add Staff",
+  "hi": "स्टाफ जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "जोडले.",
+  "en": "Added.",
+  "hi": "जोड़ा गया।",
+  "js": false
+ },
+ {
+  "mr": "पत्ता",
+  "en": "Address",
+  "hi": "पता",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स",
+  "en": "Advance",
+  "hi": "एडवांस",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स रक्कम",
+  "en": "Advance Amount",
+  "hi": "एडवांस राशि",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स रक्कम:",
+  "en": "Advance Amount:",
+  "hi": "एडवांस राशि:",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स रिपोर्ट",
+  "en": "Advance Report",
+  "hi": "एडवांस रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स यशस्वीरीत्या जोडला.",
+  "en": "Advance added successfully.",
+  "hi": "एडवांस सफलतापूर्वक जोड़ा गया।",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स कपात यशस्वीरीत्या सेव्ह झाली.",
+  "en": "Advance deduction saved successfully.",
+  "hi": "एडवांस कटौती सफलतापूर्वक सेव हुई।",
+  "js": false
+ },
+ {
+  "mr": "Advance report load करता आला नाही.",
+  "en": "Could not load the advance report.",
+  "hi": "एडवांस रिपोर्ट लोड नहीं हो सकी।",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स व्यवहार यशस्वीरीत्या हटवला.",
+  "en": "Advance transaction deleted successfully.",
+  "hi": "एडवांस लेन-देन सफलतापूर्वक हटाया गया।",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स व्यवहार यशस्वीरीत्या अपडेट झाला.",
+  "en": "Advance transaction updated successfully.",
+  "hi": "एडवांस लेन-देन सफलतापूर्वक अपडेट हुआ।",
+  "js": false
+ },
+ {
+  "mr": "Advance व Food Sack नोंद",
+  "en": "Advance and food sack entries",
+  "hi": "एडवांस और पशु आहार प्रविष्टि",
+  "js": false
+ },
+ {
+  "mr": "DairyPro ची सर्व वैशिष्ट्ये",
+  "en": "All DairyPro features",
+  "hi": "DairyPro की सभी सुविधाएँ",
+  "js": false
+ },
+ {
+  "mr": "सर्व नोंदी सिंक झाल्या आहेत",
+  "en": "All entries are synchronized",
+  "hi": "सभी प्रविष्टियाँ सिंक हो चुकी हैं",
+  "js": true
+ },
+ {
+  "mr": "रक्कम",
+  "en": "Amount",
+  "hi": "राशि",
+  "js": false
+ },
+ {
+  "mr": "या ऑर्डरची सध्याची स्थिती Razorpay कडून तपासायची?",
+  "en": "Ask Razorpay for the current status of this order?",
+  "hi": "इस ऑर्डर की वर्तमान स्थिति Razorpay से जाँचें?",
+  "js": false
+ },
+ {
+  "mr": "काहीतरी विचारा...",
+  "en": "Ask something...",
+  "hi": "कुछ पूछें...",
+  "js": false
+ },
+ {
+  "mr": "प्रयत्न: {n}",
+  "en": "Attempts: {n}",
+  "hi": "प्रयास: {n}",
+  "js": true
+ },
+ {
+  "mr": "अधिकृत सही",
+  "en": "Authorized Signature",
+  "hi": "अधिकृत हस्ताक्षर",
+  "js": false
+ },
+ {
+  "mr": "आपोआप तयार, तुम्ही बदलू शकता",
+  "en": "Auto-generated, you can edit",
+  "hi": "स्वतः बना, आप बदल सकते हैं",
+  "js": false
+ },
+ {
+  "mr": "सरासरी दूध",
+  "en": "Average Milk",
+  "hi": "औसत दूध",
+  "js": false
+ },
+ {
+  "mr": "मागे",
+  "en": "Back",
+  "hi": "वापस",
+  "js": false
+ },
+ {
+  "mr": "इंटरनेट परत आले.",
+  "en": "Back online.",
+  "hi": "इंटरनेट वापस आ गया।",
+  "js": true
+ },
+ {
+  "mr": "इंटरनेट परत आले. या डिव्हाइसवरील नोंदी सिंक होत आहेत...",
+  "en": "Back online. Synchronizing entries saved on this device...",
+  "hi": "इंटरनेट वापस आ गया। इस डिवाइस की प्रविष्टियाँ सिंक हो रही हैं...",
+  "js": true
+ },
+ {
+  "mr": "लॉगिनवर परत जा",
+  "en": "Back to Login",
+  "hi": "लॉगिन पर वापस जाएँ",
+  "js": false
+ },
+ {
+  "mr": "बॅकअप आणि रिस्टोअर",
+  "en": "Backup & Restore",
+  "hi": "बैकअप और रिस्टोर",
+  "js": false
+ },
+ {
+  "mr": "बॅकअप फाइल",
+  "en": "Backup File",
+  "hi": "बैकअप फ़ाइल",
+  "js": false
+ },
+ {
+  "mr": "बॅकअप इतिहास",
+  "en": "Backup History",
+  "hi": "बैकअप इतिहास",
+  "js": false
+ },
+ {
+  "mr": "माझ्या डेटाचा बॅकअप",
+  "en": "Backup My Data",
+  "hi": "मेरे डेटा का बैकअप",
+  "js": false
+ },
+ {
+  "mr": "बॅकअप सिस्टम",
+  "en": "Backup System",
+  "hi": "बैकअप सिस्टम",
+  "js": false
+ },
+ {
+  "mr": "Backup file सापडली नाही.",
+  "en": "Backup file not found.",
+  "hi": "बैकअप फ़ाइल नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "Backup आणि Restore संपूर्ण डेटाबेसवर (सर्व डेअरी) चालतात, म्हणून ते फक्त DairyPro प्लॅटफॉर्म ॲडमिनसाठी उपलब्ध आहेत. तुमच्या डेटाचा बॅकअप हवा असल्यास",
+  "en": "Backup and restore work on the whole database (all dairies), so they are available only to DairyPro platform administrators. If you need a backup of your data",
+  "hi": "बैकअप और रिस्टोर पूरे डेटाबेस (सभी डेयरियों) पर चलते हैं, इसलिए वे केवल DairyPro प्लेटफ़ॉर्म एडमिन के लिए उपलब्ध हैं। यदि आपको अपने डेटा का बैकअप चाहिए",
+  "js": false
+ },
+ {
+  "mr": "Backup तयार करता आला नाही.",
+  "en": "Could not create the backup.",
+  "hi": "बैकअप नहीं बन सका।",
+  "js": false
+ },
+ {
+  "mr": "Backup मध्ये तुमचे सर्व vendors, milk entries, advance, food sack आणि milk rates सुरक्षित ठेवले जातील.",
+  "en": "The backup keeps all your customers, milk entries, advances, food sacks and milk rates safe.",
+  "hi": "बैकअप में आपके सभी ग्राहक, दूध प्रविष्टियाँ, एडवांस, पशु आहार और दूध दर सुरक्षित रहेंगे।",
+  "js": false
+ },
+ {
+  "mr": "Backup/restore फक्त प्लॅटफॉर्म ॲडमिनसाठी उपलब्ध आहे.",
+  "en": "Backup/restore is available only to the platform administrator.",
+  "hi": "बैकअप/रिस्टोर केवल प्लेटफ़ॉर्म एडमिन के लिए उपलब्ध है।",
+  "js": false
+ },
+ {
+  "mr": "बँक खाते क्रमांक",
+  "en": "Bank Account Number",
+  "hi": "बैंक खाता संख्या",
+  "js": false
+ },
+ {
+  "mr": "बँक सेटिंग्ज",
+  "en": "Bank Settings",
+  "hi": "बैंक सेटिंग्स",
+  "js": false
+ },
+ {
+  "mr": "बँक तपशील यशस्वीरीत्या सेव्ह झाले.",
+  "en": "Bank details saved successfully.",
+  "hi": "बैंक विवरण सफलतापूर्वक सेव हुआ।",
+  "js": false
+ },
+ {
+  "mr": "बँक तपशील यशस्वीरीत्या अपडेट झाले.",
+  "en": "Bank details updated successfully.",
+  "hi": "बैंक विवरण सफलतापूर्वक अपडेट हुआ।",
+  "js": false
+ },
+ {
+  "mr": "या डेअरीची नोंद आहे - सिंक करा",
+  "en": "Belongs to this dairy - sync",
+  "hi": "यह इसी डेयरी की प्रविष्टि है - सिंक करें",
+  "js": true
+ },
+ {
+  "mr": "सर्वोत्तम किंमत",
+  "en": "Best value",
+  "hi": "सबसे किफायती",
+  "js": false
+ },
+ {
+  "mr": "म्हशीची रक्कम",
+  "en": "Buffalo Amount",
+  "hi": "भैंस राशि",
+  "js": false
+ },
+ {
+  "mr": "म्हैस संध्याकाळ",
+  "en": "Buffalo Evening",
+  "hi": "भैंस शाम",
+  "js": false
+ },
+ {
+  "mr": "म्हैस सकाळ",
+  "en": "Buffalo Morning",
+  "hi": "भैंस सुबह",
+  "js": false
+ },
+ {
+  "mr": "म्हशीचा दर",
+  "en": "Buffalo Rate",
+  "hi": "भैंस दर",
+  "js": false
+ },
+ {
+  "mr": "CSV",
+  "en": "CSV",
+  "hi": "CSV",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक",
+  "en": "CUSTOMER",
+  "hi": "ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक",
+  "en": "CUSTOMERS",
+  "hi": "ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "हिशोब पद्धत 'general' किंवा 'fat_snf' असावी.",
+  "en": "Calculation mode must be 'general' or 'fat_snf'.",
+  "hi": "गणना पद्धति 'general' या 'fat_snf' होनी चाहिए।",
+  "js": false
+ },
+ {
+  "mr": "रद्द करा",
+  "en": "Cancel",
+  "hi": "रद्द करें",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट स्थिती तपासा",
+  "en": "Check payment status",
+  "hi": "भुगतान स्थिति जाँचें",
+  "js": false
+ },
+ {
+  "mr": "बंद करा",
+  "en": "Close",
+  "hi": "बंद करें",
+  "js": true
+ },
+ {
+  "mr": "खात्री करा",
+  "en": "Confirm",
+  "hi": "पुष्टि करें",
+  "js": true
+ },
+ {
+  "mr": "पासवर्ड पुन्हा टाका",
+  "en": "Confirm Password",
+  "hi": "पासवर्ड की पुष्टि करें",
+  "js": false
+ },
+ {
+  "mr": "खात्री करून सिंक करा",
+  "en": "Confirm and sync",
+  "hi": "पुष्टि करके सिंक करें",
+  "js": true
+ },
+ {
+  "mr": "आधी हटवण्याची खात्री करा",
+  "en": "Confirm deletion first",
+  "hi": "पहले हटाने की पुष्टि करें",
+  "js": false
+ },
+ {
+  "mr": "सातत्य",
+  "en": "Consistency",
+  "hi": "निरंतरता",
+  "js": false
+ },
+ {
+  "mr": "संपर्क करा",
+  "en": "Contact Us",
+  "hi": "संपर्क करें",
+  "js": false
+ },
+ {
+  "mr": "पुढे जा",
+  "en": "Continue",
+  "hi": "आगे बढ़ें",
+  "js": true
+ },
+ {
+  "mr": "कॉपी करा",
+  "en": "Copy",
+  "hi": "कॉपी करें",
+  "js": false
+ },
+ {
+  "mr": "कॉपी करता आले नाही!",
+  "en": "Copy failed!",
+  "hi": "कॉपी नहीं हो सका!",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट विंडो उघडता आली नाही. इंटरनेट तपासून पुन्हा प्रयत्न करा.",
+  "en": "Could not load the payment window. Check the internet connection and try again.",
+  "hi": "भुगतान विंडो नहीं खुल सकी। इंटरनेट जाँचकर फिर प्रयास करें।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट गेटवेशी संपर्क झाला नाही. थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  "en": "Could not reach the payment gateway. Please try again shortly.",
+  "hi": "भुगतान गेटवे से संपर्क नहीं हुआ। थोड़ी देर बाद फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "या डिव्हाइसवर सेव्ह करता आले नाही.",
+  "en": "Could not save on this device.",
+  "hi": "इस डिवाइस पर सेव नहीं हो सका।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट सुरू करता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Could not start the payment. Please try again.",
+  "hi": "भुगतान शुरू नहीं हो सका। कृपया फिर प्रयास करें।",
+  "js": true
+ },
+ {
+  "mr": "गायीची रक्कम",
+  "en": "Cow Amount",
+  "hi": "गाय राशि",
+  "js": false
+ },
+ {
+  "mr": "गाय संध्याकाळ",
+  "en": "Cow Evening",
+  "hi": "गाय शाम",
+  "js": false
+ },
+ {
+  "mr": "गाय सकाळ",
+  "en": "Cow Morning",
+  "hi": "गाय सुबह",
+  "js": false
+ },
+ {
+  "mr": "गायीचा दर",
+  "en": "Cow Rate",
+  "hi": "गाय दर",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक डॅशबोर्ड",
+  "en": "Customer Dashboard",
+  "hi": "ग्राहक डैशबोर्ड",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक लॉगिन",
+  "en": "Customer Login",
+  "hi": "ग्राहक लॉगिन",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक लॉगिन यशस्वी",
+  "en": "Customer Login Successful",
+  "hi": "ग्राहक लॉगिन सफल",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक पोर्टल",
+  "en": "Customer Portal",
+  "hi": "ग्राहक पोर्टल",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक सापडला नाही.",
+  "en": "Customer not found.",
+  "hi": "ग्राहक नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक क्रमांक 1 किंवा त्यापेक्षा जास्त असावा.",
+  "en": "Customer numbers must be 1 or more.",
+  "hi": "ग्राहक संख्या 1 या उससे अधिक होनी चाहिए।",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक निवड खूप मोठी आहे.",
+  "en": "Customer selection is too long.",
+  "hi": "ग्राहक चयन बहुत लंबा है।",
+  "js": false
+ },
+ {
+  "mr": "Customer नुसार दूध दर",
+  "en": "Milk rate per customer",
+  "hi": "ग्राहक-वार दूध दर",
+  "js": false
+ },
+ {
+  "mr": "DM000001",
+  "en": "DM000001",
+  "hi": "DM000001",
+  "js": false
+ },
+ {
+  "mr": "डेअरी",
+  "en": "Dairies",
+  "hi": "डेयरियाँ",
+  "js": false
+ },
+ {
+  "mr": "डेअरी",
+  "en": "Dairy",
+  "hi": "डेयरी",
+  "js": false
+ },
+ {
+  "mr": "डेअरी आयडी",
+  "en": "Dairy ID",
+  "hi": "डेयरी आईडी",
+  "js": false
+ },
+ {
+  "mr": "डेअरी आयडी :",
+  "en": "Dairy ID :",
+  "hi": "डेयरी आईडी :",
+  "js": false
+ },
+ {
+  "mr": "डेअरी आयडी कॉपी झाला!",
+  "en": "Dairy ID Copied Successfully!",
+  "hi": "डेयरी आईडी कॉपी हो गई!",
+  "js": true
+ },
+ {
+  "mr": "Dairy ID आणि मोबाईल नंबर वापरून लॉगिन करा",
+  "en": "Log in with the Dairy ID and mobile number",
+  "hi": "डेयरी आईडी और मोबाइल नंबर से लॉगिन करें",
+  "js": false
+ },
+ {
+  "mr": "डेअरीचे नाव",
+  "en": "Dairy Name",
+  "hi": "डेयरी का नाम",
+  "js": false
+ },
+ {
+  "mr": "डेअरीचे नाव:",
+  "en": "Dairy Name:",
+  "hi": "डेयरी का नाम:",
+  "js": false
+ },
+ {
+  "mr": "DairyPro",
+  "en": "DairyPro",
+  "hi": "DairyPro",
+  "js": false
+ },
+ {
+  "mr": "DairyPro AI",
+  "en": "DairyPro AI",
+  "hi": "DairyPro AI",
+  "js": false
+ },
+ {
+  "mr": "DairyPro AI सध्या उत्तर देऊ शकत नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  "en": "DairyPro AI cannot answer right now. Please try again in a little while.",
+  "hi": "DairyPro AI अभी उत्तर नहीं दे सकता। कृपया थोड़ी देर बाद फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro कोणतीही सेवा, सुविधा किंवा फी पूर्वसूचना न देता बदलू किंवा बंद करू शकते.",
+  "en": "DairyPro may change or discontinue any service, feature or fee without prior notice.",
+  "hi": "DairyPro किसी भी सेवा, सुविधा या शुल्क को बिना पूर्व सूचना के बदल या बंद कर सकता है।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro कोणत्याही परिस्थितीत आपली वैयक्तिक माहिती तृतीय पक्षास विकत नाही. कायदेशीर बंधन असल्यास किंवा सरकारी आदेशानुसारच माहिती शेअर केली जाऊ शकते.",
+  "en": "DairyPro never sells your personal information to third parties. Information may be shared only when legally required or under a government order.",
+  "hi": "DairyPro किसी भी स्थिति में आपकी व्यक्तिगत जानकारी तीसरे पक्ष को नहीं बेचता। कानूनी बाध्यता या सरकारी आदेश पर ही जानकारी साझा की जा सकती है।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro फक्त डेअरी व्यवसायाशी संबंधित वापरासाठी आहे",
+  "en": "DairyPro is only for dairy-business use",
+  "hi": "DairyPro केवल डेयरी व्यवसाय से जुड़े उपयोग के लिए है",
+  "js": false
+ },
+ {
+  "mr": "DairyPro मध्ये साठवलेला डेटा गोपनीय ठेवण्याचा प्रयत्न केला जातो, परंतु इंटरनेटवर पूर्ण सुरक्षा हमी देता येत नाही.",
+  "en": "We try to keep the data stored in DairyPro confidential, but complete security cannot be guaranteed on the internet.",
+  "hi": "DairyPro में रखे गए डेटा को गोपनीय रखने का प्रयास किया जाता है, पर इंटरनेट पर पूर्ण सुरक्षा की गारंटी नहीं दी जा सकती।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro मध्ये स्वागत आहे",
+  "en": "Welcome to DairyPro",
+  "hi": "DairyPro में आपका स्वागत है",
+  "js": true
+ },
+ {
+  "mr": "DairyPro वापरताना खालील माहिती गोळा केली जाऊ शकते:",
+  "en": "The following information may be collected while you use DairyPro:",
+  "hi": "DairyPro के उपयोग के दौरान निम्न जानकारी एकत्र की जा सकती है:",
+  "js": false
+ },
+ {
+  "mr": "DairyPro वापरामुळे होणाऱ्या कोणत्याही थेट किंवा अप्रत्यक्ष नुकसानासाठी DairyPro जबाबदार राहणार नाही.",
+  "en": "DairyPro is not responsible for any direct or indirect loss resulting from its use.",
+  "hi": "DairyPro के उपयोग से होने वाले किसी भी प्रत्यक्ष या अप्रत्यक्ष नुकसान के लिए DairyPro ज़िम्मेदार नहीं होगा।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro वेळोवेळी हे गोपनीयता धोरण अपडेट करू शकते. कोणतेही बदल या पेजवर प्रसिद्ध केले जातील.",
+  "en": "DairyPro may update this privacy policy from time to time. Any changes will be published on this page.",
+  "hi": "DairyPro समय-समय पर यह गोपनीयता नीति अपडेट कर सकता है। कोई भी बदलाव इस पेज पर प्रकाशित किया जाएगा।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro सेवा योग्य प्रकारे चालवण्यासाठी",
+  "en": "To run the DairyPro service properly",
+  "hi": "DairyPro सेवा को सही तरह चलाने के लिए",
+  "js": false
+ },
+ {
+  "mr": "DairyPro सोबत तुमची डेअरी व्यवस्थापित करा",
+  "en": "Manage your dairy with DairyPro",
+  "hi": "DairyPro के साथ अपनी डेयरी प्रबंधित करें",
+  "js": false
+ },
+ {
+  "mr": "DairyPro हा एक आधुनिक व विश्वासार्ह dairy management platform आहे. डेअरी मालक आणि शेतकरी यांच्यासाठी दूध संकलन व हिशोब प्रक्रिया डिजिटल करण्यासाठी तयार केला आहे.",
+  "en": "DairyPro is a modern, reliable dairy management platform, built to digitise milk collection and accounting for dairy owners and farmers.",
+  "hi": "DairyPro एक आधुनिक और भरोसेमंद डेयरी प्रबंधन प्लेटफ़ॉर्म है, जो डेयरी मालिकों और किसानों के लिए दूध संकलन और हिसाब को डिजिटल बनाने हेतु तैयार किया गया है।",
+  "js": false
+ },
+ {
+  "mr": "डॅशबोर्ड",
+  "en": "Dashboard",
+  "hi": "डैशबोर्ड",
+  "js": true
+ },
+ {
+  "mr": "या ग्राहकाची या तारखेची, वेळेची आणि दुधाच्या प्रकाराची नोंद आधीच आहे.",
+  "en": "Data already exists for this vendor/date/slot/milk_type.",
+  "hi": "इस ग्राहक की इस तारीख, समय और दूध के प्रकार की प्रविष्टि पहले से है।",
+  "js": false
+ },
+ {
+  "mr": "डेटा यशस्वीरीत्या रिस्टोअर झाला!",
+  "en": "Data restored successfully!",
+  "hi": "डेटा सफलतापूर्वक रिस्टोर हुआ!",
+  "js": true
+ },
+ {
+  "mr": "डेटाबेस बॅकअप आणि रिस्टोअर (ॲडमिन)",
+  "en": "Database Backup & Restore (Admin)",
+  "hi": "डेटाबेस बैकअप और रिस्टोर (एडमिन)",
+  "js": false
+ },
+ {
+  "mr": "दिनांक",
+  "en": "Date",
+  "hi": "दिनांक",
+  "js": true
+ },
+ {
+  "mr": "तारखेपासून",
+  "en": "Date From",
+  "hi": "तारीख से",
+  "js": false
+ },
+ {
+  "mr": "Date range निवडा",
+  "en": "Select a date range",
+  "hi": "तारीख सीमा चुनें",
+  "js": false
+ },
+ {
+  "mr": "दिवस",
+  "en": "Day",
+  "hi": "दिन",
+  "js": false
+ },
+ {
+  "mr": "निष्क्रिय करा",
+  "en": "Deactivate",
+  "hi": "निष्क्रिय करें",
+  "js": true
+ },
+ {
+  "mr": "कपात उपलब्ध ॲडव्हान्स ₹{balance_without_transaction:.2f} पेक्षा जास्त असू शकत नाही.",
+  "en": "Deduction cannot exceed available advance of ₹{balance_without_transaction:.2f}.",
+  "hi": "कटौती उपलब्ध एडवांस ₹{balance_without_transaction:.2f} से अधिक नहीं हो सकती।",
+  "js": false
+ },
+ {
+  "mr": "कपात शिल्लक ॲडव्हान्स ₹{current_balance:.2f} पेक्षा जास्त असू शकत नाही.",
+  "en": "Deduction cannot exceed remaining advance of ₹{current_balance:.2f}.",
+  "hi": "कटौती शेष एडवांस ₹{current_balance:.2f} से अधिक नहीं हो सकती।",
+  "js": false
+ },
+ {
+  "mr": "हटवा",
+  "en": "Delete",
+  "hi": "हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "खाते हटवा",
+  "en": "Delete Account",
+  "hi": "खाता हटाएँ",
+  "js": false
+ },
+ {
+  "mr": "यशस्वीरीत्या हटवले.",
+  "en": "Deleted successfully.",
+  "hi": "सफलतापूर्वक हटाया गया।",
+  "js": true
+ },
+ {
+  "mr": "बंद करा",
+  "en": "Disable",
+  "hi": "बंद करें",
+  "js": false
+ },
+ {
+  "mr": "बंद",
+  "en": "Disabled",
+  "hi": "बंद",
+  "js": false
+ },
+ {
+  "mr": "काढून टाका",
+  "en": "Discard",
+  "hi": "हटा दें",
+  "js": true
+ },
+ {
+  "mr": "ही नोंद या डिव्हाइसवरून काढायची? ती सर्व्हरवर सेव्ह झालेली नाही.",
+  "en": "Discard this entry from this device? It has NOT been saved on the server.",
+  "hi": "इस प्रविष्टि को इस डिवाइस से हटाएँ? यह सर्वर पर सेव नहीं हुई है।",
+  "js": true
+ },
+ {
+  "mr": "Excel रिपोर्ट डाउनलोड करा",
+  "en": "Download Excel Report",
+  "hi": "Excel रिपोर्ट डाउनलोड करें",
+  "js": false
+ },
+ {
+  "mr": "संपादन",
+  "en": "Edit",
+  "hi": "संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ संपादन",
+  "en": "Edit Staff",
+  "hi": "स्टाफ संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "लागू तारीख",
+  "en": "Effective Date",
+  "hi": "लागू तिथि",
+  "js": false
+ },
+ {
+  "mr": "ईमेल",
+  "en": "Email",
+  "hi": "ईमेल",
+  "js": false
+ },
+ {
+  "mr": "ईमेल (लॉगिन आयडी)",
+  "en": "Email (Login ID)",
+  "hi": "ईमेल (लॉगिन आईडी)",
+  "js": false
+ },
+ {
+  "mr": "ईमेल सापडला नाही.",
+  "en": "Email not found.",
+  "hi": "ईमेल नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "सुरू करा",
+  "en": "Enable",
+  "hi": "चालू करें",
+  "js": false
+ },
+ {
+  "mr": "संपला",
+  "en": "Ended",
+  "hi": "समाप्त",
+  "js": false
+ },
+ {
+  "mr": "इंग्रजी नाव",
+  "en": "English Name",
+  "hi": "अंग्रेज़ी नाम",
+  "js": false
+ },
+ {
+  "mr": "OTP टाका",
+  "en": "Enter OTP",
+  "hi": "OTP दर्ज करें",
+  "js": false
+ },
+ {
+  "mr": "म्हशीचा दर टाका",
+  "en": "Enter buffalo rate",
+  "hi": "भैंस का दर दर्ज करें",
+  "js": false
+ },
+ {
+  "mr": "गायीचा दर टाका",
+  "en": "Enter cow rate",
+  "hi": "गाय का दर दर्ज करें",
+  "js": false
+ },
+ {
+  "mr": "तारीख DD/MM/YYYY अशी टाका.",
+  "en": "Enter the date as DD/MM/YYYY.",
+  "hi": "तारीख DD/MM/YYYY के रूप में दर्ज करें।",
+  "js": true
+ },
+ {
+  "mr": "नोंदी या डिव्हाइसवर सेव्ह आहेत. सिंक करण्यासाठी सबस्क्रिप्शन नूतनीकरण करा.",
+  "en": "Entries are saved on this device. Renew the subscription to synchronize them.",
+  "hi": "प्रविष्टियाँ इस डिवाइस पर सेव हैं। सिंक करने के लिए सब्सक्रिप्शन नवीनीकृत करें।",
+  "js": true
+ },
+ {
+  "mr": "नोंदी यशस्वीरीत्या अपडेट झाल्या.",
+  "en": "Entries updated successfully.",
+  "hi": "प्रविष्टियाँ सफलतापूर्वक अपडेट हुईं।",
+  "js": false
+ },
+ {
+  "mr": "नोंद यशस्वीरीत्या हटवली.",
+  "en": "Entry deleted successfully.",
+  "hi": "प्रविष्टि सफलतापूर्वक हटाई गई।",
+  "js": false
+ },
+ {
+  "mr": "त्रुटी",
+  "en": "Error",
+  "hi": "त्रुटि",
+  "js": true
+ },
+ {
+  "mr": "दर जोडताना त्रुटी आली.",
+  "en": "Error adding rate.",
+  "hi": "दर जोड़ते समय त्रुटि हुई।",
+  "js": false
+ },
+ {
+  "mr": "नोंद हटवताना त्रुटी आली.",
+  "en": "Error deleting entry.",
+  "hi": "प्रविष्टि हटाते समय त्रुटि हुई।",
+  "js": true
+ },
+ {
+  "mr": "पेंड नोंद हटवताना त्रुटी आली.",
+  "en": "Error deleting food sack entry.",
+  "hi": "पशु आहार प्रविष्टि हटाते समय त्रुटि हुई।",
+  "js": false
+ },
+ {
+  "mr": "दूध दर हटवताना त्रुटी आली.",
+  "en": "Error deleting milk rate.",
+  "hi": "दूध दर हटाते समय त्रुटि हुई।",
+  "js": false
+ },
+ {
+  "mr": "नोंदी अपडेट करताना त्रुटी आली.",
+  "en": "Error updating entries.",
+  "hi": "प्रविष्टियाँ अपडेट करते समय त्रुटि हुई।",
+  "js": false
+ },
+ {
+  "mr": "संध्याकाळ म्हैस",
+  "en": "Evening Buffalo",
+  "hi": "शाम भैंस",
+  "js": false
+ },
+ {
+  "mr": "संध्याकाळ गाय",
+  "en": "Evening Cow",
+  "hi": "शाम गाय",
+  "js": false
+ },
+ {
+  "mr": "FAT",
+  "en": "FAT",
+  "hi": "FAT",
+  "js": true
+ },
+ {
+  "mr": "FAT %",
+  "en": "FAT %",
+  "hi": "FAT %",
+  "js": false
+ },
+ {
+  "mr": "FAT SNF दर तक्ता",
+  "en": "FAT SNF rate matrix",
+  "hi": "FAT SNF दर तालिका",
+  "js": false
+ },
+ {
+  "mr": "FAT {fat} SNF {snf} दर",
+  "en": "FAT {fat} SNF {snf} rate",
+  "hi": "FAT {fat} SNF {snf} दर",
+  "js": true
+ },
+ {
+  "mr": "FAT {fat} आणि SNF {snf} साठी आधार दर (₹/लिटर)",
+  "en": "Base rate for FAT {fat} and SNF {snf} (₹/litre)",
+  "hi": "FAT {fat} और SNF {snf} का आधार दर (₹/लीटर)",
+  "js": true
+ },
+ {
+  "mr": "FAT {fmin}–{fmax}, SNF {smin}–{smax} (0.1 च्या फरकाने)",
+  "en": "FAT {fmin}–{fmax}, SNF {smin}–{smax} (in steps of 0.1)",
+  "hi": "FAT {fmin}–{fmax}, SNF {smin}–{smax} (0.1 के अंतर से)",
+  "js": true
+ },
+ {
+  "mr": "FAT {f} / SNF {s} चार्टच्या श्रेणीबाहेर आहे.",
+  "en": "FAT {f} / SNF {s} is outside the chart range.",
+  "hi": "FAT {f} / SNF {s} चार्ट की सीमा से बाहर है।",
+  "js": false
+ },
+ {
+  "mr": "FAT {f} / SNF {s} दोनदा आले आहे.",
+  "en": "FAT {f} / SNF {s} appears twice.",
+  "hi": "FAT {f} / SNF {s} दो बार आया है।",
+  "js": false
+ },
+ {
+  "mr": "FAT {f} / SNF {s} साठी दर शून्यापेक्षा कमी येतो. वाढ/श्रेणी तपासा.",
+  "en": "The rate for FAT {f} / SNF {s} comes out below zero. Check the increment/range.",
+  "hi": "FAT {f} / SNF {s} का दर शून्य से कम आता है। वृद्धि/सीमा जाँचें।",
+  "js": false
+ },
+ {
+  "mr": "FAT {f} / SNF {s} साठी योग्य दर भरा.",
+  "en": "Enter a valid rate for FAT {f} / SNF {s}.",
+  "hi": "FAT {f} / SNF {s} के लिए सही दर दर्ज करें।",
+  "js": false
+ },
+ {
+  "mr": "FAT {value} काढा",
+  "en": "Remove FAT {value}",
+  "hi": "FAT {value} हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "FAT ओळ काढा",
+  "en": "Remove FAT row",
+  "hi": "FAT पंक्ति हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "FAT किंवा SNF प्रत्येक 0.1 बदलल्यावर दरात बदल (₹)",
+  "en": "Rate change for every 0.1 change in FAT or SNF (₹)",
+  "hi": "FAT या SNF में हर 0.1 बदलाव पर दर में बदलाव (₹)",
+  "js": false
+ },
+ {
+  "mr": "FAT प्रति वाढ दरातील बदल चुकीचा आहे.",
+  "en": "The rate change per FAT step is invalid.",
+  "hi": "प्रति FAT वृद्धि दर बदलाव गलत है।",
+  "js": false
+ },
+ {
+  "mr": "FAT मूल्ये आवश्यक आहेत.",
+  "en": "FAT values are required.",
+  "hi": "FAT मान आवश्यक हैं।",
+  "js": false
+ },
+ {
+  "mr": "FAT मूल्ये पुनरावृत्त आहेत.",
+  "en": "FAT values are repeated.",
+  "hi": "FAT मान दोहराए गए हैं।",
+  "js": false
+ },
+ {
+  "mr": "FAT व SNF नुसार दुधाचा दर. प्रत्येक दुधाच्या प्रकारासाठी वेगळा चार्ट ठेवता येतो.",
+  "en": "Milk rate by FAT and SNF. Each milk type can have its own chart.",
+  "hi": "FAT और SNF के अनुसार दूध का दर। हर दूध के प्रकार के लिए अलग चार्ट रखा जा सकता है।",
+  "js": false
+ },
+ {
+  "mr": "FAT%",
+  "en": "FAT%",
+  "hi": "FAT%",
+  "js": false
+ },
+ {
+  "mr": "FAT, SNF आणि दरांची माहिती भरा. मग तक्ता तयार करा, गरज असल्यास दर बदला आणि सेव्ह करा.",
+  "en": "Enter the FAT, SNF and rate details. Then generate the table, change rates if needed and save.",
+  "hi": "FAT, SNF और दर की जानकारी भरें। फिर तालिका बनाएँ, ज़रूरत हो तो दर बदलें और सेव करें।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF",
+  "en": "FAT/SNF",
+  "hi": "FAT/SNF",
+  "js": true
+ },
+ {
+  "mr": "FAT/SNF ची जास्तीत जास्त {max_axis_values} मूल्ये असू शकतात.",
+  "en": "FAT/SNF can have at most {max_axis_values} values.",
+  "hi": "FAT/SNF के अधिकतम {max_axis_values} मान हो सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF दर चार्ट",
+  "en": "FAT/SNF rate chart",
+  "hi": "FAT/SNF दर चार्ट",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF दर चार्ट (",
+  "en": "FAT/SNF rate charts (",
+  "hi": "FAT/SNF दर चार्ट (",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF दर चार्ट सेव्ह झाला.",
+  "en": "FAT/SNF rate chart saved.",
+  "hi": "FAT/SNF दर चार्ट सेव हुआ।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत (Milk Calculation Mode)",
+  "en": "FAT/SNF method (Milk Calculation Mode)",
+  "hi": "FAT/SNF पद्धति (दूध गणना पद्धति)",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत चालू",
+  "en": "FAT/SNF method on",
+  "hi": "FAT/SNF पद्धति चालू",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत चालू आहे. दूध संकलन FAT/SNF पानावरून करा (लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही).",
+  "en": "The FAT/SNF method is on. Collect milk from the FAT/SNF page (new litre-rate entries cannot be added).",
+  "hi": "FAT/SNF पद्धति चालू है। दूध संकलन FAT/SNF पेज से करें (लीटर-दर पद्धति में नई प्रविष्टि नहीं होगी)।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत चालू करायची? यापुढे दूध संकलनात FAT, SNF व लिटर भरावे लागतील आणि दर चार्टमधून येईल. लिटर-दर पद्धतीत नवीन नोंद घेता येणार नाही. जुन्या नोंदी बदलणार नाहीत.",
+  "en": "Turn on the FAT/SNF method? From now on milk collection needs FAT, SNF and litres, and the rate comes from the chart. New litre-rate entries cannot be added. Old entries will not change.",
+  "hi": "FAT/SNF पद्धति चालू करें? अब से दूध संकलन में FAT, SNF और लीटर भरने होंगे और दर चार्ट से आएगा। लीटर-दर पद्धति में नई प्रविष्टि नहीं होगी। पुरानी प्रविष्टियाँ नहीं बदलेंगी।",
+  "js": true
+ },
+ {
+  "mr": "FAT/SNF पद्धत चालू केली.",
+  "en": "FAT/SNF method turned on.",
+  "hi": "FAT/SNF पद्धति चालू की गई।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत चालू/बंद",
+  "en": "Turn FAT/SNF method on/off",
+  "hi": "FAT/SNF पद्धति चालू/बंद",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत बंद आहे. Settings मध्ये ती चालू करा.",
+  "en": "The FAT/SNF method is off. Turn it on in Settings.",
+  "hi": "FAT/SNF पद्धति बंद है। सेटिंग्स में इसे चालू करें।",
+  "js": true
+ },
+ {
+  "mr": "FAT/SNF पद्धत बंद करायची? यापुढे लिटर × दर पद्धत वापरली जाईल. FAT/SNF नोंदी जतन राहतील आणि हिशोबात जोडल्या जातील.",
+  "en": "Turn off the FAT/SNF method? From now on the litre × rate method is used. FAT/SNF entries are kept and included in the accounts.",
+  "hi": "FAT/SNF पद्धति बंद करें? अब से लीटर × दर पद्धति उपयोग होगी। FAT/SNF प्रविष्टियाँ सुरक्षित रहेंगी और हिसाब में जुड़ेंगी।",
+  "js": true
+ },
+ {
+  "mr": "FAT/SNF पद्धत बंद केली. लिटर-दर पद्धत चालू आहे.",
+  "en": "FAT/SNF method turned off. The litre-rate method is active.",
+  "hi": "FAT/SNF पद्धति बंद की गई। लीटर-दर पद्धति चालू है।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत सध्या बंद आहे. Settings मध्ये 'Milk Calculation Mode' चालू करा.",
+  "en": "The FAT/SNF method is currently off. Turn on 'Milk Calculation Mode' in Settings.",
+  "hi": "FAT/SNF पद्धति अभी बंद है। सेटिंग्स में 'दूध गणना पद्धति' चालू करें।",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत सध्या बंद आहे. आधी चार्ट तयार करा, मग",
+  "en": "The FAT/SNF method is currently off. Create a chart first, then",
+  "hi": "FAT/SNF पद्धति अभी बंद है। पहले चार्ट बनाएँ, फिर",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF पद्धत:",
+  "en": "FAT/SNF method:",
+  "hi": "FAT/SNF पद्धति:",
+  "js": false
+ },
+ {
+  "mr": "FAT/SNF/लिटर बदलल्यास त्या तारखेच्या चार्टप्रमाणे दर पुन्हा काढला जातो. प्रत्येक बदल ऑडिट लॉगमध्ये जतन होतो.",
+  "en": "When FAT/SNF/litres change, the rate is recalculated from that date's chart. Every change is kept in the audit log.",
+  "hi": "FAT/SNF/लीटर बदलने पर उस तारीख के चार्ट से दर फिर निकाला जाता है। हर बदलाव ऑडिट लॉग में सहेजा जाता है।",
+  "js": false
+ },
+ {
+  "mr": "आर्थिक",
+  "en": "FINANCE",
+  "hi": "वित्त",
+  "js": false
+ },
+ {
+  "mr": "रिपोर्ट डाउनलोड करता आला नाही.",
+  "en": "Failed to download report.",
+  "hi": "रिपोर्ट डाउनलोड नहीं हो सकी।",
+  "js": true
+ },
+ {
+  "mr": "शेतकरी सही",
+  "en": "Farmer Signature",
+  "hi": "किसान हस्ताक्षर",
+  "js": false
+ },
+ {
+  "mr": "खाद्याचे नाव",
+  "en": "Feed Name",
+  "hi": "आहार का नाम",
+  "js": false
+ },
+ {
+  "mr": "अभिप्राय",
+  "en": "Feedback",
+  "hi": "प्रतिक्रिया",
+  "js": false
+ },
+ {
+  "mr": "Feedback किंवा Support साठी पाठवलेले संदेश",
+  "en": "Messages sent for feedback or support",
+  "hi": "प्रतिक्रिया या सहायता के लिए भेजे गए संदेश",
+  "js": false
+ },
+ {
+  "mr": "Feedback पाठवताना error आला.",
+  "en": "Error while sending feedback.",
+  "hi": "प्रतिक्रिया भेजते समय त्रुटि हुई।",
+  "js": false
+ },
+ {
+  "mr": "Feedback पाठवला. धन्यवाद!",
+  "en": "Feedback sent. Thank you!",
+  "hi": "प्रतिक्रिया भेजी गई। धन्यवाद!",
+  "js": false
+ },
+ {
+  "mr": "पेंड",
+  "en": "Food Sack",
+  "hi": "पशु आहार",
+  "js": true
+ },
+ {
+  "mr": "पेंड रक्कम",
+  "en": "Food Sack Amount",
+  "hi": "पशु आहार राशि",
+  "js": false
+ },
+ {
+  "mr": "पेंड तपशील",
+  "en": "Food Sack Details",
+  "hi": "पशु आहार विवरण",
+  "js": false
+ },
+ {
+  "mr": "पेंड नोंद हटवली.",
+  "en": "Food sack entry deleted.",
+  "hi": "पशु आहार प्रविष्टि हटाई गई।",
+  "js": false
+ },
+ {
+  "mr": "पेंड दर जोडला.",
+  "en": "Food sack rate added.",
+  "hi": "पशु आहार दर जोड़ा गया।",
+  "js": false
+ },
+ {
+  "mr": "तुमच्या सुरक्षिततेसाठी",
+  "en": "For your security, enter the",
+  "hi": "आपकी सुरक्षा के लिए",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड विसरलात",
+  "en": "Forgot Password",
+  "hi": "पासवर्ड भूल गए",
+  "js": false
+ },
+ {
+  "mr": "मोफत चाचणी",
+  "en": "Free trial",
+  "hi": "मुफ़्त ट्रायल",
+  "js": false
+ },
+ {
+  "mr": "मोफत चाचणी: {n} दिवस बाकी ({date} रोजी संपेल).",
+  "en": "Free trial: {n} days left (ends {date}).",
+  "hi": "मुफ़्त ट्रायल: {n} दिन शेष ({date} को समाप्त)।",
+  "js": false
+ },
+ {
+  "mr": "पासून तारीख",
+  "en": "From Date",
+  "hi": "तारीख से",
+  "js": false
+ },
+ {
+  "mr": "From Date आणि To Date निवडा आणि रिपोर्ट दाखवा.",
+  "en": "Select From Date and To Date and show the report.",
+  "hi": "आरंभ और अंतिम तारीख चुनें और रिपोर्ट दिखाएँ।",
+  "js": false
+ },
+ {
+  "mr": "From Date आणि To Date निवडा.",
+  "en": "Select From Date and To Date.",
+  "hi": "आरंभ और अंतिम तारीख चुनें।",
+  "js": false
+ },
+ {
+  "mr": "From Date ही To Date पेक्षा मोठी असू शकत नाही.",
+  "en": "From Date cannot be after To Date.",
+  "hi": "आरंभ तारीख अंतिम तारीख से बाद की नहीं हो सकती।",
+  "js": true
+ },
+ {
+  "mr": "भविष्यातील तारीख निवडता येणार नाही.",
+  "en": "Future dates are not allowed.",
+  "hi": "भविष्य की तारीख नहीं चुनी जा सकती।",
+  "js": true
+ },
+ {
+  "mr": "AI सेवा सेट केलेली नाही. GEMINI_API_KEY तपासा.",
+  "en": "Gemini AI is not configured. Please check GEMINI_API_KEY.",
+  "hi": "AI सेवा सेट नहीं है। GEMINI_API_KEY जाँचें।",
+  "js": false
+ },
+ {
+  "mr": "बँक रिपोर्ट तयार करा",
+  "en": "Generate Bank Report",
+  "hi": "बैंक रिपोर्ट बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "पावती तयार करा",
+  "en": "Generate Receipt",
+  "hi": "रसीद बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "रिपोर्ट तयार करा",
+  "en": "Generate Report",
+  "hi": "रिपोर्ट बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "मुख्यपृष्ठ",
+  "en": "HOME",
+  "hi": "होम",
+  "js": false
+ },
+ {
+  "mr": "नमस्कार! मी DairyPro AI आहे. दूध संकलन, ग्राहक, पेमेंट, ॲडव्हान्स किंवा पेंड याबद्दल काहीही विचारा.",
+  "en": "Hello! I am DairyPro AI. Ask me anything about milk collection, customers, payments, advances or food sacks.",
+  "hi": "नमस्ते! मैं DairyPro AI हूँ। दूध संकलन, ग्राहक, भुगतान, एडवांस या पशु आहार के बारे में कुछ भी पूछें।",
+  "js": false
+ },
+ {
+  "mr": "नमस्कार मित्रा!",
+  "en": "Hello, Friend!",
+  "hi": "नमस्ते दोस्त!",
+  "js": false
+ },
+ {
+  "mr": "आयडी",
+  "en": "ID",
+  "hi": "आईडी",
+  "js": false
+ },
+ {
+  "mr": "आयडी: -",
+  "en": "ID: -",
+  "hi": "आईडी: -",
+  "js": false
+ },
+ {
+  "mr": "IFSC कोड",
+  "en": "IFSC Code",
+  "hi": "IFSC कोड",
+  "js": false
+ },
+ {
+  "mr": "IST",
+  "en": "IST",
+  "hi": "IST",
+  "js": false
+ },
+ {
+  "mr": "माहिती",
+  "en": "Information",
+  "hi": "जानकारी",
+  "js": true
+ },
+ {
+  "mr": "इंस्टॉल करा",
+  "en": "Install",
+  "hi": "इंस्टॉल करें",
+  "js": true
+ },
+ {
+  "mr": "जलद वापर आणि ऑफलाइन कामासाठी ॲप इंस्टॉल करा.",
+  "en": "Install the app for faster access and offline use.",
+  "hi": "तेज़ उपयोग और ऑफ़लाइन काम के लिए ऐप इंस्टॉल करें।",
+  "js": true
+ },
+ {
+  "mr": "चुकीचा डेअरी आयडी किंवा मोबाईल नंबर",
+  "en": "Invalid Dairy ID or Mobile Number",
+  "hi": "गलत डेयरी आईडी या मोबाइल नंबर",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा OTP.",
+  "en": "Invalid OTP.",
+  "hi": "गलत OTP।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा OTP. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Invalid OTP. Please try again.",
+  "hi": "गलत OTP। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा ईमेल किंवा पासवर्ड!",
+  "en": "Invalid credentials!",
+  "hi": "गलत ईमेल या पासवर्ड!",
+  "js": false
+ },
+ {
+  "mr": "चुकीची माहिती",
+  "en": "Invalid data",
+  "hi": "गलत जानकारी",
+  "js": true
+ },
+ {
+  "mr": "तारखेचे स्वरूप चुकीचे आहे.",
+  "en": "Invalid date format.",
+  "hi": "तारीख का प्रारूप गलत है।",
+  "js": false
+ },
+ {
+  "mr": "तारखांची श्रेणी चुकीची आहे.",
+  "en": "Invalid date range.",
+  "hi": "तारीख सीमा गलत है।",
+  "js": false
+ },
+ {
+  "mr": "चुकीची तारीख.",
+  "en": "Invalid date.",
+  "hi": "गलत तारीख।",
+  "js": false
+ },
+ {
+  "mr": "हटवण्याची विनंती चुकीची आहे.",
+  "en": "Invalid deletion request.",
+  "hi": "हटाने का अनुरोध गलत है।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा ईमेल!",
+  "en": "Invalid email!",
+  "hi": "गलत ईमेल!",
+  "js": false
+ },
+ {
+  "mr": "चुकीची घटना.",
+  "en": "Invalid event.",
+  "hi": "गलत घटना।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा किंवा मुदत संपलेला OTP.",
+  "en": "Invalid or expired OTP.",
+  "hi": "गलत या समाप्त OTP।",
+  "js": false
+ },
+ {
+  "mr": "चुकीची श्रेणी {range}: पहिला क्रमांक लहान असावा.",
+  "en": "Invalid range {range}: the first number must be smaller.",
+  "hi": "गलत श्रेणी {range}: पहली संख्या छोटी होनी चाहिए।",
+  "js": true
+ },
+ {
+  "mr": "चुकीची सूचना.",
+  "en": "Invalid reminder.",
+  "hi": "गलत सूचना।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा विनंती क्रमांक.",
+  "en": "Invalid request id.",
+  "hi": "गलत अनुरोध आईडी।",
+  "js": false
+ },
+ {
+  "mr": "चुकीची पेंड",
+  "en": "Invalid sack",
+  "hi": "गलत पशु आहार",
+  "js": false
+ },
+ {
+  "mr": "चुकीची पेंड.",
+  "en": "Invalid sack.",
+  "hi": "गलत पशु आहार।",
+  "js": false
+ },
+ {
+  "mr": "सत्र चुकीचे आहे. कृपया पुन्हा लॉगिन करा.",
+  "en": "Invalid session. Please login again.",
+  "hi": "सत्र अमान्य है। कृपया फिर से लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ लॉगिन सत्र चुकीचे आहे.",
+  "en": "Invalid staff login session.",
+  "hi": "स्टाफ लॉगिन सत्र अमान्य है।",
+  "js": false
+ },
+ {
+  "mr": "सबस्क्रिप्शन माहिती चुकीची आहे",
+  "en": "Invalid subscription data",
+  "hi": "सब्सक्रिप्शन जानकारी गलत है",
+  "js": false
+ },
+ {
+  "mr": "अपडेट विनंती चुकीची आहे.",
+  "en": "Invalid update request.",
+  "hi": "अपडेट अनुरोध गलत है।",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा ग्राहक.",
+  "en": "Invalid vendor.",
+  "hi": "गलत ग्राहक।",
+  "js": false
+ },
+ {
+  "mr": "लि",
+  "en": "L",
+  "hi": "ली",
+  "js": true
+ },
+ {
+  "mr": "भाषा",
+  "en": "Language",
+  "hi": "भाषा",
+  "js": false
+ },
+ {
+  "mr": "भाषा बदलली.",
+  "en": "Language changed.",
+  "hi": "भाषा बदल दी गई।",
+  "js": false
+ },
+ {
+  "mr": "नंतर",
+  "en": "Later",
+  "hi": "बाद में",
+  "js": true
+ },
+ {
+  "mr": "अलीकडील पेमेंट ऑर्डर",
+  "en": "Latest payment orders",
+  "hi": "हाल के भुगतान ऑर्डर",
+  "js": false
+ },
+ {
+  "mr": "DairyPro शिका",
+  "en": "Learn DairyPro",
+  "hi": "DairyPro सीखें",
+  "js": false
+ },
+ {
+  "mr": "लोड होत आहे...",
+  "en": "Loading...",
+  "hi": "लोड हो रहा है...",
+  "js": true
+ },
+ {
+  "mr": "यशस्वीरीत्या लॉगिन झाले!",
+  "en": "Logged in successfully!",
+  "hi": "सफलतापूर्वक लॉगिन हुआ!",
+  "js": false
+ },
+ {
+  "mr": "यशस्वीरीत्या लॉगआउट झाले.",
+  "en": "Logged out successfully.",
+  "hi": "सफलतापूर्वक लॉगआउट हुआ।",
+  "js": false
+ },
+ {
+  "mr": "लॉगआउट झाले.",
+  "en": "Logged out.",
+  "hi": "लॉगआउट हो गया।",
+  "js": false
+ },
+ {
+  "mr": "लॉगिन",
+  "en": "Login",
+  "hi": "लॉगिन",
+  "js": false
+ },
+ {
+  "mr": "Login तपशील इतर कोणासोबत शेअर करू नयेत",
+  "en": "Do not share login details with anyone",
+  "hi": "लॉगिन विवरण किसी के साथ साझा न करें",
+  "js": false
+ },
+ {
+  "mr": "लॉगआउट",
+  "en": "Logout",
+  "hi": "लॉगआउट",
+  "js": true
+ },
+ {
+  "mr": "मेनू",
+  "en": "MENU",
+  "hi": "मेनू",
+  "js": false
+ },
+ {
+  "mr": "MH12AB1234",
+  "en": "MH12AB1234",
+  "hi": "MH12AB1234",
+  "js": false
+ },
+ {
+  "mr": "दूध हिशोब पद्धत",
+  "en": "MILK CALCULATION MODE",
+  "hi": "दूध गणना पद्धति",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ व्यवस्थापन",
+  "en": "Manage Staff",
+  "hi": "स्टाफ प्रबंधन",
+  "js": false
+ },
+ {
+  "mr": "मराठी, इंग्रजी आणि हिंदी",
+  "en": "Marathi, English and Hindi",
+  "hi": "मराठी, अंग्रेज़ी और हिंदी",
+  "js": false
+ },
+ {
+  "mr": "मेनू",
+  "en": "Menu",
+  "hi": "मेनू",
+  "js": false
+ },
+ {
+  "mr": "संदेश खूप मोठा आहे.",
+  "en": "Message is too long.",
+  "hi": "संदेश बहुत लंबा है।",
+  "js": false
+ },
+ {
+  "mr": "दूध",
+  "en": "Milk",
+  "hi": "दूध",
+  "js": true
+ },
+ {
+  "mr": "दुधाची रक्कम",
+  "en": "Milk Amount",
+  "hi": "दूध राशि",
+  "js": false
+ },
+ {
+  "mr": "दूध हिशोब पद्धत",
+  "en": "Milk Calculation Mode",
+  "hi": "दूध गणना पद्धति",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन तपशील",
+  "en": "Milk Collection Details",
+  "hi": "दूध संकलन विवरण",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन पावती",
+  "en": "Milk Collection Receipt",
+  "hi": "दूध संकलन रसीद",
+  "js": false
+ },
+ {
+  "mr": "दूध इतिहास",
+  "en": "Milk History",
+  "hi": "दूध इतिहास",
+  "js": false
+ },
+ {
+  "mr": "दूध पेमेंट पावती",
+  "en": "Milk Payment Receipt",
+  "hi": "दूध भुगतान रसीद",
+  "js": false
+ },
+ {
+  "mr": "दूध अंदाज",
+  "en": "Milk Prediction",
+  "hi": "दूध पूर्वानुमान",
+  "js": false
+ },
+ {
+  "mr": "दुधाचा प्रकार",
+  "en": "Milk Type",
+  "hi": "दूध का प्रकार",
+  "js": false
+ },
+ {
+  "mr": "दूध दर जोडला.",
+  "en": "Milk rate added.",
+  "hi": "दूध दर जोड़ा गया।",
+  "js": false
+ },
+ {
+  "mr": "दूध दर हटवला.",
+  "en": "Milk rate deleted.",
+  "hi": "दूध दर हटाया गया।",
+  "js": false
+ },
+ {
+  "mr": "मासिक",
+  "en": "Monthly",
+  "hi": "मासिक",
+  "js": false
+ },
+ {
+  "mr": "सकाळ म्हैस",
+  "en": "Morning Buffalo",
+  "hi": "सुबह भैंस",
+  "js": false
+ },
+ {
+  "mr": "सकाळ गाय",
+  "en": "Morning Cow",
+  "hi": "सुबह गाय",
+  "js": false
+ },
+ {
+  "mr": "माझे खाते",
+  "en": "My Account",
+  "hi": "मेरा खाता",
+  "js": false
+ },
+ {
+  "mr": "माझी प्रोफाइल",
+  "en": "My Profile",
+  "hi": "मेरी प्रोफ़ाइल",
+  "js": false
+ },
+ {
+  "mr": "नाव",
+  "en": "Name",
+  "hi": "नाम",
+  "js": false
+ },
+ {
+  "mr": "एकूण देय",
+  "en": "Net Payable",
+  "hi": "कुल देय",
+  "js": false
+ },
+ {
+  "mr": "नेटवर्क अडचण. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Network problem. Please try again.",
+  "hi": "नेटवर्क समस्या। कृपया फिर प्रयास करें।",
+  "js": true
+ },
+ {
+  "mr": "नवीन पासवर्ड",
+  "en": "New Password",
+  "hi": "नया पासवर्ड",
+  "js": false
+ },
+ {
+  "mr": "नवीन दर लागू झाला.",
+  "en": "New rate applied.",
+  "hi": "नया दर लागू हुआ।",
+  "js": false
+ },
+ {
+  "mr": "दुधाच्या नोंदी सापडल्या नाहीत",
+  "en": "No Milk Records Found",
+  "hi": "दूध की प्रविष्टियाँ नहीं मिलीं",
+  "js": false
+ },
+ {
+  "mr": "अजून बॅकअप नाही",
+  "en": "No backups yet",
+  "hi": "अभी कोई बैकअप नहीं",
+  "js": false
+ },
+ {
+  "mr": "माहिती नाही",
+  "en": "No data",
+  "hi": "कोई जानकारी नहीं",
+  "js": false
+ },
+ {
+  "mr": "या डिव्हाइसवर कोणतीही नोंद सेव्ह नाही.",
+  "en": "No entries saved on this device.",
+  "hi": "इस डिवाइस पर कोई प्रविष्टि सेव नहीं है।",
+  "js": true
+ },
+ {
+  "mr": "दीर्घकालीन बंधन नाही",
+  "en": "No long-term commitment",
+  "hi": "कोई लंबी प्रतिबद्धता नहीं",
+  "js": false
+ },
+ {
+  "mr": "निवडलेल्या कालावधीत दूध संकलन नाही.",
+  "en": "No milk collection found for selected period.",
+  "hi": "चुनी गई अवधि में कोई दूध संकलन नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "कोणत्याही सूचना नाहीत.",
+  "en": "No notifications found.",
+  "hi": "कोई सूचना नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "या डिव्हाइसवर अजून पाने सेव्ह नाहीत. ऑफलाइन वापरासाठी एकदा इंटरनेटसह DairyPro उघडा.",
+  "en": "No pages are saved on this device yet. Open DairyPro once with internet to use it offline.",
+  "hi": "इस डिवाइस पर अभी कोई पेज सेव नहीं है। ऑफ़लाइन उपयोग के लिए एक बार इंटरनेट के साथ DairyPro खोलें।",
+  "js": false
+ },
+ {
+  "mr": "अजून कोणतेही पेमेंट नाही.",
+  "en": "No payments yet.",
+  "hi": "अभी कोई भुगतान नहीं।",
+  "js": false
+ },
+ {
+  "mr": "निवडलेल्या ग्राहक क्रमांकांची पावती नाही.",
+  "en": "No receipt matches the selected customer numbers.",
+  "hi": "चुने गए ग्राहक नंबरों की कोई रसीद नहीं है।",
+  "js": true
+ },
+ {
+  "mr": "नोंदी नाहीत.",
+  "en": "No records.",
+  "hi": "कोई रिकॉर्ड नहीं।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ सापडला नाही.",
+  "en": "No staff found.",
+  "hi": "कोई स्टाफ नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकांची माहिती पाठवली नाही.",
+  "en": "No vendor data provided.",
+  "hi": "ग्राहकों की जानकारी नहीं भेजी गई।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकनिहाय विशेष दर नाहीत.",
+  "en": "No vendor special rates found.",
+  "hi": "ग्राहक-विशेष दर नहीं मिले।",
+  "js": false
+ },
+ {
+  "mr": "सूचना",
+  "en": "Notifications",
+  "hi": "सूचनाएँ",
+  "js": false
+ },
+ {
+  "mr": "ठीक आहे",
+  "en": "OK",
+  "hi": "ठीक है",
+  "js": true
+ },
+ {
+  "mr": "व्यवहार",
+  "en": "OPERATIONS",
+  "hi": "संचालन",
+  "js": false
+ },
+ {
+  "mr": "OTP पडताळणी",
+  "en": "OTP Verification",
+  "hi": "OTP सत्यापन",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 1",
+  "en": "OTP digit 1",
+  "hi": "OTP अंक 1",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 2",
+  "en": "OTP digit 2",
+  "hi": "OTP अंक 2",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 3",
+  "en": "OTP digit 3",
+  "hi": "OTP अंक 3",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 4",
+  "en": "OTP digit 4",
+  "hi": "OTP अंक 4",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 5",
+  "en": "OTP digit 5",
+  "hi": "OTP अंक 5",
+  "js": false
+ },
+ {
+  "mr": "OTP अंक 6",
+  "en": "OTP digit 6",
+  "hi": "OTP अंक 6",
+  "js": false
+ },
+ {
+  "mr": "OTP ची मुदत संपेल",
+  "en": "OTP expires in",
+  "hi": "OTP की समय-सीमा",
+  "js": false
+ },
+ {
+  "mr": "मालकाच्या ईमेलवर OTP पाठवला आहे. कृपया OTP टाका.",
+  "en": "OTP has been sent to the owner email. Please enter the OTP.",
+  "hi": "मालिक के ईमेल पर OTP भेजा गया है। कृपया OTP दर्ज करें।",
+  "js": false
+ },
+ {
+  "mr": "ईमेलवर OTP पाठवला.",
+  "en": "OTP sent to email.",
+  "hi": "ईमेल पर OTP भेजा गया।",
+  "js": false
+ },
+ {
+  "mr": "OTP पाठवला. कृपया पडताळणी करा.",
+  "en": "OTP sent. Please verify.",
+  "hi": "OTP भेजा गया। कृपया सत्यापित करें।",
+  "js": false
+ },
+ {
+  "mr": "OTP पडताळला. नवीन पासवर्ड सेट करा.",
+  "en": "OTP verified. Set new password.",
+  "hi": "OTP सत्यापित हुआ। नया पासवर्ड सेट करें।",
+  "js": false
+ },
+ {
+  "mr": "OTP ची मुदत संपली. कृपया पुन्हा सुरुवात करा.",
+  "en": "The OTP has expired. Please start again.",
+  "hi": "OTP की समय-सीमा समाप्त हो गई। कृपया फिर से शुरू करें।",
+  "js": false
+ },
+ {
+  "mr": "OTP तपासा",
+  "en": "Verify OTP",
+  "hi": "OTP जाँचें",
+  "js": false
+ },
+ {
+  "mr": "OTP पाठवता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Could not send the OTP. Please try again.",
+  "hi": "OTP नहीं भेजा जा सका। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "OTP पाठवा",
+  "en": "Send OTP",
+  "hi": "OTP भेजें",
+  "js": false
+ },
+ {
+  "mr": "OTP पुन्हा पाठवला ✓",
+  "en": "OTP sent again ✓",
+  "hi": "OTP फिर से भेजा गया ✓",
+  "js": true
+ },
+ {
+  "mr": "OTP मिळाला नाही?",
+  "en": "Did not get the OTP?",
+  "hi": "OTP नहीं मिला?",
+  "js": false
+ },
+ {
+  "mr": "ऑफलाइन",
+  "en": "Offline",
+  "hi": "ऑफ़लाइन",
+  "js": true
+ },
+ {
+  "mr": "या पानाची ऑफलाइन प्रत {date} रोजी सेव्ह झाली. आकडे जुने असू शकतात.",
+  "en": "Offline copy of this page saved on {date}. Figures may be out of date.",
+  "hi": "इस पेज की ऑफ़लाइन प्रति {date} को सेव हुई। आँकड़े पुराने हो सकते हैं।",
+  "js": true
+ },
+ {
+  "mr": "ऑफलाइन नोंदी",
+  "en": "Offline entries",
+  "hi": "ऑफ़लाइन प्रविष्टियाँ",
+  "js": true
+ },
+ {
+  "mr": "ऑनलाइन",
+  "en": "Online",
+  "hi": "ऑनलाइन",
+  "js": true
+ },
+ {
+  "mr": "ऑनलाइन पेमेंट अजून सुरू केलेले नाही. कृपया सपोर्टशी संपर्क करा.",
+  "en": "Online payment is not configured yet. Please contact support.",
+  "hi": "ऑनलाइन भुगतान अभी सेट नहीं है। कृपया सपोर्ट से संपर्क करें।",
+  "js": false
+ },
+ {
+  "mr": "फक्त मालक स्टाफ जोडू शकतो",
+  "en": "Only owner can add staff",
+  "hi": "केवल मालिक स्टाफ जोड़ सकता है",
+  "js": false
+ },
+ {
+  "mr": "फक्त डेअरी मालक सबस्क्रिप्शन व्यवस्थापित करू शकतो.",
+  "en": "Only the dairy owner can manage the subscription.",
+  "hi": "केवल डेयरी मालिक सब्सक्रिप्शन प्रबंधित कर सकता है।",
+  "js": false
+ },
+ {
+  "mr": "DairyPro AI उघडा",
+  "en": "Open DairyPro AI",
+  "hi": "DairyPro AI खोलें",
+  "js": false
+ },
+ {
+  "mr": "कॅलेंडर उघडा",
+  "en": "Open calendar",
+  "hi": "कैलेंडर खोलें",
+  "js": true
+ },
+ {
+  "mr": "मेनू उघडा",
+  "en": "Open menu",
+  "hi": "मेनू खोलें",
+  "js": false
+ },
+ {
+  "mr": "ऑर्डर स्थिती: {status}",
+  "en": "Order status: {status}",
+  "hi": "ऑर्डर स्थिति: {status}",
+  "js": false
+ },
+ {
+  "mr": "मालक लॉगिन",
+  "en": "Owner Login",
+  "hi": "मालिक लॉगिन",
+  "js": false
+ },
+ {
+  "mr": "मालकाचे खाते सापडले नाही.",
+  "en": "Owner account not found.",
+  "hi": "मालिक का खाता नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "सबस्क्रिप्शन मुदत",
+  "en": "Paid until",
+  "hi": "भुगतान वैधता",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड",
+  "en": "Password",
+  "hi": "पासवर्ड",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड यशस्वीरीत्या रीसेट झाला",
+  "en": "Password reset successfully",
+  "hi": "पासवर्ड सफलतापूर्वक रीसेट हुआ",
+  "js": false
+ },
+ {
+  "mr": "पासवर्डची ताकद",
+  "en": "Password strength",
+  "hi": "पासवर्ड की मज़बूती",
+  "js": true
+ },
+ {
+  "mr": "पासवर्ड बदलला. कृपया लॉगिन करा.",
+  "en": "Password updated. Please login.",
+  "hi": "पासवर्ड अपडेट हुआ। कृपया लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड जुळत नाहीत",
+  "en": "Passwords do not match",
+  "hi": "पासवर्ड मेल नहीं खाते",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड जुळत नाहीत!",
+  "en": "Passwords do not match!",
+  "hi": "पासवर्ड मेल नहीं खाते!",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड जुळत नाहीत.",
+  "en": "Passwords do not match.",
+  "hi": "पासवर्ड मेल नहीं खाते।",
+  "js": false
+ },
+ {
+  "mr": "{amount} भरा",
+  "en": "Pay {amount}",
+  "hi": "{amount} भुगतान करें",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट इतिहास",
+  "en": "Payment History",
+  "hi": "भुगतान इतिहास",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट आयडी",
+  "en": "Payment ID",
+  "hi": "भुगतान आईडी",
+  "js": false
+ },
+ {
+  "mr": "पेमेंटची रक्कम प्लॅनच्या किंमतीशी जुळत नाही.",
+  "en": "Payment amount does not match the plan price.",
+  "hi": "भुगतान राशि प्लान की कीमत से मेल नहीं खाती।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट तपासले जात आहे",
+  "en": "Payment being verified",
+  "hi": "भुगतान की जाँच हो रही है",
+  "js": true
+ },
+ {
+  "mr": "पेमेंटची पडताळणी झाली नाही.",
+  "en": "Payment could not be verified.",
+  "hi": "भुगतान सत्यापित नहीं हो सका।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंटचे चलन जुळत नाही.",
+  "en": "Payment currency does not match.",
+  "hi": "भुगतान की मुद्रा मेल नहीं खाती।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट अयशस्वी झाले. सबस्क्रिप्शन सुरू झाले नाही. तुम्ही पुन्हा प्रयत्न करू शकता.",
+  "en": "Payment failed. No subscription was activated. You can try again.",
+  "hi": "भुगतान विफल हुआ। कोई सब्सक्रिप्शन सक्रिय नहीं हुआ। आप फिर प्रयास कर सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट अयशस्वी: {reason}. सबस्क्रिप्शन सुरू झाले नाही. तुम्ही पुन्हा प्रयत्न करू शकता.",
+  "en": "Payment failed: {reason}. No subscription was activated. You can try again.",
+  "hi": "भुगतान विफल: {reason}। कोई सब्सक्रिप्शन सक्रिय नहीं हुआ। आप फिर प्रयास कर सकते हैं।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट इतिहास",
+  "en": "Payment history",
+  "hi": "भुगतान इतिहास",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट ऑर्डर सापडली नाही.",
+  "en": "Payment order not found.",
+  "hi": "भुगतान ऑर्डर नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट मिळाले. बँकेकडून खात्री केली जात आहे; हे पान आपोआप अपडेट होईल. पुन्हा पेमेंट करू नका.",
+  "en": "Payment received. We are confirming it with the bank; this page will update automatically. Do not pay again.",
+  "hi": "भुगतान प्राप्त हुआ। बैंक से पुष्टि की जा रही है; यह पेज अपने-आप अपडेट होगा। दोबारा भुगतान न करें।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट यशस्वी",
+  "en": "Payment successful",
+  "hi": "भुगतान सफल",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट यशस्वी. तुमचे सबस्क्रिप्शन सुरू झाले आहे.",
+  "en": "Payment successful. Your subscription is active.",
+  "hi": "भुगतान सफल। आपका सब्सक्रिप्शन सक्रिय है।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट विंडो बंद झाली. पैसे कापले गेले असल्यास ते आपोआप निश्चित होईल. पुन्हा पेमेंट करू नका; 'पेमेंट स्थिती तपासा' वापरा.",
+  "en": "Payment window closed. If money was deducted, it will be confirmed automatically. Do not pay again; use 'Check payment status'.",
+  "hi": "भुगतान विंडो बंद हो गई। यदि पैसे कटे हैं तो यह अपने-आप पुष्टि होगी। दोबारा भुगतान न करें; 'भुगतान स्थिति जाँचें' का उपयोग करें।",
+  "js": true
+ },
+ {
+  "mr": "पेमेंट Razorpay द्वारे सुरक्षितपणे होते. DairyPro ला तुमचे कार्ड, UPI PIN किंवा बँक पासवर्ड दिसत नाही. Razorpay ने पेमेंटची खात्री केल्यानंतरच सबस्क्रिप्शन सुरू होते.",
+  "en": "Payments are processed securely by Razorpay. DairyPro never sees your card, UPI PIN or bank password. A subscription is activated only after Razorpay confirms the payment.",
+  "hi": "भुगतान Razorpay द्वारा सुरक्षित रूप से होता है। DairyPro आपका कार्ड, UPI PIN या बैंक पासवर्ड कभी नहीं देखता। Razorpay द्वारा पुष्टि के बाद ही सब्सक्रिप्शन सक्रिय होता है।",
+  "js": false
+ },
+ {
+  "mr": "पेमेंटसाठी इंटरनेट आवश्यक आहे. प्लॅन निवडण्यासाठी इंटरनेट सुरू करा.",
+  "en": "Payments require internet. Connect to the internet to choose a plan.",
+  "hi": "भुगतान के लिए इंटरनेट ज़रूरी है। प्लान चुनने के लिए इंटरनेट चालू करें।",
+  "js": false
+ },
+ {
+  "mr": "प्रलंबित पेमेंट",
+  "en": "Pending payments",
+  "hi": "लंबित भुगतान",
+  "js": false
+ },
+ {
+  "mr": "कालावधी",
+  "en": "Period",
+  "hi": "अवधि",
+  "js": false
+ },
+ {
+  "mr": "कालावधीची एकूण रक्कम",
+  "en": "Period Total",
+  "hi": "अवधि का कुल",
+  "js": false
+ },
+ {
+  "mr": "फोन",
+  "en": "Phone",
+  "hi": "फ़ोन",
+  "js": false
+ },
+ {
+  "mr": "फोन नंबर",
+  "en": "Phone Number",
+  "hi": "फ़ोन नंबर",
+  "js": false
+ },
+ {
+  "mr": "प्लॅन",
+  "en": "Plan",
+  "hi": "प्लान",
+  "js": false
+ },
+ {
+  "mr": "प्लॅटफॉर्म ॲडमिन",
+  "en": "Platform admin",
+  "hi": "प्लेटफ़ॉर्म एडमिन",
+  "js": false
+ },
+ {
+  "mr": "कृपया योग्य प्लॅन निवडा.",
+  "en": "Please choose a valid plan.",
+  "hi": "कृपया सही प्लान चुनें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया खात्री करा",
+  "en": "Please confirm",
+  "hi": "कृपया पुष्टि करें",
+  "js": true
+ },
+ {
+  "mr": "कृपया हटवण्याची खात्री करा.",
+  "en": "Please confirm deletion.",
+  "hi": "कृपया हटाने की पुष्टि करें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया संदेश लिहा.",
+  "en": "Please enter a message.",
+  "hi": "कृपया संदेश लिखें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया आधी लॉगिन करा.",
+  "en": "Please login first.",
+  "hi": "कृपया पहले लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "पासून आणि पर्यंत तारीख निवडा, मग 'पावती तयार करा' दाबा.",
+  "en": "Please select From Date and To Date, then click Generate Receipt.",
+  "hi": "आरंभ और अंतिम तारीख चुनें, फिर 'रसीद बनाएँ' दबाएँ।",
+  "js": false
+ },
+ {
+  "mr": "कृपया पासून आणि पर्यंत दोन्ही तारखा निवडा.",
+  "en": "Please select both From Date and To Date.",
+  "hi": "कृपया आरंभ और अंतिम दोनों तारीखें चुनें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया दोन्ही तारखा निवडा.",
+  "en": "Please select both dates.",
+  "hi": "कृपया दोनों तारीखें चुनें।",
+  "js": false
+ },
+ {
+  "mr": "हा रिपोर्ट तयार करण्यापूर्वी बँक सेटिंग्ज (IFSC कोड) भरा.",
+  "en": "Please set up your Bank Settings (IFSC code) before generating this report.",
+  "hi": "यह रिपोर्ट बनाने से पहले बैंक सेटिंग्स (IFSC कोड) भरें।",
+  "js": false
+ },
+ {
+  "mr": "उद्याच्या दुधाचा अंदाज",
+  "en": "Predict Tomorrow Milk",
+  "hi": "कल के दूध का पूर्वानुमान",
+  "js": false
+ },
+ {
+  "mr": "प्रिंट",
+  "en": "Print",
+  "hi": "प्रिंट",
+  "js": false
+ },
+ {
+  "mr": "प्रिंट तारीख:",
+  "en": "Print Date:",
+  "hi": "प्रिंट तिथि:",
+  "js": false
+ },
+ {
+  "mr": "गोपनीयता",
+  "en": "Privacy",
+  "hi": "गोपनीयता",
+  "js": false
+ },
+ {
+  "mr": "गोपनीयता धोरण",
+  "en": "Privacy Policy",
+  "hi": "गोपनीयता नीति",
+  "js": false
+ },
+ {
+  "mr": "Pro",
+  "en": "Pro",
+  "hi": "Pro",
+  "js": false
+ },
+ {
+  "mr": "प्रक्रिया सुरू आहे...",
+  "en": "Processing...",
+  "hi": "प्रक्रिया जारी है...",
+  "js": true
+ },
+ {
+  "mr": "प्रोफाइल",
+  "en": "Profile",
+  "hi": "प्रोफ़ाइल",
+  "js": false
+ },
+ {
+  "mr": "प्रोफाइल सापडली नाही.",
+  "en": "Profile not found.",
+  "hi": "प्रोफ़ाइल नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "जलद दुवे",
+  "en": "QUICK LINKS",
+  "hi": "त्वरित लिंक",
+  "js": false
+ },
+ {
+  "mr": "संख्या",
+  "en": "Qty",
+  "hi": "मात्रा",
+  "js": false
+ },
+ {
+  "mr": "प्रमाण",
+  "en": "Quantity",
+  "hi": "मात्रा",
+  "js": false
+ },
+ {
+  "mr": "जलद दुवे",
+  "en": "Quick Links",
+  "hi": "त्वरित लिंक",
+  "js": false
+ },
+ {
+  "mr": "श्रेणी {range} खूप मोठी आहे.",
+  "en": "Range {range} is too large.",
+  "hi": "श्रेणी {range} बहुत बड़ी है।",
+  "js": true
+ },
+ {
+  "mr": "दर",
+  "en": "Rate",
+  "hi": "दर",
+  "js": true
+ },
+ {
+  "mr": "रेटिंग",
+  "en": "Rating",
+  "hi": "रेटिंग",
+  "js": false
+ },
+ {
+  "mr": "Razorpay",
+  "en": "Razorpay",
+  "hi": "Razorpay",
+  "js": false
+ },
+ {
+  "mr": "Razorpay सेट केलेले नाही.",
+  "en": "Razorpay is not configured.",
+  "hi": "Razorpay सेट नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "Razorpay शी संपर्क होत नाही.",
+  "en": "Razorpay is unreachable.",
+  "hi": "Razorpay से संपर्क नहीं हो पा रहा।",
+  "js": false
+ },
+ {
+  "mr": "Razorpay विनंती अयशस्वी झाली.",
+  "en": "Razorpay request failed.",
+  "hi": "Razorpay अनुरोध विफल हुआ।",
+  "js": false
+ },
+ {
+  "mr": "कारण",
+  "en": "Reason",
+  "hi": "कारण",
+  "js": true
+ },
+ {
+  "mr": "पावती कालावधी:",
+  "en": "Receipt Period:",
+  "hi": "रसीद अवधि:",
+  "js": false
+ },
+ {
+  "mr": "पावत्या",
+  "en": "Receipts",
+  "hi": "रसीदें",
+  "js": false
+ },
+ {
+  "mr": "तपासा",
+  "en": "Reconcile",
+  "hi": "मिलान करें",
+  "js": false
+ },
+ {
+  "mr": "रिफ्रेश",
+  "en": "Refresh",
+  "hi": "रिफ़्रेश",
+  "js": false
+ },
+ {
+  "mr": "परतावा दिला",
+  "en": "Refunded",
+  "hi": "धनवापसी हुई",
+  "js": false
+ },
+ {
+  "mr": "आता नूतनीकरण करा",
+  "en": "Renew now",
+  "hi": "अभी नवीनीकरण करें",
+  "js": false
+ },
+ {
+  "mr": "Report load करता आला नाही.",
+  "en": "Could not load the report.",
+  "hi": "रिपोर्ट लोड नहीं हो सकी।",
+  "js": true
+ },
+ {
+  "mr": "Report पहा",
+  "en": "View report",
+  "hi": "रिपोर्ट देखें",
+  "js": false
+ },
+ {
+  "mr": "रिपोर्ट",
+  "en": "Reports",
+  "hi": "रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड रीसेट करा",
+  "en": "Reset Password",
+  "hi": "पासवर्ड रीसेट करें",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ पासवर्ड रीसेट करा",
+  "en": "Reset Staff Password",
+  "hi": "स्टाफ पासवर्ड रीसेट करें",
+  "js": false
+ },
+ {
+  "mr": "रिस्टोअर करा",
+  "en": "Restore",
+  "hi": "रिस्टोर करें",
+  "js": true
+ },
+ {
+  "mr": "हा बॅकअप रिस्टोअर करायचा? सध्याचा डेटा बदलला जाईल!",
+  "en": "Restore this backup? Current data will be replaced!",
+  "hi": "यह बैकअप रिस्टोर करें? वर्तमान डेटा बदल जाएगा!",
+  "js": true
+ },
+ {
+  "mr": "Restore करता आला नाही.",
+  "en": "Could not restore.",
+  "hi": "रिस्टोर नहीं हो सका।",
+  "js": false
+ },
+ {
+  "mr": "पुन्हा प्रयत्न करा",
+  "en": "Retry",
+  "hi": "फिर प्रयास करें",
+  "js": true
+ },
+ {
+  "mr": "तपासा",
+  "en": "Review",
+  "hi": "समीक्षा करें",
+  "js": true
+ },
+ {
+  "mr": "SBIN0001234",
+  "en": "SBIN0001234",
+  "hi": "SBIN0001234",
+  "js": false
+ },
+ {
+  "mr": "लॉगिन करा",
+  "en": "SIGN IN",
+  "hi": "साइन इन करें",
+  "js": false
+ },
+ {
+  "mr": "नोंदणी करा",
+  "en": "SIGN UP",
+  "hi": "साइन अप करें",
+  "js": false
+ },
+ {
+  "mr": "SNF",
+  "en": "SNF",
+  "hi": "SNF",
+  "js": true
+ },
+ {
+  "mr": "SNF %",
+  "en": "SNF %",
+  "hi": "SNF %",
+  "js": false
+ },
+ {
+  "mr": "SNF {value} काढा",
+  "en": "Remove SNF {value}",
+  "hi": "SNF {value} हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "SNF प्रति वाढ दरातील बदल चुकीचा आहे.",
+  "en": "The rate change per SNF step is invalid.",
+  "hi": "प्रति SNF वृद्धि दर बदलाव गलत है।",
+  "js": false
+ },
+ {
+  "mr": "SNF मूल्ये आवश्यक आहेत.",
+  "en": "SNF values are required.",
+  "hi": "SNF मान आवश्यक हैं।",
+  "js": false
+ },
+ {
+  "mr": "SNF मूल्ये पुनरावृत्त आहेत.",
+  "en": "SNF values are repeated.",
+  "hi": "SNF मान दोहराए गए हैं।",
+  "js": false
+ },
+ {
+  "mr": "SNF स्तंभ काढा",
+  "en": "Remove SNF column",
+  "hi": "SNF कॉलम हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "SNF%",
+  "en": "SNF%",
+  "hi": "SNF%",
+  "js": false
+ },
+ {
+  "mr": "सिस्टम",
+  "en": "SYSTEM",
+  "hi": "सिस्टम",
+  "js": false
+ },
+ {
+  "mr": "सेव्ह करा",
+  "en": "Save",
+  "hi": "सेव करें",
+  "js": false
+ },
+ {
+  "mr": "बँक तपशील सेव्ह करा",
+  "en": "Save Bank Details",
+  "hi": "बैंक विवरण सेव करें",
+  "js": false
+ },
+ {
+  "mr": "तरीही सेव्ह करा",
+  "en": "Save anyway",
+  "hi": "फिर भी सेव करें",
+  "js": true
+ },
+ {
+  "mr": "{n}% बचत",
+  "en": "Save {n}%",
+  "hi": "{n}% बचत",
+  "js": false
+ },
+ {
+  "mr": "जुन्या ॲप आवृत्तीत सेव्ह झाली. सिंक करण्यापूर्वी ही नोंद याच डेअरीची आहे याची खात्री करा.",
+  "en": "Saved by the previous app version. Confirm that it belongs to this dairy before syncing.",
+  "hi": "पुराने ऐप संस्करण में सेव हुई। सिंक करने से पहले पुष्टि करें कि यह इसी डेयरी की है।",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक {vendor} साठी सेव्ह झाले",
+  "en": "Saved for vendor {vendor}",
+  "hi": "ग्राहक {vendor} के लिए सेव हुआ",
+  "js": true
+ },
+ {
+  "mr": "{vendor} ({milk_type}) साठी सेव्ह झाले",
+  "en": "Saved for {vendor} ({milk_type})",
+  "hi": "{vendor} ({milk_type}) के लिए सेव हुआ",
+  "js": false
+ },
+ {
+  "mr": "या डिव्हाइसवर सेव्ह",
+  "en": "Saved on this device",
+  "hi": "इस डिवाइस पर सेव",
+  "js": true
+ },
+ {
+  "mr": "या डिव्हाइसवर सेव्ह झाले. सिंक होण्याची प्रतीक्षा.",
+  "en": "Saved on this device. Waiting for synchronization.",
+  "hi": "इस डिवाइस पर सेव हुआ। सिंक की प्रतीक्षा है।",
+  "js": true
+ },
+ {
+  "mr": "सेव्ह होत आहे {done}/{total}...",
+  "en": "Saving {done}/{total}...",
+  "hi": "सेव हो रहा है {done}/{total}...",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक निवडा",
+  "en": "Select Vendor",
+  "hi": "ग्राहक चुनें",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक निवडा",
+  "en": "Select vendor",
+  "hi": "ग्राहक चुनें",
+  "js": true
+ },
+ {
+  "mr": "पाठवा",
+  "en": "Send",
+  "hi": "भेजें",
+  "js": false
+ },
+ {
+  "mr": "अभिप्राय पाठवा",
+  "en": "Send Feedback",
+  "hi": "प्रतिक्रिया भेजें",
+  "js": false
+ },
+ {
+  "mr": "डेटा सेव्ह करताना सर्व्हरवर अडचण आली.",
+  "en": "Server error saving data.",
+  "hi": "डेटा सेव करते समय सर्वर में समस्या हुई।",
+  "js": false
+ },
+ {
+  "mr": "सर्व्हर व्यस्त आहे. आपोआप पुन्हा प्रयत्न होईल.",
+  "en": "Server is busy. Will retry automatically.",
+  "hi": "सर्वर व्यस्त है। अपने-आप फिर प्रयास होगा।",
+  "js": true
+ },
+ {
+  "mr": "सत्र तपासणी अयशस्वी. कृपया पुन्हा लॉगिन करा.",
+  "en": "Session check failed. Please login again.",
+  "hi": "सत्र जाँच विफल। कृपया फिर से लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "सत्र संपले.",
+  "en": "Session expired.",
+  "hi": "सत्र समाप्त हो गया।",
+  "js": false
+ },
+ {
+  "mr": "सत्र संपले. कृपया पुन्हा लॉगिन करा.",
+  "en": "Session expired. Please login again.",
+  "hi": "सत्र समाप्त हो गया। कृपया फिर से लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "सत्र संपले. पुन्हा नोंदणी करा.",
+  "en": "Session expired. Signup again.",
+  "hi": "सत्र समाप्त हो गया। फिर से साइन अप करें।",
+  "js": false
+ },
+ {
+  "mr": "सत्र चुकीचे आहे. कृपया पुन्हा लॉगिन करा.",
+  "en": "Session invalid. Please login again.",
+  "hi": "सत्र अमान्य है। कृपया फिर से लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "नवीन सुरक्षा पासवर्ड सेट करा",
+  "en": "Set New Security Password",
+  "hi": "नया सुरक्षा पासवर्ड सेट करें",
+  "js": false
+ },
+ {
+  "mr": "सेटिंग",
+  "en": "Setting",
+  "hi": "सेटिंग",
+  "js": true
+ },
+ {
+  "mr": "सेटिंग्ज",
+  "en": "Settings",
+  "hi": "सेटिंग्स",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड दाखवा",
+  "en": "Show Password",
+  "hi": "पासवर्ड दिखाएँ",
+  "js": true
+ },
+ {
+  "mr": "पासवर्ड दाखवा",
+  "en": "Show password",
+  "hi": "पासवर्ड दिखाएँ",
+  "js": true
+ },
+ {
+  "mr": "नोंदणी",
+  "en": "Signup",
+  "hi": "साइन अप",
+  "js": false
+ },
+ {
+  "mr": "Signup वर परत जा",
+  "en": "Back to signup",
+  "hi": "साइन अप पर वापस जाएँ",
+  "js": false
+ },
+ {
+  "mr": "सहा महिने",
+  "en": "Six Months",
+  "hi": "छह महीने",
+  "js": false
+ },
+ {
+  "mr": "काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Something went wrong. Please try again.",
+  "hi": "कुछ गलत हो गया। कृपया फिर प्रयास करें।",
+  "js": true
+ },
+ {
+  "mr": "माफ करा, AI कडून उत्तर मिळाले नाही.",
+  "en": "Sorry, no answer was received from AI.",
+  "hi": "क्षमा करें, AI से उत्तर नहीं मिला।",
+  "js": true
+ },
+ {
+  "mr": "Staff Add करा",
+  "en": "Add staff",
+  "hi": "स्टाफ जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "Staff Edit करा",
+  "en": "Edit staff",
+  "hi": "स्टाफ संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यादी",
+  "en": "Staff List",
+  "hi": "स्टाफ सूची",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ लॉगिन पडताळणी",
+  "en": "Staff Login Verification",
+  "hi": "स्टाफ लॉगिन सत्यापन",
+  "js": false
+ },
+ {
+  "mr": "स्टाफचे नाव",
+  "en": "Staff Name",
+  "hi": "स्टाफ का नाम",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ खाते सापडले नाही.",
+  "en": "Staff account not found.",
+  "hi": "स्टाफ खाता नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यशस्वीरीत्या जोडला",
+  "en": "Staff added successfully",
+  "hi": "स्टाफ सफलतापूर्वक जोड़ा गया",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यशस्वीरीत्या हटवला. स्टाफ खात्याचा प्रवेश बंद केला.",
+  "en": "Staff deleted successfully. Staff account access has been removed.",
+  "hi": "स्टाफ सफलतापूर्वक हटाया गया। स्टाफ खाते की पहुँच हटा दी गई।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यशस्वीरीत्या बंद केला.",
+  "en": "Staff disabled successfully.",
+  "hi": "स्टाफ सफलतापूर्वक निष्क्रिय किया गया।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यशस्वीरीत्या सुरू केला.",
+  "en": "Staff enabled successfully.",
+  "hi": "स्टाफ सफलतापूर्वक सक्रिय किया गया।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ लॉगिन यशस्वी!",
+  "en": "Staff login successful!",
+  "hi": "स्टाफ लॉगिन सफल!",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ सापडला नाही.",
+  "en": "Staff not found.",
+  "hi": "स्टाफ नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "स्टाफ यशस्वीरीत्या अपडेट झाला",
+  "en": "Staff updated successfully",
+  "hi": "स्टाफ सफलतापूर्वक अपडेट हुआ",
+  "js": false
+ },
+ {
+  "mr": "स्थिती",
+  "en": "Status",
+  "hi": "स्थिति",
+  "js": false
+ },
+ {
+  "mr": "सबस्क्राइब केले",
+  "en": "Subscribed",
+  "hi": "सब्सक्राइब किया",
+  "js": false
+ },
+ {
+  "mr": "सबस्क्रिप्शन",
+  "en": "Subscription",
+  "hi": "सब्सक्रिप्शन",
+  "js": true
+ },
+ {
+  "mr": "सबस्क्रिप्शन संपले",
+  "en": "Subscription expired",
+  "hi": "सब्सक्रिप्शन समाप्त",
+  "js": false
+ },
+ {
+  "mr": "सबस्क्रिप्शन",
+  "en": "Subscriptions",
+  "hi": "सब्सक्रिप्शन",
+  "js": false
+ },
+ {
+  "mr": "यशस्वी",
+  "en": "Success",
+  "hi": "सफल",
+  "js": true
+ },
+ {
+  "mr": "आता सिंक करा",
+  "en": "Sync now",
+  "hi": "अभी सिंक करें",
+  "js": true
+ },
+ {
+  "mr": "सिंक अयशस्वी",
+  "en": "Synchronization failed",
+  "hi": "सिंक विफल",
+  "js": true
+ },
+ {
+  "mr": "सिंक होत आहे...",
+  "en": "Synchronizing...",
+  "hi": "सिंक हो रहा है...",
+  "js": true
+ },
+ {
+  "mr": "System time पाहून default slot ठरवतो (Asia/Kolkata).",
+  "en": "The default slot is chosen from the system time (Asia/Kolkata).",
+  "hi": "डिफ़ॉल्ट समय सिस्टम समय (Asia/Kolkata) से तय होता है।",
+  "js": false
+ },
+ {
+  "mr": "अटी व शर्ती",
+  "en": "Terms & Conditions",
+  "hi": "नियम एवं शर्तें",
+  "js": false
+ },
+ {
+  "mr": "सिंक झाल्यावर सर्व्हर दर काढेल.",
+  "en": "The rate will be calculated by the server when it synchronizes.",
+  "hi": "सिंक होने पर सर्वर दर की गणना करेगा।",
+  "js": true
+ },
+ {
+  "mr": "थीम",
+  "en": "Theme",
+  "hi": "थीम",
+  "js": false
+ },
+ {
+  "mr": "या नोंदी दुसऱ्या डेअरी खात्याच्या आहेत. सिंक करण्यासाठी त्या खात्याने लॉगिन करा.",
+  "en": "These entries belong to another dairy account. Log in to that account to synchronise them.",
+  "hi": "ये प्रविष्टियाँ किसी दूसरे डेयरी खाते की हैं। सिंक करने के लिए उस खाते से लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "या कामासाठी इंटरनेट आवश्यक आहे.",
+  "en": "This action requires internet.",
+  "hi": "इस काम के लिए इंटरनेट ज़रूरी है।",
+  "js": true
+ },
+ {
+  "mr": "हा ॲडव्हान्स हटवता येणार नाही, कारण त्यावर आधीच्या कपाती अवलंबून आहेत.",
+  "en": "This advance cannot be deleted because existing deductions depend on it.",
+  "hi": "यह एडवांस हटाया नहीं जा सकता क्योंकि मौजूदा कटौतियाँ इस पर निर्भर हैं।",
+  "js": false
+ },
+ {
+  "mr": "हा ब्राउझर नोंदी ऑफलाइन साठवू शकत नाही (प्रायव्हेट मोड किंवा स्टोरेज बंद).",
+  "en": "This browser cannot store entries offline (private mode or storage blocked).",
+  "hi": "यह ब्राउज़र प्रविष्टियाँ ऑफ़लाइन नहीं रख सकता (प्राइवेट मोड या स्टोरेज बंद)।",
+  "js": true
+ },
+ {
+  "mr": "हा ग्राहक या प्रकारचे दूध देत नाही.",
+  "en": "This customer does not supply this milk type.",
+  "hi": "यह ग्राहक इस प्रकार का दूध नहीं देता।",
+  "js": false
+ },
+ {
+  "mr": "ही तारीख निवडता येणार नाही.",
+  "en": "This date is not allowed.",
+  "hi": "यह तारीख मान्य नहीं है।",
+  "js": true
+ },
+ {
+  "mr": "ही नोंद आधीच या डिव्हाइसवर सेव्ह असून सिंक होण्याची वाट पाहत आहे.",
+  "en": "This entry is already saved on this device and waiting for synchronization.",
+  "hi": "यह प्रविष्टि पहले से इस डिवाइस पर सेव है और सिंक की प्रतीक्षा में है।",
+  "js": true
+ },
+ {
+  "mr": "ही नोंद आधीच सेव्ह झाली होती.",
+  "en": "This entry was already saved.",
+  "hi": "यह प्रविष्टि पहले ही सेव हो चुकी थी।",
+  "js": true
+ },
+ {
+  "mr": "ही माहिती आवश्यक आहे.",
+  "en": "This field is required.",
+  "hi": "यह जानकारी आवश्यक है।",
+  "js": true
+ },
+ {
+  "mr": "हे तुमचे प्रोफाइल पान आहे. येथे तुमची माहिती आणि सेटिंग्ज जोडू शकता.",
+  "en": "This is your profile page. You can add user details and settings here.",
+  "hi": "यह आपका प्रोफ़ाइल पेज है। यहाँ आप अपनी जानकारी और सेटिंग्स जोड़ सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "हे पान अजून या डिव्हाइसवर सेव्ह झालेले नाही. ऑनलाइन असताना उघडलेली पाने खाली दिली आहेत. ऑफलाइन सेव्ह केलेल्या नोंदी या डिव्हाइसवर सुरक्षित राहतात आणि इंटरनेट आल्यावर आपोआप सिंक होतात.",
+  "en": "This page has not been saved on this device yet. Pages you opened while online are available below. Entries you save offline are kept on this device and synchronize automatically when the internet returns.",
+  "hi": "यह पेज अभी इस डिवाइस पर सेव नहीं है। ऑनलाइन रहते खोले गए पेज नीचे दिए हैं। ऑफ़लाइन सेव की गई प्रविष्टियाँ इस डिवाइस पर सुरक्षित रहती हैं और इंटरनेट आने पर अपने-आप सिंक होती हैं।",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत",
+  "en": "To",
+  "hi": "तक",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत तारीख",
+  "en": "To Date",
+  "hi": "तारीख तक",
+  "js": false
+ },
+ {
+  "mr": "एकूण",
+  "en": "Total",
+  "hi": "कुल",
+  "js": false
+ },
+ {
+  "mr": "एकूण म्हशीचे दूध:",
+  "en": "Total Buffalo Milk:",
+  "hi": "कुल भैंस का दूध:",
+  "js": false
+ },
+ {
+  "mr": "एकूण गायीचे दूध:",
+  "en": "Total Cow Milk:",
+  "hi": "कुल गाय का दूध:",
+  "js": false
+ },
+ {
+  "mr": "एकूण पेंड रक्कम",
+  "en": "Total Food Sack Amount",
+  "hi": "कुल पशु आहार राशि",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूध (लि)",
+  "en": "Total Milk (L)",
+  "hi": "कुल दूध (ली)",
+  "js": false
+ },
+ {
+  "mr": "एकूण दुधाची रक्कम",
+  "en": "Total Milk Amount",
+  "hi": "कुल दूध राशि",
+  "js": false
+ },
+ {
+  "mr": "व्यवहार सापडला नाही किंवा परवानगी नाही.",
+  "en": "Transaction not found or unauthorized.",
+  "hi": "लेन-देन नहीं मिला या अनुमति नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "चाचणी संपते",
+  "en": "Trial ends",
+  "hi": "ट्रायल समाप्ति",
+  "js": false
+ },
+ {
+  "mr": "चाचणी {date} रोजी संपेल.",
+  "en": "Trial ends on {date}.",
+  "hi": "ट्रायल {date} को समाप्त होगा।",
+  "js": true
+ },
+ {
+  "mr": "चाचणी: {n} दिवस",
+  "en": "Trial: {n} days",
+  "hi": "ट्रायल: {n} दिन",
+  "js": false
+ },
+ {
+  "mr": "पुन्हा प्रयत्न करा",
+  "en": "Try again",
+  "hi": "फिर प्रयास करें",
+  "js": false
+ },
+ {
+  "mr": "बंद करा",
+  "en": "Turn off",
+  "hi": "बंद करें",
+  "js": true
+ },
+ {
+  "mr": "चालू करा",
+  "en": "Turn on",
+  "hi": "चालू करें",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स जोडता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Unable to add advance. Please try again.",
+  "hi": "एडवांस नहीं जोड़ा जा सका। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स कपात करता आली नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Unable to deduct advance. Please try again.",
+  "hi": "एडवांस कटौती नहीं हो सकी। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "व्यवहार हटवता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Unable to delete transaction. Please try again.",
+  "hi": "लेन-देन नहीं हटाया जा सका। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "मालकाच्या ईमेलवर OTP पाठवता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Unable to send OTP to owner email. Please try again.",
+  "hi": "मालिक के ईमेल पर OTP नहीं भेजा जा सका। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "व्यवहार अपडेट करता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Unable to update transaction. Please try again.",
+  "hi": "लेन-देन अपडेट नहीं हो सका। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "परवानगी नाही",
+  "en": "Unauthorized",
+  "hi": "अनुमति नहीं",
+  "js": false
+ },
+ {
+  "mr": "परवानगीशिवाय प्रवेश.",
+  "en": "Unauthorized access.",
+  "hi": "अनधिकृत पहुँच।",
+  "js": false
+ },
+ {
+  "mr": "परवानगी नाही किंवा ग्राहक सापडला नाही.",
+  "en": "Unauthorized or vendor not found.",
+  "hi": "अनुमति नहीं या ग्राहक नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "परवानगी नसलेली विनंती",
+  "en": "Unauthorized request",
+  "hi": "अनधिकृत अनुरोध",
+  "js": false
+ },
+ {
+  "mr": "परवानगी नाही, कृपया लॉगिन करा.",
+  "en": "Unauthorized request, please log in.",
+  "hi": "अनधिकृत अनुरोध, कृपया लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "हटवण्याची परवानगी नाही.",
+  "en": "Unauthorized to delete.",
+  "hi": "हटाने की अनुमति नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "हा ग्राहक तुमच्या डेअरीचा नाही.",
+  "en": "Unauthorized vendor.",
+  "hi": "यह ग्राहक आपकी डेयरी का नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "सर्व्हरकडून अनपेक्षित उत्तर आले.",
+  "en": "Unexpected answer from the server.",
+  "hi": "सर्वर से अप्रत्याशित उत्तर आया।",
+  "js": true
+ },
+ {
+  "mr": "अज्ञात कारण",
+  "en": "Unknown reason",
+  "hi": "अज्ञात कारण",
+  "js": true
+ },
+ {
+  "mr": "ही भाषा उपलब्ध नाही.",
+  "en": "Unsupported language.",
+  "hi": "यह भाषा उपलब्ध नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "अपडेट करा",
+  "en": "Update",
+  "hi": "अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "बँक तपशील अपडेट करा",
+  "en": "Update Bank Details",
+  "hi": "बैंक विवरण अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड बदला",
+  "en": "Update Password",
+  "hi": "पासवर्ड बदलें",
+  "js": false
+ },
+ {
+  "mr": "Update करता आला नाही.",
+  "en": "Could not update.",
+  "hi": "अपडेट नहीं हो सका।",
+  "js": true
+ },
+ {
+  "mr": "आता अपग्रेड करा",
+  "en": "Upgrade now",
+  "hi": "अभी अपग्रेड करें",
+  "js": false
+ },
+ {
+  "mr": "वापरकर्ता सापडला नाही.",
+  "en": "User not found.",
+  "hi": "उपयोगकर्ता नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "{date} पर्यंत वैध",
+  "en": "Valid until {date}",
+  "hi": "{date} तक मान्य",
+  "js": false
+ },
+ {
+  "mr": "गाडी",
+  "en": "Vehicle",
+  "hi": "वाहन",
+  "js": false
+ },
+ {
+  "mr": "गाडीनुसार दूध रिपोर्ट",
+  "en": "Vehicle Milk Report",
+  "hi": "वाहन-वार दूध रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "गाडी क्रमांक",
+  "en": "Vehicle Number",
+  "hi": "वाहन संख्या",
+  "js": false
+ },
+ {
+  "mr": "गाडीनुसार दूध संकलन",
+  "en": "Vehicle Wise Milk Collection",
+  "hi": "वाहन-वार दूध संकलन",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक",
+  "en": "Vendor",
+  "hi": "ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "Vendor / शेतकरी संबंधित माहिती",
+  "en": "Customer / farmer information",
+  "hi": "ग्राहक / किसान से जुड़ी जानकारी",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक हटवला",
+  "en": "Vendor Deleted",
+  "hi": "ग्राहक हटाया गया",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक आयडी",
+  "en": "Vendor ID",
+  "hi": "ग्राहक आईडी",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकाचे नाव",
+  "en": "Vendor Name",
+  "hi": "ग्राहक का नाम",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक कामगिरी",
+  "en": "Vendor Performance",
+  "hi": "ग्राहक प्रदर्शन",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक कालावधी रिपोर्ट",
+  "en": "Vendor Range Report",
+  "hi": "ग्राहक अवधि रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकनिहाय विशेष दूध दर",
+  "en": "Vendor Special Milk Rate",
+  "hi": "ग्राहक-विशेष दूध दर",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक सापडला नाही किंवा परवानगी नाही.",
+  "en": "Vendor not found or unauthorized.",
+  "hi": "ग्राहक नहीं मिला या अनुमति नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक सापडला नाही.",
+  "en": "Vendor not found.",
+  "hi": "ग्राहक नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकनिहाय विशेष दर यशस्वीरीत्या हटवला",
+  "en": "Vendor special rate deleted successfully",
+  "hi": "ग्राहक-विशेष दर सफलतापूर्वक हटाया गया",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकनिहाय विशेष दर सेव्ह झाला",
+  "en": "Vendor special rate saved",
+  "hi": "ग्राहक-विशेष दर सेव हुआ",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक यशस्वीरीत्या अपडेट झाला.",
+  "en": "Vendor updated successfully.",
+  "hi": "ग्राहक सफलतापूर्वक अपडेट हुआ।",
+  "js": false
+ },
+ {
+  "mr": "Vendor व्यवस्थापन",
+  "en": "Customer management",
+  "hi": "ग्राहक प्रबंधन",
+  "js": false
+ },
+ {
+  "mr": "खाते पडताळा",
+  "en": "Verify Account",
+  "hi": "खाता सत्यापित करें",
+  "js": false
+ },
+ {
+  "mr": "OTP पडताळा",
+  "en": "Verify OTP",
+  "hi": "OTP सत्यापित करें",
+  "js": false
+ },
+ {
+  "mr": "रीसेट OTP पडताळा",
+  "en": "Verify Reset OTP",
+  "hi": "रीसेट OTP सत्यापित करें",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट तपासत आहे...",
+  "en": "Verifying payment...",
+  "hi": "भुगतान की जाँच हो रही है...",
+  "js": true
+ },
+ {
+  "mr": "प्लॅन पहा",
+  "en": "View plans",
+  "hi": "प्लान देखें",
+  "js": true
+ },
+ {
+  "mr": "सिंक होण्याची प्रतीक्षा",
+  "en": "Waiting for synchronization",
+  "hi": "सिंक की प्रतीक्षा",
+  "js": true
+ },
+ {
+  "mr": "सूचना",
+  "en": "Warning",
+  "hi": "चेतावनी",
+  "js": true
+ },
+ {
+  "mr": "कनेक्शन तुटल्याने पेमेंटची खात्री करता आली नाही. पुन्हा पेमेंट करू नका. इंटरनेट आल्यावर 'पेमेंट स्थिती तपासा' दाबा.",
+  "en": "We could not confirm the payment because the connection dropped. Do NOT pay again. When the internet is back, tap 'Check payment status'.",
+  "hi": "कनेक्शन टूटने के कारण भुगतान की पुष्टि नहीं हो सकी। दोबारा भुगतान न करें। इंटरनेट आने पर 'भुगतान स्थिति जाँचें' दबाएँ।",
+  "js": true
+ },
+ {
+  "mr": "पुन्हा स्वागत आहे!",
+  "en": "Welcome Back!",
+  "hi": "फिर से स्वागत है!",
+  "js": false
+ },
+ {
+  "mr": "DairyPro मध्ये स्वागत आहे",
+  "en": "Welcome to DairyPro",
+  "hi": "DairyPro में आपका स्वागत है",
+  "js": true
+ },
+ {
+  "mr": "ऑफलाइन काम करते, आपोआप सिंक होते",
+  "en": "Works offline with automatic sync",
+  "hi": "ऑफ़लाइन काम करता है, अपने-आप सिंक होता है",
+  "js": false
+ },
+ {
+  "mr": "वार्षिक",
+  "en": "Yearly",
+  "hi": "वार्षिक",
+  "js": false
+ },
+ {
+  "mr": "तुम्हाला DairyPro AI वापरण्याची परवानगी नाही.",
+  "en": "You are not authorized to use DairyPro AI.",
+  "hi": "आपको DairyPro AI उपयोग करने की अनुमति नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "तुम्ही ऑफलाइन आहात",
+  "en": "You are offline",
+  "hi": "आप ऑफ़लाइन हैं",
+  "js": false
+ },
+ {
+  "mr": "तुम्ही ऑफलाइन आहात. नोंदी या डिव्हाइसवर सेव्ह होतील.",
+  "en": "You are offline. Entries will be saved on this device.",
+  "hi": "आप ऑफ़लाइन हैं। प्रविष्टियाँ इस डिवाइस पर सेव होंगी।",
+  "js": true
+ },
+ {
+  "mr": "तुम्ही ऑफलाइन आहात. या डिव्हाइसवर सेव्ह केलेली पाने दाखवत आहे.",
+  "en": "You are offline. Showing pages saved on this device.",
+  "hi": "आप ऑफ़लाइन हैं। इस डिवाइस पर सेव पेज दिखाए जा रहे हैं।",
+  "js": true
+ },
+ {
+  "mr": "तुमचा OTP सुरक्षितपणे तपासला जातो",
+  "en": "Your OTP is securely verified",
+  "hi": "आपका OTP सुरक्षित रूप से जाँचा जाता है",
+  "js": false
+ },
+ {
+  "mr": "मालकाने तुमचे खाते बंद केले आहे.",
+  "en": "Your account has been disabled by owner.",
+  "hi": "मालिक ने आपका खाता बंद कर दिया है।",
+  "js": false
+ },
+ {
+  "mr": "तुमचे पेमेंट तपासले जात आहे. खात्री होताच प्रवेश सुरू होईल.",
+  "en": "Your payment is being verified. Access will open as soon as it is confirmed.",
+  "hi": "आपके भुगतान की जाँच हो रही है। पुष्टि होते ही पहुँच खुल जाएगी।",
+  "js": false
+ },
+ {
+  "mr": "तुमचा प्लॅन {date} रोजी संपेल.",
+  "en": "Your plan ends on {date}.",
+  "hi": "आपका प्लान {date} को समाप्त होगा।",
+  "js": true
+ },
+ {
+  "mr": "तुमचे सत्र संपले आहे. या डिव्हाइसवरील नोंदी सिंक करण्यासाठी पुन्हा लॉगिन करा.",
+  "en": "Your session has expired. Log in again to synchronize the entries saved on this device.",
+  "hi": "आपका सत्र समाप्त हो गया है। इस डिवाइस की प्रविष्टियाँ सिंक करने के लिए फिर से लॉगिन करें।",
+  "js": true
+ },
+ {
+  "mr": "तुमचे सत्र संपले आहे. कृपया पुन्हा लॉगिन करा.",
+  "en": "Your session has expired. Please log in again.",
+  "hi": "आपका सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।",
+  "js": true
+ },
+ {
+  "mr": "तुमचे सबस्क्रिप्शन सक्रिय नाही. पुढे वापरण्यासाठी नूतनीकरण करा.",
+  "en": "Your subscription is not active. Please renew to continue.",
+  "hi": "आपका सब्सक्रिप्शन सक्रिय नहीं है। जारी रखने के लिए नवीनीकरण करें।",
+  "js": true
+ },
+ {
+  "mr": "प्रयत्न केला",
+  "en": "payment_status_attempted",
+  "hi": "प्रयास किया",
+  "js": false
+ },
+ {
+  "mr": "रद्द",
+  "en": "payment_status_cancelled",
+  "hi": "रद्द",
+  "js": false
+ },
+ {
+  "mr": "सुरू केले",
+  "en": "payment_status_created",
+  "hi": "शुरू किया",
+  "js": false
+ },
+ {
+  "mr": "अयशस्वी",
+  "en": "payment_status_failed",
+  "hi": "विफल",
+  "js": false
+ },
+ {
+  "mr": "भरले",
+  "en": "payment_status_paid",
+  "hi": "भुगतान हुआ",
+  "js": false
+ },
+ {
+  "mr": "अंशतः परतावा",
+  "en": "payment_status_partially_refunded",
+  "hi": "आंशिक धनवापसी",
+  "js": false
+ },
+ {
+  "mr": "तपासणी सुरू",
+  "en": "payment_status_pending",
+  "hi": "जाँच जारी",
+  "js": false
+ },
+ {
+  "mr": "परतावा दिला",
+  "en": "payment_status_refunded",
+  "hi": "धनवापसी हुई",
+  "js": false
+ },
+ {
+  "mr": "तुमच्या नोंदणीकृत मोबाईल नंबरवर पाठवला.",
+  "en": "sent to your registered mobile number.",
+  "hi": "आपके पंजीकृत मोबाइल नंबर पर भेजा गया।",
+  "js": false
+ },
+ {
+  "mr": "{animal} FAT {min} - {max}",
+  "en": "{animal} FAT {min} - {max}",
+  "hi": "{animal} FAT {min} - {max}",
+  "js": true
+ },
+ {
+  "mr": "{animal} SNF {min} - {max}",
+  "en": "{animal} SNF {min} - {max}",
+  "hi": "{animal} SNF {min} - {max}",
+  "js": true
+ },
+ {
+  "mr": "{animal} चार्टसाठी FAT {min} ते {max} दरम्यान असावा (चुकीचे: {bad}).",
+  "en": "For a {animal} chart, FAT must be between {min} and {max} (invalid: {bad}).",
+  "hi": "{animal} चार्ट के लिए FAT {min} से {max} के बीच होना चाहिए (गलत: {bad})।",
+  "js": false
+ },
+ {
+  "mr": "{animal} चार्टसाठी SNF {min} ते {max} दरम्यान असावा (चुकीचे: {bad}).",
+  "en": "For a {animal} chart, SNF must be between {min} and {max} (invalid: {bad}).",
+  "hi": "{animal} चार्ट के लिए SNF {min} से {max} के बीच होना चाहिए (गलत: {bad})।",
+  "js": false
+ },
+ {
+  "mr": "{animal} दुधासाठी FAT {min} ते {max} दरम्यान असावा.",
+  "en": "For {animal} milk, FAT must be between {min} and {max}.",
+  "hi": "{animal} दूध के लिए FAT {min} से {max} के बीच होना चाहिए।",
+  "js": true
+ },
+ {
+  "mr": "{animal} दुधासाठी SNF {min} ते {max} दरम्यान असावा.",
+  "en": "For {animal} milk, SNF must be between {min} and {max}.",
+  "hi": "{animal} दूध के लिए SNF {min} से {max} के बीच होना चाहिए।",
+  "js": true
+ },
+ {
+  "mr": "{axis} {min} ते {max} दरम्यान 0.1 च्या पटीतील मूल्य भरा.",
+  "en": "Enter a {axis} value between {min} and {max}, in steps of 0.1.",
+  "hi": "{axis} का मान {min} से {max} के बीच 0.1 के गुणक में दर्ज करें।",
+  "js": true
+ },
+ {
+  "mr": "{axis} {value} काढायचे?",
+  "en": "Remove {axis} {value}?",
+  "hi": "{axis} {value} हटाएँ?",
+  "js": true
+ },
+ {
+  "mr": "{date} ({slot}) या वेळेच्या {n} नोंदी सेव्ह करायच्या?",
+  "en": "Save {n} entries for {date} ({slot})?",
+  "hi": "{date} ({slot}) की {n} प्रविष्टियाँ सेव करें?",
+  "js": true
+ },
+ {
+  "mr": "{date} ({slot}) या वेळेच्या नोंदी सेव्ह करून अंतिम करायच्या?",
+  "en": "Save and finalize the entries for {date} ({slot})?",
+  "hi": "{date} ({slot}) की प्रविष्टियाँ सेव करके अंतिम करें?",
+  "js": true
+ },
+ {
+  "mr": "{date} साठी सर्व नोंदी हटवायच्या आहेत का?",
+  "en": "Delete all entries for {date}?",
+  "hi": "{date} की सभी प्रविष्टियाँ हटाएँ?",
+  "js": true
+ },
+ {
+  "mr": "{label_upper} कमाल मूल्य चुकीचे आहे.",
+  "en": "{label_upper} maximum value is invalid.",
+  "hi": "{label_upper} अधिकतम मान गलत है।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} किमान मूल्य कमाल मूल्यापेक्षा जास्त आहे.",
+  "en": "{label_upper} minimum value is greater than the maximum.",
+  "hi": "{label_upper} न्यूनतम मान अधिकतम से अधिक है।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} किमान मूल्य चुकीचे आहे.",
+  "en": "{label_upper} minimum value is invalid.",
+  "hi": "{label_upper} न्यूनतम मान गलत है।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} ची जास्तीत जास्त {max_axis_values} मूल्ये असू शकतात.",
+  "en": "{label_upper} can have at most {max_axis_values} values.",
+  "hi": "{label_upper} के अधिकतम {max_axis_values} मान हो सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} वाढ (step) 0.01 पेक्षा कमी नसावी.",
+  "en": "{label_upper} step must not be less than 0.01.",
+  "hi": "{label_upper} वृद्धि (step) 0.01 से कम नहीं होनी चाहिए।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} वाढ (step) चुकीची आहे.",
+  "en": "{label_upper} step is invalid.",
+  "hi": "{label_upper} वृद्धि (step) गलत है।",
+  "js": false
+ },
+ {
+  "mr": "{label_upper} श्रेणी {lo}–{hi} ही वाढ {st} ने समान भागली जात नाही.",
+  "en": "{label_upper} range {lo}–{hi} does not divide evenly by the step {st}.",
+  "hi": "{label_upper} सीमा {lo}–{hi} वृद्धि {st} से बराबर नहीं बँटती।",
+  "js": false
+ },
+ {
+  "mr": "{len_missing} दर रिकामे आहेत (उदा. FAT {f} / SNF {s}). सर्व दर भरा.",
+  "en": "{len_missing} rates are empty (e.g. FAT {f} / SNF {s}). Fill in all rates.",
+  "hi": "{len_missing} दर खाली हैं (उदा. FAT {f} / SNF {s})। सभी दर भरें।",
+  "js": false
+ },
+ {
+  "mr": "{n} दिवस बाकी",
+  "en": "{n} days left",
+  "hi": "{n} दिन शेष",
+  "js": false
+ },
+ {
+  "mr": "{n} नोंदी या डिव्हाइसवर सेव्ह आहेत आणि अजून सिंक झालेल्या नाहीत. त्या या डिव्हाइसवर सुरक्षित राहतील आणि पुन्हा लॉगिन केल्यावर सिंक होतील. आता लॉगआउट करायचे?",
+  "en": "{n} entries are saved on this device and not yet synchronized. They will stay safely on this device and synchronize after you log in again. Log out now?",
+  "hi": "{n} प्रविष्टियाँ इस डिवाइस पर सेव हैं और अभी सिंक नहीं हुईं। वे इस डिवाइस पर सुरक्षित रहेंगी और फिर से लॉगिन करने पर सिंक होंगी। अभी लॉगआउट करें?",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी सेव्ह झाल्या नाहीत. लाल रंगातील ओळी तपासा.",
+  "en": "{n} entries could not be saved. Check the rows marked in red.",
+  "hi": "{n} प्रविष्टियाँ सेव नहीं हुईं। लाल रंग वाली पंक्तियाँ जाँचें।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी सिंक झाल्या नाहीत.",
+  "en": "{n} entries could not be synchronized.",
+  "hi": "{n} प्रविष्टियाँ सिंक नहीं हो सकीं।",
+  "js": true
+ },
+ {
+  "mr": "जुन्या ॲप आवृत्तीतील {n} नोंदींसाठी तुमची खात्री आवश्यक आहे.",
+  "en": "{n} entries from the previous app version need your confirmation.",
+  "hi": "पुराने ऐप संस्करण की {n} प्रविष्टियों के लिए आपकी पुष्टि आवश्यक है।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी सेव्ह झाल्या",
+  "en": "{n} entries saved",
+  "hi": "{n} प्रविष्टियाँ सेव हुईं",
+  "js": true
+ },
+ {
+  "mr": "या डिव्हाइसवरील {n} नोंदी दुसऱ्या डेअरी खात्याच्या आहेत. त्या सुरक्षित ठेवल्या आहेत आणि ते खाते लॉगिन झाल्यावर सिंक होतील.",
+  "en": "{n} entries saved on this device belong to another dairy account. They are kept safely and will synchronise when that account logs in.",
+  "hi": "इस डिवाइस की {n} प्रविष्टियाँ किसी दूसरे डेयरी खाते की हैं। वे सुरक्षित रखी गई हैं और उस खाते के लॉगिन होने पर सिंक होंगी।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी या डिव्हाइसवर सेव्ह झाल्या. अंतिम करण्यासाठी इंटरनेट लागेल; सिंक झाल्यावर अंतिम करा.",
+  "en": "{n} entries saved on this device. Finalizing needs internet; it can be done after synchronization.",
+  "hi": "{n} प्रविष्टियाँ इस डिवाइस पर सेव हुईं। अंतिम करने के लिए इंटरनेट चाहिए; सिंक के बाद अंतिम करें।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी या डिव्हाइसवर सेव्ह झाल्या. सिंक होण्याची प्रतीक्षा.",
+  "en": "{n} entries saved on this device. Waiting for synchronization.",
+  "hi": "{n} प्रविष्टियाँ इस डिवाइस पर सेव हुईं। सिंक की प्रतीक्षा है।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी वगळल्या (चुकीची माहिती).",
+  "en": "{n} entries skipped (invalid data).",
+  "hi": "{n} प्रविष्टियाँ छोड़ी गईं (गलत जानकारी)।",
+  "js": false
+ },
+ {
+  "mr": "{n} नोंदी यशस्वीरीत्या सिंक झाल्या.",
+  "en": "{n} entries successfully synchronized.",
+  "hi": "{n} प्रविष्टियाँ सफलतापूर्वक सिंक हुईं।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी सिंक होण्याच्या प्रतीक्षेत",
+  "en": "{n} entries waiting for synchronization",
+  "hi": "{n} प्रविष्टियाँ सिंक की प्रतीक्षा में",
+  "js": true
+ },
+ {
+  "mr": "{n} मोठ्या पावत्या स्वतंत्र पानावर प्रिंट होतील",
+  "en": "{n} long receipts printed on their own page",
+  "hi": "{n} लंबी रसीदें अलग पेज पर प्रिंट होंगी",
+  "js": true
+ },
+ {
+  "mr": "{n} महिने",
+  "en": "{n} months",
+  "hi": "{n} महीने",
+  "js": false
+ },
+ {
+  "mr": "{n} दर रिकामे किंवा चुकीचे आहेत. लाल रंगातील दर दुरुस्त करा.",
+  "en": "{n} rates are empty or invalid. Correct the rates shown in red.",
+  "hi": "{n} दर खाली या गलत हैं। लाल रंग वाले दर ठीक करें।",
+  "js": true
+ },
+ {
+  "mr": "{n} नोंदी अंतिम केल्या.",
+  "en": "{n} entries finalized.",
+  "hi": "{n} प्रविष्टियाँ अंतिम की गईं।",
+  "js": false
+ },
+ {
+  "mr": "{on_date_strftime_d_m_y} साठी {type_labels_mr_milk_type} दुधाचा सक्रिय दर चार्ट उपलब्ध नाही.",
+  "en": "No active {type_labels_mr_milk_type} milk rate chart for {on_date_strftime_d_m_y}.",
+  "hi": "{on_date_strftime_d_m_y} के लिए {type_labels_mr_milk_type} दूध का कोई सक्रिय दर चार्ट नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "{total} पैकी {shown} पावत्या निवडल्या · {pages} A4 पाने",
+  "en": "{shown} of {total} receipts selected · {pages} A4 pages",
+  "hi": "{total} में से {shown} रसीदें चुनी गईं · {pages} A4 पेज",
+  "js": true
+ },
+ {
+  "mr": "{value} आधीच आहे.",
+  "en": "{value} already exists.",
+  "hi": "{value} पहले से है।",
+  "js": true
+ },
+ {
+  "mr": "· FAT/SNF ही दुधाच्या प्रमाणानुसार सरासरी (weighted) आहेत.",
+  "en": "· FAT/SNF are averages weighted by milk quantity.",
+  "hi": "· FAT/SNF दूध की मात्रा के अनुसार भारित औसत हैं।",
+  "js": false
+ },
+ {
+  "mr": "· SNF",
+  "en": "· SNF",
+  "hi": "· SNF",
+  "js": false
+ },
+ {
+  "mr": "· ग्राहकानुसार दूध, FAT आणि SNF",
+  "en": "· Milk, FAT and SNF by customer",
+  "hi": "· ग्राहक-वार दूध, FAT और SNF",
+  "js": false
+ },
+ {
+  "mr": "· सध्याचा दर",
+  "en": "· Current rate",
+  "hi": "· वर्तमान दर",
+  "js": true
+ },
+ {
+  "mr": "अंतिम",
+  "en": "Final",
+  "hi": "अंतिम",
+  "js": false
+ },
+ {
+  "mr": "अंतिम करण्यासाठी नवीन नोंद नाही.",
+  "en": "No new entries to finalize.",
+  "hi": "अंतिम करने के लिए कोई नई प्रविष्टि नहीं।",
+  "js": false
+ },
+ {
+  "mr": "अंतिम झाले",
+  "en": "Finalized",
+  "hi": "अंतिम हुआ",
+  "js": true
+ },
+ {
+  "mr": "अंतिम झालेली नोंद फक्त मालक दुरुस्त करू शकतो.",
+  "en": "Only the owner can correct a finalized entry.",
+  "hi": "अंतिम हुई प्रविष्टि केवल मालिक ठीक कर सकता है।",
+  "js": false
+ },
+ {
+  "mr": "अंतिम देय",
+  "en": "Net payable",
+  "hi": "अंतिम देय",
+  "js": false
+ },
+ {
+  "mr": "अंतिम देय = दुधाची रक्कम − खाद्य − या कालावधीत वजा केलेला ॲडव्हान्स. शिल्लक ॲडव्हान्स पुढे नेला जातो.",
+  "en": "Net payable = milk amount − food sack − advance deducted in this period. The remaining advance is carried forward.",
+  "hi": "अंतिम देय = दूध राशि − पशु आहार − इस अवधि में काटा गया एडवांस। शेष एडवांस आगे ले जाया जाता है।",
+  "js": false
+ },
+ {
+  "mr": "अंतिम देय रक्कम",
+  "en": "Net payable amount",
+  "hi": "अंतिम देय राशि",
+  "js": false
+ },
+ {
+  "mr": "अंतिम नोंद दुरुस्तीसाठी कारण लिहा.",
+  "en": "Write a reason to correct a finalized entry.",
+  "hi": "अंतिम प्रविष्टि सुधारने का कारण लिखें।",
+  "js": false
+ },
+ {
+  "mr": "अंतिम पेमेंट",
+  "en": "Final payment",
+  "hi": "अंतिम भुगतान",
+  "js": false
+ },
+ {
+  "mr": "अंतिम पेमेंट कॅल्क्युलेशन",
+  "en": "Final payment calculation",
+  "hi": "अंतिम भुगतान गणना",
+  "js": false
+ },
+ {
+  "mr": "अंतिम पेमेंट कॅल्क्युलेशनसाठी",
+  "en": "For the final payment calculation",
+  "hi": "अंतिम भुगतान गणना के लिए",
+  "js": false
+ },
+ {
+  "mr": "अंतिम सबमिट",
+  "en": "Final submit",
+  "hi": "अंतिम सबमिट",
+  "js": false
+ },
+ {
+  "mr": "अंतिम सबमिट (सर्व नोंद करा)",
+  "en": "Final submit (save all)",
+  "hi": "अंतिम सबमिट (सभी दर्ज करें)",
+  "js": false
+ },
+ {
+  "mr": "अंतिम सबमिट (सर्व सेव्ह करा)",
+  "en": "Final submit (save all)",
+  "hi": "अंतिम सबमिट (सभी सेव करें)",
+  "js": false
+ },
+ {
+  "mr": "अजून कोणताही चार्ट नाही. \"नवीन चार्ट\" वापरून तयार करा.",
+  "en": "No chart yet. Create one with \"New chart\".",
+  "hi": "अभी कोई चार्ट नहीं है। \"नया चार्ट\" से बनाएँ।",
+  "js": false
+ },
+ {
+  "mr": "अजून कोणताही व्यवहार नाही.",
+  "en": "No transactions yet.",
+  "hi": "अभी कोई लेन-देन नहीं।",
+  "js": true
+ },
+ {
+  "mr": "अजून कोणतेही दर नोंदलेले नाहीत.",
+  "en": "No rates recorded yet.",
+  "hi": "अभी कोई दर दर्ज नहीं।",
+  "js": false
+ },
+ {
+  "mr": "अजून सक्रिय FAT/SNF दर चार्ट नाही. पद्धत चालू करण्यापूर्वी चार्ट तयार करा.",
+  "en": "No active FAT/SNF rate chart yet. Create a chart before turning the method on.",
+  "hi": "अभी कोई सक्रिय FAT/SNF दर चार्ट नहीं है। पद्धति चालू करने से पहले चार्ट बनाएँ।",
+  "js": false
+ },
+ {
+  "mr": "अटी व शर्ती (Terms & Conditions)",
+  "en": "Terms & Conditions",
+  "hi": "नियम एवं शर्तें",
+  "js": false
+ },
+ {
+  "mr": "अटी व शर्तींबाबत काही प्रश्न असल्यास आम्हाला संपर्क करा:",
+  "en": "If you have any questions about these terms, contact us:",
+  "hi": "नियम एवं शर्तों के बारे में कोई प्रश्न हो तो हमसे संपर्क करें:",
+  "js": false
+ },
+ {
+  "mr": "अटींचे उल्लंघन झाल्यास DairyPro कोणतेही खाते तात्काळ बंद करण्याचा अधिकार राखून ठेवते.",
+  "en": "DairyPro reserves the right to close any account immediately if these terms are violated.",
+  "hi": "शर्तों का उल्लंघन होने पर DairyPro किसी भी खाते को तुरंत बंद करने का अधिकार रखता है।",
+  "js": false
+ },
+ {
+  "mr": "अधिकृत सही",
+  "en": "Authorized signature",
+  "hi": "अधिकृत हस्ताक्षर",
+  "js": false
+ },
+ {
+  "mr": "अनधिकृत वापर झाल्यास त्वरित कळवणे आवश्यक आहे",
+  "en": "Report any unauthorized use immediately",
+  "hi": "अनधिकृत उपयोग होने पर तुरंत सूचित करना आवश्यक है",
+  "js": false
+ },
+ {
+  "mr": "असामान्य दूध प्रमाण आढळले. कृपया तपासा.",
+  "en": "Unusual milk quantity detected. Please check.",
+  "hi": "असामान्य दूध मात्रा मिली। कृपया जाँचें।",
+  "js": false
+ },
+ {
+  "mr": "आजचं काम",
+  "en": "Today's work",
+  "hi": "आज का काम",
+  "js": false
+ },
+ {
+  "mr": "आजचा हिशोब",
+  "en": "Today's accounts",
+  "hi": "आज का हिसाब",
+  "js": false
+ },
+ {
+  "mr": "आता सक्रिय दर चार्ट तयार करा.",
+  "en": "Now create an active rate chart.",
+  "hi": "अब सक्रिय दर चार्ट बनाएँ।",
+  "js": true
+ },
+ {
+  "mr": "आधार FAT आणि SNF दुधाच्या प्रकारानुसार ठरतात. FAT किंवा SNF प्रत्येक 0.1 ने वाढल्यास दिलेल्या रकमेइतका दर वाढेल; कमी झाल्यास तितकाच कमी होईल.",
+  "en": "The base FAT and SNF depend on the milk type. For every 0.1 increase in FAT or SNF the rate rises by the given amount; for every 0.1 decrease it falls by the same amount.",
+  "hi": "आधार FAT और SNF दूध के प्रकार पर निर्भर हैं। FAT या SNF में हर 0.1 बढ़ने पर दर दी गई राशि जितना बढ़ेगा; घटने पर उतना ही घटेगा।",
+  "js": false
+ },
+ {
+  "mr": "आधार: FAT {fat} / SNF {snf} = ₹{rate}. FAT किंवा SNF प्रत्येक 0.1 ने बदलल्यास दर ₹{step} ने {direction}.",
+  "en": "Base: FAT {fat} / SNF {snf} = ₹{rate}. For every 0.1 change in FAT or SNF the rate {direction} by ₹{step}.",
+  "hi": "आधार: FAT {fat} / SNF {snf} = ₹{rate}। FAT या SNF में हर 0.1 बदलाव पर दर ₹{step} {direction}।",
+  "js": true
+ },
+ {
+  "mr": "आधी तक्ता तयार करा.",
+  "en": "Generate the table first.",
+  "hi": "पहले तालिका बनाएँ।",
+  "js": true
+ },
+ {
+  "mr": "आधीच्या नोंदी लोड करता आल्या नाहीत: {error}",
+  "en": "Could not load earlier entries: {error}",
+  "hi": "पिछली प्रविष्टियाँ लोड नहीं हो सकीं: {error}",
+  "js": true
+ },
+ {
+  "mr": "आधीपासून खाते आहे?",
+  "en": "Already have an account?",
+  "hi": "पहले से खाता है?",
+  "js": false
+ },
+ {
+  "mr": "आधीपासून खाते आहे? लॉगिन करा",
+  "en": "Already have an account? Log in",
+  "hi": "पहले से खाता है? लॉगिन करें",
+  "js": false
+ },
+ {
+  "mr": "आपण आमच्याशी खालील email वर संपर्क साधू शकता:",
+  "en": "You can contact us at the following email:",
+  "hi": "आप हमसे निम्न ईमेल पर संपर्क कर सकते हैं:",
+  "js": false
+ },
+ {
+  "mr": "आपले login तपशील सुरक्षित ठेवणे",
+  "en": "Keeping your login details safe",
+  "hi": "अपने लॉगिन विवरण सुरक्षित रखना",
+  "js": false
+ },
+ {
+  "mr": "आपल्या खात्याची माहिती सुरक्षित ठेवणे ही वापरकर्त्याची जबाबदारी आहे",
+  "en": "Keeping account information safe is the user's responsibility",
+  "hi": "अपने खाते की जानकारी सुरक्षित रखना उपयोगकर्ता की ज़िम्मेदारी है",
+  "js": false
+ },
+ {
+  "mr": "आपल्या माहितीची सुरक्षा राखण्यासाठी आम्ही योग्य तांत्रिक व प्रशासकीय उपाययोजना करतो. कोणतीही अनधिकृत व्यक्ती आपल्या डेटामध्ये प्रवेश करू शकणार नाही याची काळजी घेतली जाते.",
+  "en": "We take appropriate technical and administrative measures to keep your information secure, and make sure no unauthorized person can access your data.",
+  "hi": "आपकी जानकारी सुरक्षित रखने के लिए हम उचित तकनीकी और प्रशासनिक उपाय करते हैं। कोई अनधिकृत व्यक्ति आपके डेटा तक न पहुँचे, इसका ध्यान रखा जाता है।",
+  "js": false
+ },
+ {
+  "mr": "आमचा उद्देश",
+  "en": "Our goal",
+  "hi": "हमारा उद्देश्य",
+  "js": false
+ },
+ {
+  "mr": "आमच्याशी संपर्क साधा",
+  "en": "Contact us",
+  "hi": "हमसे संपर्क करें",
+  "js": false
+ },
+ {
+  "mr": "आयडी",
+  "en": "ID",
+  "hi": "आईडी",
+  "js": false
+ },
+ {
+  "mr": "आयडी / नाव",
+  "en": "ID / name",
+  "hi": "आईडी / नाम",
+  "js": false
+ },
+ {
+  "mr": "आयडी किंवा नावाने शोधा",
+  "en": "Search by ID or name",
+  "hi": "आईडी या नाम से खोजें",
+  "js": false
+ },
+ {
+  "mr": "आवृत्ती",
+  "en": "Version",
+  "hi": "संस्करण",
+  "js": false
+ },
+ {
+  "mr": "इशारा मर्यादा तपासा (किमान ≤ कमाल).",
+  "en": "Check the warning limits (minimum ≤ maximum).",
+  "hi": "चेतावनी सीमाएँ जाँचें (न्यूनतम ≤ अधिकतम)।",
+  "js": false
+ },
+ {
+  "mr": "इशारा मर्यादा सेव्ह झाल्या.",
+  "en": "Warning limits saved.",
+  "hi": "चेतावनी सीमाएँ सेव हुईं।",
+  "js": false
+ },
+ {
+  "mr": "इशारा स्वीकारला नाही; नोंद सेव्ह केलेली नाही.",
+  "en": "Warning not accepted; the entry was not saved.",
+  "hi": "चेतावनी स्वीकार नहीं की गई; प्रविष्टि सेव नहीं हुई।",
+  "js": true
+ },
+ {
+  "mr": "ई-मेल",
+  "en": "Email",
+  "hi": "ईमेल",
+  "js": false
+ },
+ {
+  "mr": "उदा. 1-10, 15, 17, 36-56",
+  "en": "e.g. 1-10, 15, 17, 36-56",
+  "hi": "उदा. 1-10, 15, 17, 36-56",
+  "js": false
+ },
+ {
+  "mr": "उदा. 1-10, 15, 17, 36-56 (रिकामे = सर्व)",
+  "en": "e.g. 1-10, 15, 17, 36-56 (empty = all)",
+  "hi": "उदा. 1-10, 15, 17, 36-56 (खाली = सभी)",
+  "js": false
+ },
+ {
+  "mr": "उदा. 500",
+  "en": "e.g. 500",
+  "hi": "उदा. 500",
+  "js": false
+ },
+ {
+  "mr": "उदा. FAT चुकीचा टाकला होता",
+  "en": "e.g. wrong FAT was entered",
+  "hi": "उदा. गलत FAT दर्ज हुआ था",
+  "js": false
+ },
+ {
+  "mr": "उदा. गाय दर - ऑक्टोबर",
+  "en": "e.g. Cow rates - October",
+  "hi": "उदा. गाय दर - अक्टूबर",
+  "js": false
+ },
+ {
+  "mr": "उदा: 1-50 किंवा 1,2,10-20",
+  "en": "e.g. 1-50 or 1,2,10-20",
+  "hi": "उदा: 1-50 या 1,2,10-20",
+  "js": false
+ },
+ {
+  "mr": "उपलब्ध शिल्लक ॲडव्हान्स",
+  "en": "Available advance balance",
+  "hi": "उपलब्ध शेष एडवांस",
+  "js": false
+ },
+ {
+  "mr": "एका कालावधीसाठी FAT/SNF हे दुधाच्या प्रमाणानुसार सरासरी (weighted average) आहेत; \"दर\" = रक्कम ÷ लिटर.",
+  "en": "For a period, FAT/SNF are averages weighted by milk quantity; \"rate\" = amount ÷ litres.",
+  "hi": "किसी अवधि के लिए FAT/SNF दूध की मात्रा के अनुसार भारित औसत हैं; \"दर\" = राशि ÷ लीटर।",
+  "js": false
+ },
+ {
+  "mr": "एका वेळी जास्तीत जास्त {max_days} दिवसांचा कालावधी निवडा.",
+  "en": "Select a period of at most {max_days} days at a time.",
+  "hi": "एक बार में अधिकतम {max_days} दिनों की अवधि चुनें।",
+  "js": false
+ },
+ {
+  "mr": "एकूण",
+  "en": "Total",
+  "hi": "कुल",
+  "js": false
+ },
+ {
+  "mr": "एकूण खाद्य",
+  "en": "Total food sack",
+  "hi": "कुल पशु आहार",
+  "js": false
+ },
+ {
+  "mr": "एकूण गाय दूध",
+  "en": "Total cow milk",
+  "hi": "कुल गाय दूध",
+  "js": false
+ },
+ {
+  "mr": "एकूण गायीचे दूध",
+  "en": "Total cow milk",
+  "hi": "कुल गाय का दूध",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूध",
+  "en": "Total milk",
+  "hi": "कुल दूध",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूध (गाय + म्हैस)",
+  "en": "Total milk (cow + buffalo)",
+  "hi": "कुल दूध (गाय + भैंस)",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूध प्रमाण",
+  "en": "Total milk quantity",
+  "hi": "कुल दूध मात्रा",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूध संकलन",
+  "en": "Total milk collection",
+  "hi": "कुल दूध संकलन",
+  "js": false
+ },
+ {
+  "mr": "एकूण दूधाची रक्कम",
+  "en": "Total milk amount",
+  "hi": "कुल दूध राशि",
+  "js": false
+ },
+ {
+  "mr": "एकूण म्हशीचे दूध",
+  "en": "Total buffalo milk",
+  "hi": "कुल भैंस का दूध",
+  "js": false
+ },
+ {
+  "mr": "एकूण म्हैस दूध",
+  "en": "Total buffalo milk",
+  "hi": "कुल भैंस दूध",
+  "js": false
+ },
+ {
+  "mr": "एकूण रक्कम (₹)",
+  "en": "Total amount (₹)",
+  "hi": "कुल राशि (₹)",
+  "js": false
+ },
+ {
+  "mr": "एकूण लिटर",
+  "en": "Total litres",
+  "hi": "कुल लीटर",
+  "js": false
+ },
+ {
+  "mr": "एकूण सारांश",
+  "en": "Overall summary",
+  "hi": "कुल सारांश",
+  "js": false
+ },
+ {
+  "mr": "एकूण ॲडव्हान्स रक्कम",
+  "en": "Total advance amount",
+  "hi": "कुल एडवांस राशि",
+  "js": false
+ },
+ {
+  "mr": "एकूण ॲडव्हान्स व्यवहार",
+  "en": "Total advance transactions",
+  "hi": "कुल एडवांस लेन-देन",
+  "js": false
+ },
+ {
+  "mr": "कंपनीचे नाव",
+  "en": "Company name",
+  "hi": "कंपनी का नाम",
+  "js": false
+ },
+ {
+  "mr": "कमाल लिटर",
+  "en": "Maximum litres",
+  "hi": "अधिकतम लीटर",
+  "js": false
+ },
+ {
+  "mr": "कमाल लिटर चुकीचे आहे.",
+  "en": "Maximum litres is invalid.",
+  "hi": "अधिकतम लीटर गलत है।",
+  "js": false
+ },
+ {
+  "mr": "कमी होईल",
+  "en": "decreases",
+  "hi": "घटेगा",
+  "js": true
+ },
+ {
+  "mr": "कागदविरहित (Paperless) काम",
+  "en": "Paperless work",
+  "hi": "कागज़-रहित काम",
+  "js": false
+ },
+ {
+  "mr": "काढा",
+  "en": "Remove",
+  "hi": "हटाएँ",
+  "js": false
+ },
+ {
+  "mr": "कारवाई",
+  "en": "Action",
+  "hi": "कार्रवाई",
+  "js": false
+ },
+ {
+  "mr": "कालावधी",
+  "en": "Period",
+  "hi": "अवधि",
+  "js": false
+ },
+ {
+  "mr": "किमान लिटर",
+  "en": "Minimum litres",
+  "hi": "न्यूनतम लीटर",
+  "js": false
+ },
+ {
+  "mr": "किमान लिटर चुकीचे आहे.",
+  "en": "Minimum litres is invalid.",
+  "hi": "न्यूनतम लीटर गलत है।",
+  "js": false
+ },
+ {
+  "mr": "कृती",
+  "en": "Actions",
+  "hi": "कार्रवाई",
+  "js": false
+ },
+ {
+  "mr": "कृपया From Date आणि To Date निवडा.",
+  "en": "Please select From Date and To Date.",
+  "hi": "कृपया आरंभ और अंतिम तारीख चुनें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया login करा.",
+  "en": "Please log in.",
+  "hi": "कृपया लॉगिन करें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया इशारे तपासा आणि खात्री करा.",
+  "en": "Please check the warnings and confirm.",
+  "hi": "कृपया चेतावनियाँ जाँचें और पुष्टि करें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया किमान एक प्रमाण भरा.",
+  "en": "Please enter at least one quantity.",
+  "hi": "कृपया कम से कम एक मात्रा भरें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया ग्राहक निवडा.",
+  "en": "Please select a customer.",
+  "hi": "कृपया ग्राहक चुनें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया डेअरीचे नाव भरा.",
+  "en": "Please enter the dairy name.",
+  "hi": "कृपया डेयरी का नाम भरें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया तारीख निवडा.",
+  "en": "Please select a date.",
+  "hi": "कृपया तारीख चुनें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया दुधाचा प्रकार निवडा.",
+  "en": "Please select the milk type.",
+  "hi": "कृपया दूध का प्रकार चुनें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया नाव आणि योग्य ई-मेल भरा.",
+  "en": "Please enter your name and a valid email.",
+  "hi": "कृपया नाम और सही ईमेल भरें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया पुन्हा लॉगिन करा.",
+  "en": "Please log in again.",
+  "hi": "कृपया फिर से लॉगिन करें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया प्रमाण भरवा.",
+  "en": "Please enter the quantity.",
+  "hi": "कृपया मात्रा भरें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया योग्य FAT मूल्य भरा.",
+  "en": "Please enter a valid FAT value.",
+  "hi": "कृपया सही FAT मान भरें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया योग्य SNF मूल्य भरा.",
+  "en": "Please enter a valid SNF value.",
+  "hi": "कृपया सही SNF मान भरें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया योग्य तारीख निवडा.",
+  "en": "Please select a valid date.",
+  "hi": "कृपया सही तारीख चुनें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया योग्य दर बदल भरा.",
+  "en": "Please enter a valid rate change.",
+  "hi": "कृपया सही दर बदलाव भरें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया योग्य दर भरा.",
+  "en": "Please enter a valid rate.",
+  "hi": "कृपया सही दर भरें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया योग्य लिटर भरा (जास्तीत जास्त 2 दशांश).",
+  "en": "Please enter valid litres (at most 2 decimals).",
+  "hi": "कृपया सही लीटर भरें (अधिकतम 2 दशमलव)।",
+  "js": false
+ },
+ {
+  "mr": "कृपया वेळ (सकाळ/संध्याकाळ) निवडा.",
+  "en": "Please select the time (morning/evening).",
+  "hi": "कृपया समय (सुबह/शाम) चुनें।",
+  "js": false
+ },
+ {
+  "mr": "कृपया शून्य किंवा त्यापेक्षा मोठा आधार दर भरा.",
+  "en": "Please enter a base rate of zero or more.",
+  "hi": "कृपया शून्य या उससे अधिक आधार दर भरें।",
+  "js": true
+ },
+ {
+  "mr": "कृपया संख्या आणि पेंड निवडा.",
+  "en": "Please enter the quantity and select the food sack.",
+  "hi": "कृपया मात्रा भरें और पशु आहार चुनें।",
+  "js": true
+ },
+ {
+  "mr": "कोणताही ग्राहक सापडला नाही.",
+  "en": "No customer found.",
+  "hi": "कोई ग्राहक नहीं मिला।",
+  "js": true
+ },
+ {
+  "mr": "कोणताही ॲडव्हान्स सापडला नाही",
+  "en": "No advance found",
+  "hi": "कोई एडवांस नहीं मिला",
+  "js": true
+ },
+ {
+  "mr": "कोणतीही नोंद आढळली नाही.",
+  "en": "No entries found.",
+  "hi": "कोई प्रविष्टि नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "कोणत्या दुधासाठी दर हवेत?",
+  "en": "Which milk are the rates for?",
+  "hi": "किस दूध के लिए दर चाहिए?",
+  "js": false
+ },
+ {
+  "mr": "कोणत्याही बेकायदेशीर किंवा चुकीच्या वापरास परवानगी नाही",
+  "en": "Illegal or improper use is not allowed",
+  "hi": "किसी भी अवैध या गलत उपयोग की अनुमति नहीं है",
+  "js": false
+ },
+ {
+  "mr": "कोणाशीही password शेअर न करणे",
+  "en": "Not sharing your password with anyone",
+  "hi": "किसी के साथ पासवर्ड साझा न करना",
+  "js": false
+ },
+ {
+  "mr": "क्रिया",
+  "en": "Action",
+  "hi": "क्रिया",
+  "js": false
+ },
+ {
+  "mr": "खाते कायमचे delete करण्यासाठी पासवर्ड टाका",
+  "en": "Enter your password to delete the account permanently",
+  "hi": "खाता स्थायी रूप से हटाने के लिए पासवर्ड दर्ज करें",
+  "js": false
+ },
+ {
+  "mr": "खाते क्रमांक",
+  "en": "Account number",
+  "hi": "खाता संख्या",
+  "js": false
+ },
+ {
+  "mr": "खाते तयार करा",
+  "en": "Create account",
+  "hi": "खाता बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "खाते तयार होत आहे...",
+  "en": "Creating account...",
+  "hi": "खाता बन रहा है...",
+  "js": true
+ },
+ {
+  "mr": "खातेदाराचे नाव",
+  "en": "Account holder name",
+  "hi": "खाताधारक का नाम",
+  "js": false
+ },
+ {
+  "mr": "खाद्य",
+  "en": "Food sack",
+  "hi": "पशु आहार",
+  "js": false
+ },
+ {
+  "mr": "खाद्य दर",
+  "en": "Food sack rates",
+  "hi": "पशु आहार दर",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पिशवी खर्च",
+  "en": "Food sack cost",
+  "hi": "पशु आहार खर्च",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती दर अपडेट करा",
+  "en": "Update food sack rate",
+  "hi": "पशु आहार दर अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती दर काढण्यात आला.",
+  "en": "Food sack rate removed.",
+  "hi": "पशु आहार दर हटाया गया।",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती दर व्यवस्थापन",
+  "en": "Food sack rate management",
+  "hi": "पशु आहार दर प्रबंधन",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती दर सापडला नाही.",
+  "en": "Food sack rate not found.",
+  "hi": "पशु आहार दर नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती निवडा",
+  "en": "Select food sack",
+  "hi": "पशु आहार चुनें",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती नोंदी व्यवस्थापन",
+  "en": "Food sack entry management",
+  "hi": "पशु आहार प्रविष्टि प्रबंधन",
+  "js": false
+ },
+ {
+  "mr": "खाद्य पोती नोंदी संपादित करा",
+  "en": "Edit food sack entries",
+  "hi": "पशु आहार प्रविष्टियाँ संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "खाद्य माहिती",
+  "en": "Food sack details",
+  "hi": "पशु आहार विवरण",
+  "js": false
+ },
+ {
+  "mr": "खाद्य/ॲडव्हान्स तपशील",
+  "en": "Food sack/advance details",
+  "hi": "पशु आहार/एडवांस विवरण",
+  "js": false
+ },
+ {
+  "mr": "खाली OTP enter करा.",
+  "en": "Enter the OTP below.",
+  "hi": "नीचे OTP दर्ज करें।",
+  "js": false
+ },
+ {
+  "mr": "खूप वेळा चुकीचा OTP टाकला. कृपया पुन्हा सुरुवात करा.",
+  "en": "Wrong OTP entered too many times. Please start again.",
+  "hi": "बहुत बार गलत OTP दर्ज हुआ। कृपया फिर से शुरू करें।",
+  "js": false
+ },
+ {
+  "mr": "खूप वेळा प्रयत्न झाले. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  "en": "Too many attempts. Please try again in a little while.",
+  "hi": "बहुत अधिक प्रयास हुए। कृपया थोड़ी देर बाद फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "गाडीप्रमाणे दूध",
+  "en": "Milk by vehicle",
+  "hi": "वाहन-वार दूध",
+  "js": false
+ },
+ {
+  "mr": "गाय",
+  "en": "Cow",
+  "hi": "गाय",
+  "js": true
+ },
+ {
+  "mr": "गाय - म्हैस",
+  "en": "Cow - Buffalo",
+  "hi": "गाय - भैंस",
+  "js": false
+ },
+ {
+  "mr": "गाय / म्हैस लिटर",
+  "en": "Cow / buffalo litres",
+  "hi": "गाय / भैंस लीटर",
+  "js": false
+ },
+ {
+  "mr": "गाय लि.",
+  "en": "Cow L",
+  "hi": "गाय ली.",
+  "js": false
+ },
+ {
+  "mr": "गाय व म्हैस",
+  "en": "Cow and buffalo",
+  "hi": "गाय और भैंस",
+  "js": true
+ },
+ {
+  "mr": "गाय व म्हैस (एकच चार्ट)",
+  "en": "Cow and buffalo (one chart)",
+  "hi": "गाय और भैंस (एक ही चार्ट)",
+  "js": false
+ },
+ {
+  "mr": "गाय व म्हैस दूध वेगळा हिशोब",
+  "en": "Separate accounts for cow and buffalo milk",
+  "hi": "गाय और भैंस दूध का अलग हिसाब",
+  "js": false
+ },
+ {
+  "mr": "गाय-म्हैस",
+  "en": "Cow-Buffalo",
+  "hi": "गाय-भैंस",
+  "js": false
+ },
+ {
+  "mr": "गायी एकूण",
+  "en": "Cow total",
+  "hi": "गाय कुल",
+  "js": false
+ },
+ {
+  "mr": "गायी संध्याकाळ",
+  "en": "Cow evening",
+  "hi": "गाय शाम",
+  "js": false
+ },
+ {
+  "mr": "गायी सकाळ",
+  "en": "Cow morning",
+  "hi": "गाय सुबह",
+  "js": false
+ },
+ {
+  "mr": "गायीचे दूध",
+  "en": "Cow milk",
+  "hi": "गाय का दूध",
+  "js": false
+ },
+ {
+  "mr": "गायीच्या दूधाची रक्कम",
+  "en": "Cow milk amount",
+  "hi": "गाय के दूध की राशि",
+  "js": false
+ },
+ {
+  "mr": "गाव",
+  "en": "Village",
+  "hi": "गाँव",
+  "js": false
+ },
+ {
+  "mr": "गोणी",
+  "en": "sack",
+  "hi": "बोरी",
+  "js": false
+ },
+ {
+  "mr": "गोपनीयता धोरण (Privacy Policy)",
+  "en": "Privacy Policy",
+  "hi": "गोपनीयता नीति",
+  "js": false
+ },
+ {
+  "mr": "गोपनीयता धोरणाबाबत काही प्रश्न असल्यास आम्हाला संपर्क करा:",
+  "en": "If you have any questions about this privacy policy, contact us:",
+  "hi": "गोपनीयता नीति के बारे में कोई प्रश्न हो तो हमसे संपर्क करें:",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक",
+  "en": "Customer",
+  "hi": "ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक ID",
+  "en": "Customer ID",
+  "hi": "ग्राहक आईडी",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक ID:",
+  "en": "Customer ID:",
+  "hi": "ग्राहक आईडी:",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक Report",
+  "en": "Customer report",
+  "hi": "ग्राहक रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक आयडी",
+  "en": "Customer ID",
+  "hi": "ग्राहक आईडी",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक आयडी किंवा नाव शोधा",
+  "en": "Search customer ID or name",
+  "hi": "ग्राहक आईडी या नाम खोजें",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक आयडी किंवा नाव शोधा...",
+  "en": "Search customer ID or name...",
+  "hi": "ग्राहक आईडी या नाम खोजें...",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक उपलब्ध नाहीत.",
+  "en": "No customers available.",
+  "hi": "कोई ग्राहक उपलब्ध नहीं।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक क्र.",
+  "en": "Customer No.",
+  "hi": "ग्राहक क्र.",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक क्र. :",
+  "en": "Customer No. :",
+  "hi": "ग्राहक क्र. :",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक क्रमांक (ऐच्छिक)",
+  "en": "Customer numbers (optional)",
+  "hi": "ग्राहक संख्या (वैकल्पिक)",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक जोडा",
+  "en": "Add customer",
+  "hi": "ग्राहक जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक निवडा",
+  "en": "Select customer",
+  "hi": "ग्राहक चुनें",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक यादी",
+  "en": "Customer list",
+  "hi": "ग्राहक सूची",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक लॉगिन",
+  "en": "Customer login",
+  "hi": "ग्राहक लॉगिन",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक शोधता आला नाही.",
+  "en": "Could not search customers.",
+  "hi": "ग्राहक खोज नहीं हो सकी।",
+  "js": true
+ },
+ {
+  "mr": "ग्राहक शोधा",
+  "en": "Search customer",
+  "hi": "ग्राहक खोजें",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक सापडला नाही.",
+  "en": "Customer not found.",
+  "hi": "ग्राहक नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "ग्राहक हटवा",
+  "en": "Delete customer",
+  "hi": "ग्राहक हटाएँ",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकाचे नाव",
+  "en": "Customer name",
+  "hi": "ग्राहक का नाम",
+  "js": false
+ },
+ {
+  "mr": "ग्राहकानुसार",
+  "en": "By customer",
+  "hi": "ग्राहक-वार",
+  "js": false
+ },
+ {
+  "mr": "चार्ट अपडेट झाला.",
+  "en": "Chart updated.",
+  "hi": "चार्ट अपडेट हुआ।",
+  "js": false
+ },
+ {
+  "mr": "चार्ट निष्क्रिय केला.",
+  "en": "Chart deactivated.",
+  "hi": "चार्ट निष्क्रिय किया गया।",
+  "js": false
+ },
+ {
+  "mr": "चार्ट सक्रिय केला.",
+  "en": "Chart activated.",
+  "hi": "चार्ट सक्रिय किया गया।",
+  "js": false
+ },
+ {
+  "mr": "चार्ट सापडला नाही.",
+  "en": "Chart not found.",
+  "hi": "चार्ट नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "चार्ट सेव्ह करताना अडचण आली.",
+  "en": "Problem while saving the chart.",
+  "hi": "चार्ट सेव करते समय समस्या हुई।",
+  "js": true
+ },
+ {
+  "mr": "चार्ट सेव्ह करा",
+  "en": "Save chart",
+  "hi": "चार्ट सेव करें",
+  "js": false
+ },
+ {
+  "mr": "चार्ट सेव्ह झाला.",
+  "en": "Chart saved.",
+  "hi": "चार्ट सेव हुआ।",
+  "js": true
+ },
+ {
+  "mr": "चार्टचे नाव आवश्यक आहे (जास्तीत जास्त 150 अक्षरे).",
+  "en": "Chart name is required (up to 150 characters).",
+  "hi": "चार्ट का नाम आवश्यक है (अधिकतम 150 अक्षर)।",
+  "js": false
+ },
+ {
+  "mr": "चार्टचे नाव आवश्यक आहे.",
+  "en": "Chart name is required.",
+  "hi": "चार्ट का नाम आवश्यक है।",
+  "js": true
+ },
+ {
+  "mr": "चार्टमध्ये जास्तीत जास्त {max_cells} दर असू शकतात.",
+  "en": "A chart can have at most {max_cells} rates.",
+  "hi": "चार्ट में अधिकतम {max_cells} दर हो सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "चालू",
+  "en": "On",
+  "hi": "चालू",
+  "js": false
+ },
+ {
+  "mr": "चालू (FAT/SNF)",
+  "en": "On (FAT/SNF)",
+  "hi": "चालू (FAT/SNF)",
+  "js": true
+ },
+ {
+  "mr": "चालू (ON):",
+  "en": "ON:",
+  "hi": "चालू (ON):",
+  "js": false
+ },
+ {
+  "mr": "चुकीचा OTP. कृपया पुन्हा प्रयत्न करा.",
+  "en": "Wrong OTP. Please try again.",
+  "hi": "गलत OTP। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "चे",
+  "en": "of",
+  "hi": "का",
+  "js": false
+ },
+ {
+  "mr": "जमा केलेले दूध",
+  "en": "Milk collected",
+  "hi": "एकत्रित दूध",
+  "js": false
+ },
+ {
+  "mr": "जमा केलेले दूध (सर्व विक्रेते)",
+  "en": "Milk collected (all customers)",
+  "hi": "एकत्रित दूध (सभी ग्राहक)",
+  "js": false
+ },
+ {
+  "mr": "जुना (लिटर-दर) सारांश",
+  "en": "Old (litre-rate) summary",
+  "hi": "पुराना (लीटर-दर) सारांश",
+  "js": false
+ },
+ {
+  "mr": "जुना चार्ट तसाच राहील. नवीन आवृत्ती निवडलेल्या लागू तारखेपासून वापरली जाईल.",
+  "en": "The old chart stays as it is. The new version is used from the selected effective date.",
+  "hi": "पुराना चार्ट वैसा ही रहेगा। नया संस्करण चुनी गई लागू तिथि से उपयोग होगा।",
+  "js": false
+ },
+ {
+  "mr": "जुन्या (लिटर-दर) नोंदी",
+  "en": "Old (litre-rate) entries",
+  "hi": "पुरानी (लीटर-दर) प्रविष्टियाँ",
+  "js": false
+ },
+ {
+  "mr": "जोडा",
+  "en": "Add",
+  "hi": "जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "डेअरी",
+  "en": "Dairy",
+  "hi": "डेयरी",
+  "js": false
+ },
+ {
+  "mr": "डेअरी व्यवसायात पारदर्शकता, अचूक हिशोब आणि वेळेची बचत करणे हा DairyPro चा मुख्य उद्देश आहे.",
+  "en": "DairyPro's main goal is transparency, accurate accounts and time saved in the dairy business.",
+  "hi": "डेयरी व्यवसाय में पारदर्शिता, सटीक हिसाब और समय की बचत DairyPro का मुख्य उद्देश्य है।",
+  "js": false
+ },
+ {
+  "mr": "डेअरीचं नाव",
+  "en": "Dairy name",
+  "hi": "डेयरी का नाम",
+  "js": false
+ },
+ {
+  "mr": "डेअरीचे नाव :",
+  "en": "Dairy name :",
+  "hi": "डेयरी का नाम :",
+  "js": false
+ },
+ {
+  "mr": "डेटा load करता आला नाही.",
+  "en": "Could not load data.",
+  "hi": "डेटा लोड नहीं हो सका।",
+  "js": true
+ },
+ {
+  "mr": "डेटा आणा",
+  "en": "Load data",
+  "hi": "डेटा लाएँ",
+  "js": false
+ },
+ {
+  "mr": "डेटा उपलब्ध नाही",
+  "en": "No data available",
+  "hi": "डेटा उपलब्ध नहीं",
+  "js": false
+ },
+ {
+  "mr": "डेटा सुरक्षित राहतो",
+  "en": "Data stays safe",
+  "hi": "डेटा सुरक्षित रहता है",
+  "js": false
+ },
+ {
+  "mr": "डेटा सेव्ह करताना अडचण आली. तुमची नोंद पुन्हा तपासा.",
+  "en": "Problem while saving data. Please check your entry again.",
+  "hi": "डेटा सेव करते समय समस्या हुई। अपनी प्रविष्टि फिर से जाँचें।",
+  "js": true
+ },
+ {
+  "mr": "डेटाबेसशी संपर्क होऊ शकला नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  "en": "Could not reach the database. Please try again in a little while.",
+  "hi": "डेटाबेस से संपर्क नहीं हो सका। कृपया थोड़ी देर बाद फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "तक्ता तयार करता आला नाही.",
+  "en": "Could not generate the table.",
+  "hi": "तालिका नहीं बन सकी।",
+  "js": true
+ },
+ {
+  "mr": "तक्त्यात FAT डाव्या बाजूला आणि SNF वरच्या बाजूला दिसेल. पिवळ्या रंगात आधार दर आणि निळ्या रंगात बदललेले दर दिसतील. दर बदलण्यासाठी चौकटीत आकडा लिहा. पुढच्या चौकटीत जाण्यासाठी Tab दाबा.",
+  "en": "FAT is shown on the left and SNF along the top. The base rate is shown in yellow and changed rates in blue. Type a number in a box to change a rate; press Tab to move to the next box.",
+  "hi": "तालिका में FAT बाईं ओर और SNF ऊपर दिखेगा। आधार दर पीले रंग में और बदले हुए दर नीले रंग में दिखेंगे। दर बदलने के लिए खाने में अंक लिखें। अगले खाने में जाने के लिए Tab दबाएँ।",
+  "js": false
+ },
+ {
+  "mr": "तपशील",
+  "en": "Details",
+  "hi": "विवरण",
+  "js": false
+ },
+ {
+  "mr": "तपशील (या कालावधीतील व्यवहार)",
+  "en": "Details (transactions in this period)",
+  "hi": "विवरण (इस अवधि के लेन-देन)",
+  "js": false
+ },
+ {
+  "mr": "तरीही ही नोंद सेव्ह करायची का?",
+  "en": "Save this entry anyway?",
+  "hi": "फिर भी यह प्रविष्टि सेव करें?",
+  "js": true
+ },
+ {
+  "mr": "तारीख",
+  "en": "Date",
+  "hi": "तारीख",
+  "js": true
+ },
+ {
+  "mr": "तारीख निवडा",
+  "en": "Select date",
+  "hi": "तारीख चुनें",
+  "js": false
+ },
+ {
+  "mr": "तारीख सेट करा",
+  "en": "Set date",
+  "hi": "तारीख सेट करें",
+  "js": false
+ },
+ {
+  "mr": "तारीख/वेळ फक्त मालक बदलू शकतो.",
+  "en": "Only the owner can change the date/time.",
+  "hi": "केवल मालिक तारीख/समय बदल सकता है।",
+  "js": false
+ },
+ {
+  "mr": "तुमचं नाव",
+  "en": "Your name",
+  "hi": "आपका नाम",
+  "js": false
+ },
+ {
+  "mr": "तुमचा OTP",
+  "en": "Your OTP",
+  "hi": "आपका OTP",
+  "js": false
+ },
+ {
+  "mr": "तुमचा OTP:",
+  "en": "Your OTP:",
+  "hi": "आपका OTP:",
+  "js": false
+ },
+ {
+  "mr": "तुमचा password reset करण्यासाठी खाली आलेला OTP enter करा.",
+  "en": "Enter the OTP you received to reset your password.",
+  "hi": "पासवर्ड रीसेट करने के लिए प्राप्त OTP दर्ज करें।",
+  "js": false
+ },
+ {
+  "mr": "तुमचा ई-मेल टाका, आम्ही तुम्हाला OTP पाठवू.",
+  "en": "Enter your email and we will send you an OTP.",
+  "hi": "अपना ईमेल दर्ज करें, हम आपको OTP भेजेंगे।",
+  "js": false
+ },
+ {
+  "mr": "तुमचा नवीन सुरक्षित पासवर्ड तयार करा.",
+  "en": "Create your new secure password.",
+  "hi": "अपना नया सुरक्षित पासवर्ड बनाएँ।",
+  "js": false
+ },
+ {
+  "mr": "तुमची DairyPro journey सुरू करण्यासाठी तुमचे account तयार करा.",
+  "en": "Create your account to start your DairyPro journey.",
+  "hi": "DairyPro की शुरुआत के लिए अपना खाता बनाएँ।",
+  "js": false
+ },
+ {
+  "mr": "तुमची माहिती सुरक्षितपणे वापरली जाईल.",
+  "en": "Your information will be used securely.",
+  "hi": "आपकी जानकारी सुरक्षित रूप से उपयोग होगी।",
+  "js": false
+ },
+ {
+  "mr": "तुमच्या DairyPro account मध्ये login करा आणि तुमची डेअरी सहजपणे manage करा.",
+  "en": "Log in to your DairyPro account and manage your dairy with ease.",
+  "hi": "अपने DairyPro खाते में लॉगिन करें और अपनी डेयरी आसानी से प्रबंधित करें।",
+  "js": false
+ },
+ {
+  "mr": "तुमच्या email वर 6 अंकी OTP पाठवला आहे.",
+  "en": "A 6-digit OTP has been sent to your email.",
+  "hi": "आपके ईमेल पर 6 अंकों का OTP भेजा गया है।",
+  "js": false
+ },
+ {
+  "mr": "तुम्हाला खात्री आहे का की हा खाद्य पोती दर काढायचा आहे?",
+  "en": "Are you sure you want to remove this food sack rate?",
+  "hi": "क्या आप वाकई यह पशु आहार दर हटाना चाहते हैं?",
+  "js": false
+ },
+ {
+  "mr": "तुम्हाला खात्री आहे का?",
+  "en": "Are you sure?",
+  "hi": "क्या आप निश्चित हैं?",
+  "js": true
+ },
+ {
+  "mr": "तुम्हाला हा दर खरोखर हटवायचा आहे का?",
+  "en": "Do you really want to delete this rate?",
+  "hi": "क्या आप वाकई यह दर हटाना चाहते हैं?",
+  "js": false
+ },
+ {
+  "mr": "तुम्हाला ही कृती करण्याची परवानगी नाही.",
+  "en": "You are not allowed to do this.",
+  "hi": "आपको यह कार्य करने की अनुमति नहीं है।",
+  "js": false
+ },
+ {
+  "mr": "ते",
+  "en": "to",
+  "hi": "से",
+  "js": true
+ },
+ {
+  "mr": "त्या तारखेला आणि वेळेला या ग्राहकाची नोंद आधीच आहे.",
+  "en": "This customer already has an entry for that date and time.",
+  "hi": "उस तारीख और समय पर इस ग्राहक की प्रविष्टि पहले से है।",
+  "js": false
+ },
+ {
+  "mr": "दर",
+  "en": "Rate",
+  "hi": "दर",
+  "js": true
+ },
+ {
+  "mr": "दर (cells)",
+  "en": "rates (cells)",
+  "hi": "दर (खाने)",
+  "js": false
+ },
+ {
+  "mr": "दर (₹)",
+  "en": "Rate (₹)",
+  "hi": "दर (₹)",
+  "js": false
+ },
+ {
+  "mr": "दर (₹/लिटर)",
+  "en": "Rate (₹/litre)",
+  "hi": "दर (₹/लीटर)",
+  "js": false
+ },
+ {
+  "mr": "दर / लि.",
+  "en": "Rate / L",
+  "hi": "दर / ली.",
+  "js": false
+ },
+ {
+  "mr": "दर {rate} / लिटर · रक्कम {amount}",
+  "en": "Rate {rate} / litre · amount {amount}",
+  "hi": "दर {rate} / लीटर · राशि {amount}",
+  "js": true
+ },
+ {
+  "mr": "दर अपडेट करा",
+  "en": "Update rate",
+  "hi": "दर अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "दर चार्ट संपादन",
+  "en": "Edit rate chart",
+  "hi": "दर चार्ट संपादन",
+  "js": false
+ },
+ {
+  "mr": "दर जोडा",
+  "en": "Add rate",
+  "hi": "दर जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "दर तक्ता आवश्यक आहे.",
+  "en": "The rate table is required.",
+  "hi": "दर तालिका आवश्यक है।",
+  "js": false
+ },
+ {
+  "mr": "दर तक्त्यातील नोंद चुकीची आहे.",
+  "en": "An entry in the rate table is invalid.",
+  "hi": "दर तालिका की एक प्रविष्टि गलत है।",
+  "js": false
+ },
+ {
+  "mr": "दर व्यवस्थापन (Effective Date सह)",
+  "en": "Rate management (with effective date)",
+  "hi": "दर प्रबंधन (लागू तिथि सहित)",
+  "js": false
+ },
+ {
+  "mr": "दर/लि.",
+  "en": "Rate/L",
+  "hi": "दर/ली.",
+  "js": false
+ },
+ {
+  "mr": "दरांचा तक्ता तयार करा",
+  "en": "Generate rate table",
+  "hi": "दर तालिका बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "दाखवा",
+  "en": "Show",
+  "hi": "दिखाएँ",
+  "js": false
+ },
+ {
+  "mr": "दिनांक",
+  "en": "Date",
+  "hi": "दिनांक",
+  "js": true
+ },
+ {
+  "mr": "दिनांक निवडा.",
+  "en": "Select a date.",
+  "hi": "दिनांक चुनें।",
+  "js": true
+ },
+ {
+  "mr": "दिवसानुसार",
+  "en": "By day",
+  "hi": "दिन-वार",
+  "js": false
+ },
+ {
+  "mr": "दुधाचा दर",
+  "en": "Milk rate",
+  "hi": "दूध का दर",
+  "js": false
+ },
+ {
+  "mr": "दुधाचा प्रकार बदलल्याने FAT/SNF श्रेणी बदलते. नवीन श्रेणीनुसार तक्ता पुन्हा तयार करायचा?",
+  "en": "Changing the milk type changes the FAT/SNF range. Generate the table again for the new range?",
+  "hi": "दूध का प्रकार बदलने से FAT/SNF सीमा बदलती है। नई सीमा के अनुसार तालिका फिर बनाएँ?",
+  "js": true
+ },
+ {
+  "mr": "दुधाची रक्कम",
+  "en": "Milk amount",
+  "hi": "दूध की राशि",
+  "js": false
+ },
+ {
+  "mr": "दुरुस्त झाले. दर",
+  "en": "Corrected. Rate",
+  "hi": "सुधारा गया। दर",
+  "js": true
+ },
+ {
+  "mr": "दुरुस्तीचे कारण",
+  "en": "Reason for correction",
+  "hi": "सुधार का कारण",
+  "js": false
+ },
+ {
+  "mr": "दूध",
+  "en": "Milk",
+  "hi": "दूध",
+  "js": true
+ },
+ {
+  "mr": "दूध जमा",
+  "en": "Milk collection",
+  "hi": "दूध संकलन",
+  "js": true
+ },
+ {
+  "mr": "दूध दर",
+  "en": "Milk rate",
+  "hi": "दूध दर",
+  "js": false
+ },
+ {
+  "mr": "दूध दर व्यवस्थापन",
+  "en": "Milk rate management",
+  "hi": "दूध दर प्रबंधन",
+  "js": false
+ },
+ {
+  "mr": "दूध नोंद इशारा मर्यादा (FAT/SNF)",
+  "en": "Milk entry warning limits (FAT/SNF)",
+  "hi": "दूध प्रविष्टि चेतावनी सीमा (FAT/SNF)",
+  "js": false
+ },
+ {
+  "mr": "दूध पावती (FAT/SNF)",
+  "en": "Milk receipt (FAT/SNF)",
+  "hi": "दूध रसीद (FAT/SNF)",
+  "js": false
+ },
+ {
+  "mr": "दूध प्रकार",
+  "en": "Milk type",
+  "hi": "दूध प्रकार",
+  "js": false
+ },
+ {
+  "mr": "दूध रक्कम",
+  "en": "Milk amount",
+  "hi": "दूध राशि",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन",
+  "en": "Milk collection",
+  "hi": "दूध संकलन",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन (FAT/SNF)",
+  "en": "Milk collection (FAT/SNF)",
+  "hi": "दूध संकलन (FAT/SNF)",
+  "js": true
+ },
+ {
+  "mr": "दूध संकलन (सकाळ / संध्याकाळ)",
+  "en": "Milk collection (morning / evening)",
+  "hi": "दूध संकलन (सुबह / शाम)",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन केंद्र",
+  "en": "Milk collection centre",
+  "hi": "दूध संकलन केंद्र",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलन व हिशोब अचूक ठेवण्यासाठी",
+  "en": "To keep milk collection and accounts accurate",
+  "hi": "दूध संकलन और हिसाब सटीक रखने के लिए",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलनाची माहिती (गाय / म्हैस, सकाळ / संध्याकाळ)",
+  "en": "Milk collection details (cow / buffalo, morning / evening)",
+  "hi": "दूध संकलन की जानकारी (गाय / भैंस, सुबह / शाम)",
+  "js": false
+ },
+ {
+  "mr": "दूध संकलनात FAT%, SNF% व लिटर भरायचे; दर FAT/SNF चार्टमधून आपोआप येतो.",
+  "en": "Enter FAT%, SNF% and litres in milk collection; the rate comes automatically from the FAT/SNF chart.",
+  "hi": "दूध संकलन में FAT%, SNF% और लीटर भरें; दर FAT/SNF चार्ट से अपने-आप आता है।",
+  "js": false
+ },
+ {
+  "mr": "दूध सारांश",
+  "en": "Milk summary",
+  "hi": "दूध सारांश",
+  "js": false
+ },
+ {
+  "mr": "दूध सारांश (FAT/SNF)",
+  "en": "Milk summary (FAT/SNF)",
+  "hi": "दूध सारांश (FAT/SNF)",
+  "js": false
+ },
+ {
+  "mr": "दूधाचा प्रकार",
+  "en": "Milk type",
+  "hi": "दूध का प्रकार",
+  "js": false
+ },
+ {
+  "mr": "दूधाचे लिटर शून्यापेक्षा जास्त असावे.",
+  "en": "Milk litres must be greater than zero.",
+  "hi": "दूध के लीटर शून्य से अधिक होने चाहिए।",
+  "js": false
+ },
+ {
+  "mr": "दैनंदिन काम",
+  "en": "Daily work",
+  "hi": "दैनिक काम",
+  "js": false
+ },
+ {
+  "mr": "दोन्ही",
+  "en": "Both",
+  "hi": "दोनों",
+  "js": false
+ },
+ {
+  "mr": "नमस्कार",
+  "en": "Hello",
+  "hi": "नमस्ते",
+  "js": false
+ },
+ {
+  "mr": "नवीन FAT उदा. 5.1",
+  "en": "New FAT e.g. 5.1",
+  "hi": "नया FAT उदा. 5.1",
+  "js": false
+ },
+ {
+  "mr": "नवीन FAT मूल्य भरा",
+  "en": "Enter new FAT value",
+  "hi": "नया FAT मान भरें",
+  "js": false
+ },
+ {
+  "mr": "नवीन FAT/SNF दर चार्ट",
+  "en": "New FAT/SNF rate chart",
+  "hi": "नया FAT/SNF दर चार्ट",
+  "js": false
+ },
+ {
+  "mr": "नवीन SNF उदा. 8.8",
+  "en": "New SNF e.g. 8.8",
+  "hi": "नया SNF उदा. 8.8",
+  "js": false
+ },
+ {
+  "mr": "नवीन SNF मूल्य भरा",
+  "en": "Enter new SNF value",
+  "hi": "नया SNF मान भरें",
+  "js": false
+ },
+ {
+  "mr": "नवीन {axis} {value} जोडला. नवीन दर आपोआप भरले आहेत; गरज असल्यास बदलू शकता.",
+  "en": "New {axis} {value} added. New rates were filled automatically; you can change them if needed.",
+  "hi": "नया {axis} {value} जोड़ा गया। नए दर अपने-आप भरे गए हैं; ज़रूरत हो तो बदल सकते हैं।",
+  "js": true
+ },
+ {
+  "mr": "नवीन खाते आहे?",
+  "en": "New here?",
+  "hi": "नए हैं?",
+  "js": false
+ },
+ {
+  "mr": "नवीन खाते तयार करा",
+  "en": "Create a new account",
+  "hi": "नया खाता बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "नवीन खाद्य पोती जोडा",
+  "en": "Add new food sack",
+  "hi": "नया पशु आहार जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "नवीन ग्राहक",
+  "en": "New customer",
+  "hi": "नया ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "नवीन चार्ट",
+  "en": "New chart",
+  "hi": "नया चार्ट",
+  "js": false
+ },
+ {
+  "mr": "नवीन तक्ता तयार केल्यास सध्याचे आणि हाताने बदललेले दर बदलतील. पुढे जायचे?",
+  "en": "Generating a new table replaces the current and manually changed rates. Continue?",
+  "hi": "नई तालिका बनाने से वर्तमान और हाथ से बदले दर बदल जाएँगे। आगे बढ़ें?",
+  "js": true
+ },
+ {
+  "mr": "नवीन तारखेपासून लागू होणारी सुधारित आवृत्ती",
+  "en": "Revised version effective from a new date",
+  "hi": "नई तिथि से लागू संशोधित संस्करण",
+  "js": false
+ },
+ {
+  "mr": "नवीन दर (₹)",
+  "en": "New rate (₹)",
+  "hi": "नया दर (₹)",
+  "js": false
+ },
+ {
+  "mr": "नवीन दर जोडा",
+  "en": "Add new rate",
+  "hi": "नया दर जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "नवीन पासवर्ड",
+  "en": "New password",
+  "hi": "नया पासवर्ड",
+  "js": false
+ },
+ {
+  "mr": "नवीन पोती नोंद जोडा",
+  "en": "Add new sack entry",
+  "hi": "नई बोरी प्रविष्टि जोड़ें",
+  "js": false
+ },
+ {
+  "mr": "नाव",
+  "en": "Name",
+  "hi": "नाम",
+  "js": false
+ },
+ {
+  "mr": "नाव :",
+  "en": "Name :",
+  "hi": "नाम :",
+  "js": false
+ },
+ {
+  "mr": "नाव, मोबाईल नंबर, ईमेल आयडी यासारखी वैयक्तिक माहिती",
+  "en": "Personal information such as name, mobile number and email ID",
+  "hi": "नाम, मोबाइल नंबर, ईमेल आईडी जैसी व्यक्तिगत जानकारी",
+  "js": false
+ },
+ {
+  "mr": "निकाल (",
+  "en": "Results (",
+  "hi": "परिणाम (",
+  "js": false
+ },
+ {
+  "mr": "नियम: नोंदीच्या तारखेला लागू असलेला (लागू तारीख ≤ नोंद तारीख) सर्वात नवीन सक्रिय चार्ट वापरला जातो. गाय/म्हैस साठीचा स्वतंत्र चार्ट \"दोन्ही\" चार्टपेक्षा प्राधान्याने वापरला जातो. चार्ट बदलला तरी आधीच्या नोंदींचा दर बदलत नाही.",
+  "en": "Rule: the newest active chart in force on the entry date (effective date ≤ entry date) is used. A separate cow/buffalo chart takes priority over a \"both\" chart. Changing a chart never changes the rate of earlier entries.",
+  "hi": "नियम: प्रविष्टि की तारीख पर लागू (लागू तिथि ≤ प्रविष्टि तिथि) सबसे नया सक्रिय चार्ट उपयोग होता है। गाय/भैंस का अलग चार्ट \"दोनों\" चार्ट से पहले उपयोग होता है। चार्ट बदलने पर भी पुरानी प्रविष्टियों का दर नहीं बदलता।",
+  "js": false
+ },
+ {
+  "mr": "निवडलेल्या date range मध्ये कोणत्याही ग्राहकाने advance घेतलेला नाही.",
+  "en": "No customer took an advance in the selected date range.",
+  "hi": "चुनी गई तारीख सीमा में किसी ग्राहक ने एडवांस नहीं लिया।",
+  "js": true
+ },
+ {
+  "mr": "निवडलेल्या कालावधीत कोणतीही नोंद नाही.",
+  "en": "No entries in the selected period.",
+  "hi": "चुनी गई अवधि में कोई प्रविष्टि नहीं।",
+  "js": false
+ },
+ {
+  "mr": "निवडलेल्या तारखांमध्ये कोणतीही पावती सापडली नाही.",
+  "en": "No receipts found for the selected dates.",
+  "hi": "चुनी गई तारीखों में कोई रसीद नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "निवडलेल्या दिनांकामध्ये घेतलेल्या ॲडव्हान्सचा संपूर्ण रिपोर्ट",
+  "en": "Full report of advances taken in the selected dates",
+  "hi": "चुनी गई तारीखों में लिए गए एडवांस की पूरी रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "निवडा",
+  "en": "Select",
+  "hi": "चुनें",
+  "js": false
+ },
+ {
+  "mr": "निष्क्रिय",
+  "en": "Inactive",
+  "hi": "निष्क्रिय",
+  "js": false
+ },
+ {
+  "mr": "निष्क्रिय करा",
+  "en": "Deactivate",
+  "hi": "निष्क्रिय करें",
+  "js": true
+ },
+ {
+  "mr": "नेटवर्क अडचण: चार्ट सेव्ह झाला की नाही हे खात्रीने सांगता येत नाही. चार्ट यादी तपासा.",
+  "en": "Network problem: it is not certain whether the chart was saved. Check the chart list.",
+  "hi": "नेटवर्क समस्या: चार्ट सेव हुआ या नहीं यह निश्चित नहीं है। चार्ट सूची जाँचें।",
+  "js": true
+ },
+ {
+  "mr": "नेटवर्क कनेक्शनमध्ये अडचण आहे. कृपया पुन्हा प्रयत्न करा.",
+  "en": "There is a network connection problem. Please try again.",
+  "hi": "नेटवर्क कनेक्शन में समस्या है। कृपया फिर प्रयास करें।",
+  "js": true
+ },
+ {
+  "mr": "नोंद काढण्याचे कारण लिहा.",
+  "en": "Write the reason for removing the entry.",
+  "hi": "प्रविष्टि हटाने का कारण लिखें।",
+  "js": true
+ },
+ {
+  "mr": "नोंद काढली.",
+  "en": "Entry removed.",
+  "hi": "प्रविष्टि हटाई गई।",
+  "js": false
+ },
+ {
+  "mr": "नोंद काढा",
+  "en": "Remove entry",
+  "hi": "प्रविष्टि हटाएँ",
+  "js": false
+ },
+ {
+  "mr": "नोंद दुरुस्त झाली.",
+  "en": "Entry corrected.",
+  "hi": "प्रविष्टि सुधारी गई।",
+  "js": false
+ },
+ {
+  "mr": "नोंद दुरुस्ती",
+  "en": "Entry correction",
+  "hi": "प्रविष्टि सुधार",
+  "js": false
+ },
+ {
+  "mr": "नोंद नसलेले ग्राहकही दाखवा",
+  "en": "Also show customers without entries",
+  "hi": "बिना प्रविष्टि वाले ग्राहक भी दिखाएँ",
+  "js": false
+ },
+ {
+  "mr": "नोंद सापडली नाही.",
+  "en": "Entry not found.",
+  "hi": "प्रविष्टि नहीं मिली।",
+  "js": false
+ },
+ {
+  "mr": "नोंद सेव्ह झाली.",
+  "en": "Entry saved.",
+  "hi": "प्रविष्टि सेव हुई।",
+  "js": true
+ },
+ {
+  "mr": "नोंद सेव्ह झाली. दर {rate} / लिटर · रक्कम {amount}",
+  "en": "Entry saved. Rate {rate} / litre · amount {amount}",
+  "hi": "प्रविष्टि सेव हुई। दर {rate} / लीटर · राशि {amount}",
+  "js": true
+ },
+ {
+  "mr": "नोंदणीकृत खाद्य पोती यादी",
+  "en": "Registered food sack list",
+  "hi": "पंजीकृत पशु आहार सूची",
+  "js": false
+ },
+ {
+  "mr": "नोंदी",
+  "en": "Entries",
+  "hi": "प्रविष्टियाँ",
+  "js": false
+ },
+ {
+  "mr": "नोंदी अंतिम केल्या.",
+  "en": "Entries finalized.",
+  "hi": "प्रविष्टियाँ अंतिम की गईं।",
+  "js": true
+ },
+ {
+  "mr": "नोंदी अपडेट करा",
+  "en": "Update entries",
+  "hi": "प्रविष्टियाँ अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "नोंदी दाखवा",
+  "en": "Show entries",
+  "hi": "प्रविष्टियाँ दिखाएँ",
+  "js": false
+ },
+ {
+  "mr": "नोंदी बदला",
+  "en": "Edit entries",
+  "hi": "प्रविष्टियाँ बदलें",
+  "js": true
+ },
+ {
+  "mr": "नोंदी बदला (FAT/SNF)",
+  "en": "Edit entries (FAT/SNF)",
+  "hi": "प्रविष्टियाँ बदलें (FAT/SNF)",
+  "js": false
+ },
+ {
+  "mr": "नोंदी संपादित करा",
+  "en": "Edit entries",
+  "hi": "प्रविष्टियाँ संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "पत्ता",
+  "en": "Address",
+  "hi": "पता",
+  "js": false
+ },
+ {
+  "mr": "पद्धत बदलल्याने जुन्या नोंदी किंवा पावत्या बदलत नाहीत.",
+  "en": "Changing the method does not change old entries or receipts.",
+  "hi": "पद्धति बदलने से पुरानी प्रविष्टियाँ या रसीदें नहीं बदलतीं।",
+  "js": false
+ },
+ {
+  "mr": "परत लॉगिन करा",
+  "en": "Log in again",
+  "hi": "फिर से लॉगिन करें",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत",
+  "en": "to",
+  "hi": "तक",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत तारीख",
+  "en": "To date",
+  "hi": "तारीख तक",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत तारीख निवडा",
+  "en": "Select to date",
+  "hi": "अंतिम तारीख चुनें",
+  "js": false
+ },
+ {
+  "mr": "पर्यंत:",
+  "en": "To:",
+  "hi": "तक:",
+  "js": false
+ },
+ {
+  "mr": "पर्याय निवडा",
+  "en": "Choose an option",
+  "hi": "विकल्प चुनें",
+  "js": false
+ },
+ {
+  "mr": "पहा",
+  "en": "View",
+  "hi": "देखें",
+  "js": false
+ },
+ {
+  "mr": "पहा / संपादन",
+  "en": "View / edit",
+  "hi": "देखें / संपादन",
+  "js": false
+ },
+ {
+  "mr": "पाठवलेली माहिती खूप मोठी आहे.",
+  "en": "The data sent is too large.",
+  "hi": "भेजी गई जानकारी बहुत बड़ी है।",
+  "js": false
+ },
+ {
+  "mr": "पान",
+  "en": "Page",
+  "hi": "पेज",
+  "js": false
+ },
+ {
+  "mr": "पाने",
+  "en": "Pages",
+  "hi": "पेज",
+  "js": false
+ },
+ {
+  "mr": "पावती",
+  "en": "Receipt",
+  "hi": "रसीद",
+  "js": false
+ },
+ {
+  "mr": "पावती तयार करा",
+  "en": "Generate receipt",
+  "hi": "रसीद बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "पावती दिनांक",
+  "en": "Receipt date",
+  "hi": "रसीद तिथि",
+  "js": false
+ },
+ {
+  "mr": "पावती पहा",
+  "en": "View receipt",
+  "hi": "रसीद देखें",
+  "js": false
+ },
+ {
+  "mr": "पावती मिळवा",
+  "en": "Get receipts",
+  "hi": "रसीदें प्राप्त करें",
+  "js": false
+ },
+ {
+  "mr": "पावती व रिपोर्ट्स",
+  "en": "Receipts and reports",
+  "hi": "रसीदें और रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "पावत्या",
+  "en": "Receipts",
+  "hi": "रसीदें",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड",
+  "en": "Password",
+  "hi": "पासवर्ड",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड किमान 8 अक्षरे असावा, त्यात अक्षरे, अंक आणि symbol असणे आवश्यक आहे.",
+  "en": "The password must be at least 8 characters and contain letters, numbers and a symbol.",
+  "hi": "पासवर्ड कम से कम 8 अक्षरों का हो और उसमें अक्षर, अंक और चिह्न होने चाहिए।",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड चुकीचा आहे. खाते delete केले नाही.",
+  "en": "Wrong password. The account was not deleted.",
+  "hi": "पासवर्ड गलत है। खाता नहीं हटाया गया।",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड जुळत आहे",
+  "en": "Passwords match",
+  "hi": "पासवर्ड मेल खाते हैं",
+  "js": true
+ },
+ {
+  "mr": "पासवर्ड जुळत नाही",
+  "en": "Passwords do not match",
+  "hi": "पासवर्ड मेल नहीं खाते",
+  "js": true
+ },
+ {
+  "mr": "पासवर्ड पुन्हा लिहा",
+  "en": "Re-enter password",
+  "hi": "पासवर्ड फिर से लिखें",
+  "js": false
+ },
+ {
+  "mr": "पासवर्ड विसरलात?",
+  "en": "Forgot password?",
+  "hi": "पासवर्ड भूल गए?",
+  "js": false
+ },
+ {
+  "mr": "पासून",
+  "en": "From",
+  "hi": "से",
+  "js": false
+ },
+ {
+  "mr": "पासून तारीख",
+  "en": "From date",
+  "hi": "तारीख से",
+  "js": false
+ },
+ {
+  "mr": "पासून तारीख निवडा",
+  "en": "Select from date",
+  "hi": "आरंभ तारीख चुनें",
+  "js": false
+ },
+ {
+  "mr": "पासून:",
+  "en": "From:",
+  "hi": "से:",
+  "js": false
+ },
+ {
+  "mr": "पाहा",
+  "en": "View",
+  "hi": "देखें",
+  "js": false
+ },
+ {
+  "mr": "पुढे",
+  "en": "Next",
+  "hi": "आगे",
+  "js": false
+ },
+ {
+  "mr": "पुन्हा पाठवा",
+  "en": "Resend",
+  "hi": "फिर से भेजें",
+  "js": true
+ },
+ {
+  "mr": "पेंड",
+  "en": "Food sack",
+  "hi": "पशु आहार",
+  "js": true
+ },
+ {
+  "mr": "पेंड भर",
+  "en": "Food sack entry",
+  "hi": "पशु आहार प्रविष्टि",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट",
+  "en": "Payment",
+  "hi": "भुगतान",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट मिळवा",
+  "en": "Get payment",
+  "hi": "भुगतान देखें",
+  "js": false
+ },
+ {
+  "mr": "पेमेंट, अ‍ॅडव्हान्स व फूड सॅक संबंधित नोंदी",
+  "en": "Payment, advance and food sack records",
+  "hi": "भुगतान, एडवांस और पशु आहार से जुड़ी प्रविष्टियाँ",
+  "js": false
+ },
+ {
+  "mr": "पैशाचा तपशील",
+  "en": "Payment details",
+  "hi": "पैसों का विवरण",
+  "js": false
+ },
+ {
+  "mr": "पैसे मोजणी",
+  "en": "Money calculation",
+  "hi": "पैसों की गणना",
+  "js": false
+ },
+ {
+  "mr": "पोती संख्या",
+  "en": "Number of sacks",
+  "hi": "बोरियों की संख्या",
+  "js": false
+ },
+ {
+  "mr": "प्रकार",
+  "en": "Type",
+  "hi": "प्रकार",
+  "js": false
+ },
+ {
+  "mr": "प्रमाण (लिटर)",
+  "en": "Quantity (litres)",
+  "hi": "मात्रा (लीटर)",
+  "js": false
+ },
+ {
+  "mr": "प्राणी",
+  "en": "Animal",
+  "hi": "पशु",
+  "js": false
+ },
+ {
+  "mr": "प्रिंट",
+  "en": "Print",
+  "hi": "प्रिंट",
+  "js": false
+ },
+ {
+  "mr": "प्रिंट / PDF (एका A4 पानावर 2 पावत्या)",
+  "en": "Print / PDF (2 receipts per A4 page)",
+  "hi": "प्रिंट / PDF (एक A4 पेज पर 2 रसीदें)",
+  "js": false
+ },
+ {
+  "mr": "प्रिंट करा (एका A4 पानावर 4 पावत्या)",
+  "en": "Print (4 receipts per A4 page)",
+  "hi": "प्रिंट करें (एक A4 पेज पर 4 रसीदें)",
+  "js": false
+ },
+ {
+  "mr": "प्रिंटसाठी ग्राहक निवडा",
+  "en": "Select customers to print",
+  "hi": "प्रिंट के लिए ग्राहक चुनें",
+  "js": false
+ },
+ {
+  "mr": "फरक टक्केवारी चुकीची आहे.",
+  "en": "The deviation percentage is invalid.",
+  "hi": "अंतर प्रतिशत गलत है।",
+  "js": false
+ },
+ {
+  "mr": "फायदे",
+  "en": "Benefits",
+  "hi": "लाभ",
+  "js": false
+ },
+ {
+  "mr": "फॅट %",
+  "en": "FAT %",
+  "hi": "फैट %",
+  "js": false
+ },
+ {
+  "mr": "फोन",
+  "en": "Phone",
+  "hi": "फ़ोन",
+  "js": false
+ },
+ {
+  "mr": "फोन नंबर",
+  "en": "Phone number",
+  "hi": "फ़ोन नंबर",
+  "js": false
+ },
+ {
+  "mr": "बँक सेटिंग्स",
+  "en": "Bank settings",
+  "hi": "बैंक सेटिंग्स",
+  "js": false
+ },
+ {
+  "mr": "बँक सेटिंग्स - DairyPro",
+  "en": "Bank settings - DairyPro",
+  "hi": "बैंक सेटिंग्स - DairyPro",
+  "js": false
+ },
+ {
+  "mr": "बँकेचे नाव",
+  "en": "Bank name",
+  "hi": "बैंक का नाम",
+  "js": false
+ },
+ {
+  "mr": "बंद",
+  "en": "Off",
+  "hi": "बंद",
+  "js": false
+ },
+ {
+  "mr": "बंद (OFF):",
+  "en": "OFF:",
+  "hi": "बंद (OFF):",
+  "js": false
+ },
+ {
+  "mr": "बंद (लिटर-दर)",
+  "en": "Off (litre-rate)",
+  "hi": "बंद (लीटर-दर)",
+  "js": true
+ },
+ {
+  "mr": "बदल फक्त पुढील नोंदींना लागू होतील; आधी सेव्ह झालेल्या नोंदींचा दर तसाच राहतो.",
+  "en": "Changes apply only to new entries; already saved entries keep their rate.",
+  "hi": "बदलाव केवल आगे की प्रविष्टियों पर लागू होंगे; पहले सेव प्रविष्टियों का दर वही रहेगा।",
+  "js": false
+ },
+ {
+  "mr": "बदला",
+  "en": "Change",
+  "hi": "बदलें",
+  "js": false
+ },
+ {
+  "mr": "बाकी रक्कम",
+  "en": "Balance",
+  "hi": "शेष राशि",
+  "js": false
+ },
+ {
+  "mr": "बाकी रक्कम (शिल्लक ॲडव्हान्स)",
+  "en": "Balance (remaining advance)",
+  "hi": "शेष राशि (बचा एडवांस)",
+  "js": false
+ },
+ {
+  "mr": "भविष्यातील तारखेची नोंद करता येणार नाही.",
+  "en": "Entries cannot be made for a future date.",
+  "hi": "भविष्य की तारीख की प्रविष्टि नहीं की जा सकती।",
+  "js": false
+ },
+ {
+  "mr": "भविष्यातील तारीख निवडता येणार नाही.",
+  "en": "A future date cannot be selected.",
+  "hi": "भविष्य की तारीख नहीं चुनी जा सकती।",
+  "js": true
+ },
+ {
+  "mr": "मधून पद्धत चालू करा.",
+  "en": "and turn the method on from there.",
+  "hi": "से पद्धति चालू करें।",
+  "js": false
+ },
+ {
+  "mr": "मध्ये आपल्या गोपनीयतेला आम्ही सर्वाधिक महत्त्व देतो. हे गोपनीयता धोरण आपण DairyPro वापरत असताना कोणती माहिती गोळा केली जाते, ती कशी वापरली जाते आणि ती कशी सुरक्षित ठेवली जाते याची माहिती देते.",
+  "en": "we value your privacy above all. This privacy policy explains what information is collected while you use DairyPro, how it is used and how it is kept secure.",
+  "hi": "में हम आपकी गोपनीयता को सबसे अधिक महत्व देते हैं। यह गोपनीयता नीति बताती है कि DairyPro के उपयोग के दौरान कौन-सी जानकारी एकत्र होती है, उसका उपयोग कैसे होता है और उसे कैसे सुरक्षित रखा जाता है।",
+  "js": false
+ },
+ {
+  "mr": "मराठी",
+  "en": "मराठी",
+  "hi": "मराठी",
+  "js": false
+ },
+ {
+  "mr": "महत्वाच्या सूचना व अपडेट्स देण्यासाठी",
+  "en": "To send important notices and updates",
+  "hi": "महत्वपूर्ण सूचनाएँ और अपडेट देने के लिए",
+  "js": false
+ },
+ {
+  "mr": "मागे",
+  "en": "Back",
+  "hi": "वापस",
+  "js": false
+ },
+ {
+  "mr": "माफ करा, मला यावेळी योग्य उत्तर तयार करता आले नाही.",
+  "en": "Sorry, I could not prepare a proper answer this time.",
+  "hi": "क्षमा करें, इस बार मैं सही उत्तर नहीं बना सका।",
+  "js": false
+ },
+ {
+  "mr": "माहिती पहा",
+  "en": "View details",
+  "hi": "जानकारी देखें",
+  "js": false
+ },
+ {
+  "mr": "मुख्य पानावर जा",
+  "en": "Go to the main page",
+  "hi": "मुख्य पेज पर जाएँ",
+  "js": false
+ },
+ {
+  "mr": "मुख्य सुविधा",
+  "en": "Key features",
+  "hi": "मुख्य सुविधाएँ",
+  "js": false
+ },
+ {
+  "mr": "मूळ चार्ट सापडला नाही.",
+  "en": "Original chart not found.",
+  "hi": "मूल चार्ट नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "मोबाईल",
+  "en": "Mobile",
+  "hi": "मोबाइल",
+  "js": false
+ },
+ {
+  "mr": "मोबाईल नंबर",
+  "en": "Mobile number",
+  "hi": "मोबाइल नंबर",
+  "js": false
+ },
+ {
+  "mr": "म्हशी एकूण",
+  "en": "Buffalo total",
+  "hi": "भैंस कुल",
+  "js": false
+ },
+ {
+  "mr": "म्हशी संध्याकाळ",
+  "en": "Buffalo evening",
+  "hi": "भैंस शाम",
+  "js": false
+ },
+ {
+  "mr": "म्हशी सकाळ",
+  "en": "Buffalo morning",
+  "hi": "भैंस सुबह",
+  "js": false
+ },
+ {
+  "mr": "म्हशीचे दूध",
+  "en": "Buffalo milk",
+  "hi": "भैंस का दूध",
+  "js": false
+ },
+ {
+  "mr": "म्हशीच्या दूधाची रक्कम",
+  "en": "Buffalo milk amount",
+  "hi": "भैंस के दूध की राशि",
+  "js": false
+ },
+ {
+  "mr": "म्हैस",
+  "en": "Buffalo",
+  "hi": "भैंस",
+  "js": true
+ },
+ {
+  "mr": "म्हैस लि.",
+  "en": "Buffalo L",
+  "hi": "भैंस ली.",
+  "js": false
+ },
+ {
+  "mr": "या FAT/SNF संयोजनासाठी दर उपलब्ध नाही (FAT {fat}, SNF {snf}). चार्ट '{chart_chart_name}' मध्ये FAT {r_get_fmin}–{r_get_fmax}, SNF {r_get_smin}–{r_get_smax} आहे.",
+  "en": "No rate for this FAT/SNF combination (FAT {fat}, SNF {snf}). Chart '{chart_chart_name}' covers FAT {r_get_fmin}–{r_get_fmax}, SNF {r_get_smin}–{r_get_smax}.",
+  "hi": "इस FAT/SNF संयोजन का दर उपलब्ध नहीं है (FAT {fat}, SNF {snf})। चार्ट '{chart_chart_name}' में FAT {r_get_fmin}–{r_get_fmax}, SNF {r_get_smin}–{r_get_smax} है।",
+  "js": false
+ },
+ {
+  "mr": "या अटी व शर्ती भारताच्या कायद्यांनुसार लागू राहतील.",
+  "en": "These terms are governed by the laws of India.",
+  "hi": "ये नियम एवं शर्तें भारत के कानूनों के अनुसार लागू होंगी।",
+  "js": false
+ },
+ {
+  "mr": "या कालावधीत नोंद नाही.",
+  "en": "No entries in this period.",
+  "hi": "इस अवधि में कोई प्रविष्टि नहीं।",
+  "js": false
+ },
+ {
+  "mr": "या कालावधीत लिटर-दर पद्धतीच्या जुन्या नोंदीही आहेत (",
+  "en": "This period also has old litre-rate entries (",
+  "hi": "इस अवधि में लीटर-दर पद्धति की पुरानी प्रविष्टियाँ भी हैं (",
+  "js": false
+ },
+ {
+  "mr": "या ग्राहकाचा Advance Edit करा",
+  "en": "Edit this customer's advance",
+  "hi": "इस ग्राहक का एडवांस संपादित करें",
+  "js": true
+ },
+ {
+  "mr": "या ग्राहकाची या तारखेची आणि स्लॉटची नोंद आधीच आहे.",
+  "en": "This customer already has an entry for this date and slot.",
+  "hi": "इस ग्राहक की इस तारीख और समय की प्रविष्टि पहले से है।",
+  "js": false
+ },
+ {
+  "mr": "या ग्राहकाची या तारखेची आणि स्लॉटची नोंद आधीच आहे. बदल करायचा असल्यास 'संपादन' वापरा.",
+  "en": "This customer already has an entry for this date and slot. Use 'Edit' to change it.",
+  "hi": "इस ग्राहक की इस तारीख और समय की प्रविष्टि पहले से है। बदलने के लिए 'संपादन' का उपयोग करें।",
+  "js": false
+ },
+ {
+  "mr": "या ग्राहकाची या प्रकाराची नोंद आधीच सेव्ह आहे.",
+  "en": "An entry of this type is already saved for this customer.",
+  "hi": "इस ग्राहक की इस प्रकार की प्रविष्टि पहले से सेव है।",
+  "js": true
+ },
+ {
+  "mr": "या ग्राहकाच्या सरासरी दुधापेक्षा ({money_avg} लि.) {int_deviation}% फरक आहे.",
+  "en": "{int_deviation}% different from this customer's average milk ({money_avg} L).",
+  "hi": "इस ग्राहक के औसत दूध ({money_avg} ली.) से {int_deviation}% अंतर है।",
+  "js": false
+ },
+ {
+  "mr": "या चार्टचे नाव",
+  "en": "Name of this chart",
+  "hi": "इस चार्ट का नाम",
+  "js": false
+ },
+ {
+  "mr": "या चार्टवर नोंदी आहेत, त्यामुळे दुधाचा प्रकार बदलता येणार नाही. नवीन आवृत्ती तयार करा.",
+  "en": "This chart has entries, so the milk type cannot be changed. Create a new version.",
+  "hi": "इस चार्ट पर प्रविष्टियाँ हैं, इसलिए दूध का प्रकार नहीं बदला जा सकता। नया संस्करण बनाएँ।",
+  "js": false
+ },
+ {
+  "mr": "या चार्टवरील {stats_entries_using_chart} जुन्या नोंदींचे दर बदललेले नाहीत (त्या नोंदीच्या वेळचा दर जतन आहे).",
+  "en": "The rates of {stats_entries_using_chart} earlier entries on this chart did not change (each keeps the rate from when it was saved).",
+  "hi": "इस चार्ट की {stats_entries_using_chart} पुरानी प्रविष्टियों के दर नहीं बदले (उस समय का दर सुरक्षित है)।",
+  "js": false
+ },
+ {
+  "mr": "या तारखेला FAT/SNF नोंद नाही.",
+  "en": "No FAT/SNF entries on this date.",
+  "hi": "इस तारीख को कोई FAT/SNF प्रविष्टि नहीं।",
+  "js": false
+ },
+ {
+  "mr": "या मर्यादेबाहेरील नोंदीवर फक्त इशारा दिसतो; खात्री करून नोंद सेव्ह करता येते.",
+  "en": "Entries outside these limits only show a warning; you can confirm and save them.",
+  "hi": "इन सीमाओं से बाहर की प्रविष्टि पर केवल चेतावनी दिखती है; पुष्टि करके सेव कर सकते हैं।",
+  "js": false
+ },
+ {
+  "mr": "याच दुधाच्या प्रकारासाठी आणि याच तारखेपासून दुसरा सक्रिय चार्ट आहे.",
+  "en": "Another active chart exists for this milk type from this date.",
+  "hi": "इसी दूध प्रकार और इसी तारीख से दूसरा सक्रिय चार्ट है।",
+  "js": false
+ },
+ {
+  "mr": "याच दुधाच्या प्रकारासाठी आणि याच तारखेपासून सक्रिय चार्ट आधीच आहे. वेगळी तारीख निवडा किंवा जुना चार्ट निष्क्रिय करा.",
+  "en": "An active chart already exists for this milk type from this date. Choose another date or deactivate the old chart.",
+  "hi": "इसी दूध प्रकार और इसी तारीख से सक्रिय चार्ट पहले से है। दूसरी तारीख चुनें या पुराना चार्ट निष्क्रिय करें।",
+  "js": false
+ },
+ {
+  "mr": "याच प्रकारासाठी आणि याच तारखेपासून दुसरा चार्ट सक्रिय आहे. तो आधी निष्क्रिय करा.",
+  "en": "Another chart is active for this type from this date. Deactivate it first.",
+  "hi": "इसी प्रकार और इसी तारीख से दूसरा चार्ट सक्रिय है। पहले उसे निष्क्रिय करें।",
+  "js": false
+ },
+ {
+  "mr": "योग्य रक्कम भरा.",
+  "en": "Enter a valid amount.",
+  "hi": "सही राशि भरें।",
+  "js": true
+ },
+ {
+  "mr": "रक्कम",
+  "en": "Amount",
+  "hi": "राशि",
+  "js": false
+ },
+ {
+  "mr": "रक्कम (₹)",
+  "en": "Amount (₹)",
+  "hi": "राशि (₹)",
+  "js": false
+ },
+ {
+  "mr": "रक्कम / माहिती",
+  "en": "Amount / details",
+  "hi": "राशि / जानकारी",
+  "js": false
+ },
+ {
+  "mr": "रद्द करा",
+  "en": "Cancel",
+  "hi": "रद्द करें",
+  "js": true
+ },
+ {
+  "mr": "रिपोर्ट load झाला नाही",
+  "en": "Report did not load",
+  "hi": "रिपोर्ट लोड नहीं हुई",
+  "js": true
+ },
+ {
+  "mr": "रिपोर्ट तयार करा",
+  "en": "Generate report",
+  "hi": "रिपोर्ट बनाएँ",
+  "js": false
+ },
+ {
+  "mr": "रिपोर्ट तयार होत आहे...",
+  "en": "Generating report...",
+  "hi": "रिपोर्ट बन रही है...",
+  "js": true
+ },
+ {
+  "mr": "रिपोर्ट दाखवा",
+  "en": "Show report",
+  "hi": "रिपोर्ट दिखाएँ",
+  "js": true
+ },
+ {
+  "mr": "रोजी तुमचे",
+  "en": "on",
+  "hi": "को आपका",
+  "js": true
+ },
+ {
+  "mr": "लागू करा",
+  "en": "Apply",
+  "hi": "लागू करें",
+  "js": false
+ },
+ {
+  "mr": "लागू तारीख",
+  "en": "Effective date",
+  "hi": "लागू तिथि",
+  "js": false
+ },
+ {
+  "mr": "लागू तारीख निवडा.",
+  "en": "Select the effective date.",
+  "hi": "लागू तिथि चुनें।",
+  "js": true
+ },
+ {
+  "mr": "लि",
+  "en": "L",
+  "hi": "ली",
+  "js": true
+ },
+ {
+  "mr": "लि.",
+  "en": "L",
+  "hi": "ली.",
+  "js": true
+ },
+ {
+  "mr": "लिटर",
+  "en": "Litres",
+  "hi": "लीटर",
+  "js": false
+ },
+ {
+  "mr": "लिटर ({litres}) खूप कमी आहे (मर्यादा {low}).",
+  "en": "Litres ({litres}) are very low (limit {low}).",
+  "hi": "लीटर ({litres}) बहुत कम है (सीमा {low})।",
+  "js": false
+ },
+ {
+  "mr": "लिटर ({litres}) नेहमीच्या कमाल मर्यादेपेक्षा ({high}) जास्त आहे.",
+  "en": "Litres ({litres}) are above the usual maximum ({high}).",
+  "hi": "लीटर ({litres}) सामान्य अधिकतम सीमा ({high}) से अधिक है।",
+  "js": false
+ },
+ {
+  "mr": "लिटर 0.01 ते 9999.99 दरम्यान आणि जास्तीत जास्त 2 दशांश असावेत.",
+  "en": "Litres must be between 0.01 and 9999.99 with at most 2 decimals.",
+  "hi": "लीटर 0.01 से 9999.99 के बीच और अधिकतम 2 दशमलव होने चाहिए।",
+  "js": true
+ },
+ {
+  "mr": "लिटर दूध जमा झाले.",
+  "en": "litres of milk were collected.",
+  "hi": "लीटर दूध जमा हुआ।",
+  "js": false
+ },
+ {
+  "mr": "लिटर-दर पद्धतीचे दूध (जुन्या नोंदी)",
+  "en": "Litre-rate milk (old entries)",
+  "hi": "लीटर-दर पद्धति का दूध (पुरानी प्रविष्टियाँ)",
+  "js": false
+ },
+ {
+  "mr": "लिटर-दर रक्कम",
+  "en": "Litre-rate amount",
+  "hi": "लीटर-दर राशि",
+  "js": false
+ },
+ {
+  "mr": "लॉगिन",
+  "en": "Login",
+  "hi": "लॉगिन",
+  "js": false
+ },
+ {
+  "mr": "लॉगिन करा",
+  "en": "Log in",
+  "hi": "लॉगिन करें",
+  "js": false
+ },
+ {
+  "mr": "वजा",
+  "en": "Deduct",
+  "hi": "घटाएँ",
+  "js": true
+ },
+ {
+  "mr": "वजा करा",
+  "en": "Deduct",
+  "hi": "कटौती करें",
+  "js": false
+ },
+ {
+  "mr": "वाढेल",
+  "en": "increases",
+  "hi": "बढ़ेगा",
+  "js": true
+ },
+ {
+  "mr": "वापरकर्ता दिलेली माहिती अचूक व खरी असणे आवश्यक आहे",
+  "en": "Information given by the user must be accurate and true",
+  "hi": "उपयोगकर्ता द्वारा दी गई जानकारी सही और सच्ची होनी चाहिए",
+  "js": false
+ },
+ {
+  "mr": "वापरकर्त्यांना Support देण्यासाठी",
+  "en": "To provide support to users",
+  "hi": "उपयोगकर्ताओं को सहायता देने के लिए",
+  "js": false
+ },
+ {
+  "mr": "वापरण्यापूर्वी कृपया या अटी व शर्ती काळजीपूर्वक वाचा. DairyPro वापरल्यास आपण या अटी व शर्तींना संमती दिली आहे असे मानले जाईल.",
+  "en": "Please read these terms carefully before use. By using DairyPro you are deemed to have accepted them.",
+  "hi": "उपयोग से पहले कृपया ये नियम एवं शर्तें ध्यान से पढ़ें। DairyPro का उपयोग करने पर माना जाएगा कि आपने इन्हें स्वीकार किया है।",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता",
+  "en": "Customer",
+  "hi": "ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता अपडेट करा",
+  "en": "Update customer",
+  "hi": "ग्राहक अपडेट करें",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता आयडी",
+  "en": "Customer ID",
+  "hi": "ग्राहक आईडी",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता आयडी किंवा नावाने शोधा",
+  "en": "Search by customer ID or name",
+  "hi": "ग्राहक आईडी या नाम से खोजें",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता कालावधी अहवाल",
+  "en": "Customer period report",
+  "hi": "ग्राहक अवधि रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता निवडा",
+  "en": "Select customer",
+  "hi": "ग्राहक चुनें",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता संपादित करा",
+  "en": "Edit customer",
+  "hi": "ग्राहक संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "विक्रेता:",
+  "en": "Customer:",
+  "hi": "ग्राहक:",
+  "js": false
+ },
+ {
+  "mr": "विद्यमान दर",
+  "en": "Current rates",
+  "hi": "मौजूदा दर",
+  "js": false
+ },
+ {
+  "mr": "वेळ",
+  "en": "Time",
+  "hi": "समय",
+  "js": false
+ },
+ {
+  "mr": "वेळ आणि मेहनत वाचते",
+  "en": "Saves time and effort",
+  "hi": "समय और मेहनत बचती है",
+  "js": false
+ },
+ {
+  "mr": "व्यवहार Edit करा",
+  "en": "Edit transaction",
+  "hi": "लेन-देन संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "व्यवहार delete करता आला नाही.",
+  "en": "Could not delete the transaction.",
+  "hi": "लेन-देन नहीं हटाया जा सका।",
+  "js": true
+ },
+ {
+  "mr": "व्यवहार delete झाला.",
+  "en": "Transaction deleted.",
+  "hi": "लेन-देन हटा दिया गया।",
+  "js": true
+ },
+ {
+  "mr": "व्यवहार update झाला.",
+  "en": "Transaction updated.",
+  "hi": "लेन-देन अपडेट हुआ।",
+  "js": true
+ },
+ {
+  "mr": "व्यवहार इतिहास",
+  "en": "Transaction history",
+  "hi": "लेन-देन इतिहास",
+  "js": false
+ },
+ {
+  "mr": "शाखा",
+  "en": "Branch",
+  "hi": "शाखा",
+  "js": false
+ },
+ {
+  "mr": "शिल्लक ॲडव्हान्स",
+  "en": "Remaining advance",
+  "hi": "शेष एडवांस",
+  "js": false
+ },
+ {
+  "mr": "शेतकरी सही",
+  "en": "Farmer signature",
+  "hi": "किसान हस्ताक्षर",
+  "js": false
+ },
+ {
+  "mr": "शेवटची देय रक्कम",
+  "en": "Final payable amount",
+  "hi": "अंतिम देय राशि",
+  "js": false
+ },
+ {
+  "mr": "शोधत आहे...",
+  "en": "Searching...",
+  "hi": "खोज रहे हैं...",
+  "js": true
+ },
+ {
+  "mr": "शोधा",
+  "en": "Search",
+  "hi": "खोजें",
+  "js": false
+ },
+ {
+  "mr": "शोधा...",
+  "en": "Search...",
+  "hi": "खोजें...",
+  "js": false
+ },
+ {
+  "mr": "श्रेणी",
+  "en": "Range",
+  "hi": "सीमा",
+  "js": false
+ },
+ {
+  "mr": "संदर्भ क्रमांक:",
+  "en": "Reference no.:",
+  "hi": "संदर्भ संख्या:",
+  "js": false
+ },
+ {
+  "mr": "संध्याकाळ",
+  "en": "Evening",
+  "hi": "शाम",
+  "js": true
+ },
+ {
+  "mr": "संध्याकाळी गाय दूध",
+  "en": "Evening cow milk",
+  "hi": "शाम का गाय दूध",
+  "js": false
+ },
+ {
+  "mr": "संध्याकाळी म्हैस दूध",
+  "en": "Evening buffalo milk",
+  "hi": "शाम का भैंस दूध",
+  "js": false
+ },
+ {
+  "mr": "संपर्क :",
+  "en": "Contact :",
+  "hi": "संपर्क :",
+  "js": false
+ },
+ {
+  "mr": "संपादन",
+  "en": "Edit",
+  "hi": "संपादन",
+  "js": false
+ },
+ {
+  "mr": "संपादन करा",
+  "en": "Edit",
+  "hi": "संपादित करें",
+  "js": false
+ },
+ {
+  "mr": "संशयास्पद activity दिसल्यास त्वरित कळवणे",
+  "en": "Reporting any suspicious activity immediately",
+  "hi": "संदिग्ध गतिविधि दिखने पर तुरंत सूचित करना",
+  "js": false
+ },
+ {
+  "mr": "सकाळ",
+  "en": "Morning",
+  "hi": "सुबह",
+  "js": true
+ },
+ {
+  "mr": "सकाळी गाय दूध",
+  "en": "Morning cow milk",
+  "hi": "सुबह का गाय दूध",
+  "js": false
+ },
+ {
+  "mr": "सकाळी म्हैस दूध",
+  "en": "Morning buffalo milk",
+  "hi": "सुबह का भैंस दूध",
+  "js": false
+ },
+ {
+  "mr": "सक्रिय",
+  "en": "Active",
+  "hi": "सक्रिय",
+  "js": false
+ },
+ {
+  "mr": "सक्रिय करा",
+  "en": "Activate",
+  "hi": "सक्रिय करें",
+  "js": true
+ },
+ {
+  "mr": "सक्रिय)",
+  "en": "active)",
+  "hi": "सक्रिय)",
+  "js": false
+ },
+ {
+  "mr": "सत्र संपले. कृपया पुन्हा सुरुवात करा.",
+  "en": "Session ended. Please start again.",
+  "hi": "सत्र समाप्त हुआ। कृपया फिर से शुरू करें।",
+  "js": false
+ },
+ {
+  "mr": "सत्राची सुरक्षा तपासणी अयशस्वी झाली. कृपया पान रिफ्रेश करून पुन्हा प्रयत्न करा.",
+  "en": "The session security check failed. Please refresh the page and try again.",
+  "hi": "सत्र की सुरक्षा जाँच विफल हुई। कृपया पेज रिफ़्रेश करके फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "सध्याची लिटर × दर पद्धत.",
+  "en": "the current litre × rate method.",
+  "hi": "वर्तमान लीटर × दर पद्धति।",
+  "js": false
+ },
+ {
+  "mr": "सबमिट",
+  "en": "Submit",
+  "hi": "सबमिट",
+  "js": true
+ },
+ {
+  "mr": "सरासरी फॅट",
+  "en": "Average FAT",
+  "hi": "औसत फैट",
+  "js": false
+ },
+ {
+  "mr": "सरासरीपासून फरक (%)",
+  "en": "Deviation from average (%)",
+  "hi": "औसत से अंतर (%)",
+  "js": false
+ },
+ {
+  "mr": "सर्व",
+  "en": "All",
+  "hi": "सभी",
+  "js": false
+ },
+ {
+  "mr": "सर्व ग्राहक (एकत्र प्रिंट)",
+  "en": "All customers (print together)",
+  "hi": "सभी ग्राहक (एक साथ प्रिंट)",
+  "js": false
+ },
+ {
+  "mr": "सर्व चार्ट",
+  "en": "All charts",
+  "hi": "सभी चार्ट",
+  "js": false
+ },
+ {
+  "mr": "सर्व निवडलेले एकूण",
+  "en": "Total of all selected",
+  "hi": "सभी चयनित का कुल",
+  "js": false
+ },
+ {
+  "mr": "सर्व निवडा",
+  "en": "Select all",
+  "hi": "सभी चुनें",
+  "js": false
+ },
+ {
+  "mr": "सर्व फील्ड भरा.",
+  "en": "Fill in all fields.",
+  "hi": "सभी फ़ील्ड भरें।",
+  "js": false
+ },
+ {
+  "mr": "सर्व्हरवर अडचण आली. कृपया पुन्हा प्रयत्न करा.",
+  "en": "A server problem occurred. Please try again.",
+  "hi": "सर्वर पर समस्या हुई। कृपया फिर प्रयास करें।",
+  "js": false
+ },
+ {
+  "mr": "सारांश पहा",
+  "en": "View summary",
+  "hi": "सारांश देखें",
+  "js": false
+ },
+ {
+  "mr": "सुरुवातीची तारीख शेवटच्या तारखेपेक्षा नंतरची असू शकत नाही.",
+  "en": "The start date cannot be after the end date.",
+  "hi": "आरंभ तारीख अंतिम तारीख के बाद की नहीं हो सकती।",
+  "js": false
+ },
+ {
+  "mr": "सेव्ह",
+  "en": "Saved",
+  "hi": "सेव",
+  "js": false
+ },
+ {
+  "mr": "सेव्ह करा",
+  "en": "Save",
+  "hi": "सेव करें",
+  "js": false
+ },
+ {
+  "mr": "सेव्ह झाले",
+  "en": "Saved",
+  "hi": "सेव हुआ",
+  "js": true
+ },
+ {
+  "mr": "सेव्ह होत आहे...",
+  "en": "Saving...",
+  "hi": "सेव हो रहा है...",
+  "js": true
+ },
+ {
+  "mr": "स्थिती",
+  "en": "Status",
+  "hi": "स्थिति",
+  "js": false
+ },
+ {
+  "mr": "स्थिती:",
+  "en": "Status:",
+  "hi": "स्थिति:",
+  "js": false
+ },
+ {
+  "mr": "हटवा",
+  "en": "Delete",
+  "hi": "हटाएँ",
+  "js": true
+ },
+ {
+  "mr": "हा staff कायमचा delete करायचा आहे का? Delete केल्यानंतर या account चा access बंद होईल.",
+  "en": "Delete this staff member permanently? After deletion this account loses access.",
+  "hi": "इस स्टाफ को स्थायी रूप से हटाएँ? हटाने के बाद इस खाते की पहुँच बंद हो जाएगी।",
+  "js": false
+ },
+ {
+  "mr": "हा vendor special rate delete करायचा आहे का?",
+  "en": "Delete this customer-specific rate?",
+  "hi": "यह ग्राहक-विशेष दर हटाएँ?",
+  "js": false
+ },
+ {
+  "mr": "हा ई-मेल आधीच वापरात आहे.",
+  "en": "This email is already in use.",
+  "hi": "यह ईमेल पहले से उपयोग में है।",
+  "js": false
+ },
+ {
+  "mr": "हा ग्राहक ({id} - {name}) आणि त्याचा सर्व डेटा कायमचा हटवला जाईल. खात्री आहे का?",
+  "en": "This customer ({id} - {name}) and all their data will be deleted permanently. Are you sure?",
+  "hi": "यह ग्राहक ({id} - {name}) और उसका सारा डेटा स्थायी रूप से हटा दिया जाएगा। क्या आप निश्चित हैं?",
+  "js": false
+ },
+ {
+  "mr": "हा ग्राहक फक्त {type_labels_mr_allowed_0} दूध देतो.",
+  "en": "This customer supplies only {type_labels_mr_allowed_0} milk.",
+  "hi": "यह ग्राहक केवल {type_labels_mr_allowed_0} दूध देता है।",
+  "js": false
+ },
+ {
+  "mr": "हा चार्ट निष्क्रिय करायचा? त्यानंतर नवीन नोंदींसाठी तो वापरला जाणार नाही (जुन्या नोंदी बदलणार नाहीत).",
+  "en": "Deactivate this chart? It will not be used for new entries (old entries will not change).",
+  "hi": "यह चार्ट निष्क्रिय करें? इसके बाद नई प्रविष्टियों के लिए इसका उपयोग नहीं होगा (पुरानी प्रविष्टियाँ नहीं बदलेंगी)।",
+  "js": true
+ },
+ {
+  "mr": "हा चार्ट सक्रिय करायचा?",
+  "en": "Activate this chart?",
+  "hi": "यह चार्ट सक्रिय करें?",
+  "js": true
+ },
+ {
+  "mr": "हा व्यवहार delete करायचा आहे का?",
+  "en": "Delete this transaction?",
+  "hi": "यह लेन-देन हटाएँ?",
+  "js": true
+ },
+ {
+  "mr": "हा ॲडव्हान्स एवढा कमी करता येणार नाही, कारण त्यातून आधीच ₹{balance_without_transaction:.2f} वजा झाले आहेत.",
+  "en": "This advance cannot be reduced that much, because ₹{balance_without_transaction:.2f} has already been deducted from it.",
+  "hi": "यह एडवांस इतना कम नहीं किया जा सकता, क्योंकि उसमें से पहले ही ₹{balance_without_transaction:.2f} काटा जा चुका है।",
+  "js": false
+ },
+ {
+  "mr": "हिन्दी",
+  "en": "हिन्दी",
+  "hi": "हिन्दी",
+  "js": false
+ },
+ {
+  "mr": "हिशोब",
+  "en": "Accounts",
+  "hi": "हिसाब",
+  "js": true
+ },
+ {
+  "mr": "हिशोब (FAT/SNF)",
+  "en": "Accounts (FAT/SNF)",
+  "hi": "हिसाब (FAT/SNF)",
+  "js": false
+ },
+ {
+  "mr": "हिशोब काढा",
+  "en": "Calculate",
+  "hi": "हिसाब निकालें",
+  "js": false
+ },
+ {
+  "mr": "हिशोबात चूक होत नाही",
+  "en": "No mistakes in accounts",
+  "hi": "हिसाब में गलती नहीं होती",
+  "js": false
+ },
+ {
+  "mr": "ही नोंद आधीच सेव्ह झाली होती.",
+  "en": "This entry was already saved.",
+  "hi": "यह प्रविष्टि पहले ही सेव हो चुकी थी।",
+  "js": true
+ },
+ {
+  "mr": "ही नोंद कायमची काढायची? कारण लिहा:",
+  "en": "Remove this entry permanently? Write the reason:",
+  "hi": "यह प्रविष्टि स्थायी रूप से हटाएँ? कारण लिखें:",
+  "js": true
+ },
+ {
+  "mr": "ही नोंद दुसऱ्या वापरकर्त्याने आत्ताच बदलली आहे. पान रिफ्रेश करून पुन्हा तपासा.",
+  "en": "Another user has just changed this entry. Refresh the page and check again.",
+  "hi": "यह प्रविष्टि अभी किसी दूसरे उपयोगकर्ता ने बदली है। पेज रिफ़्रेश करके फिर जाँचें।",
+  "js": false
+ },
+ {
+  "mr": "हे दर कोणत्या तारखेपासून लागू होतील?",
+  "en": "From which date do these rates apply?",
+  "hi": "ये दर किस तारीख से लागू होंगे?",
+  "js": false
+ },
+ {
+  "mr": "हे पान सापडले नाही.",
+  "en": "This page was not found.",
+  "hi": "यह पेज नहीं मिला।",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स",
+  "en": "Advance",
+  "hi": "एडवांस",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स एन्ट्री",
+  "en": "Advance entry",
+  "hi": "एडवांस प्रविष्टि",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स घेणारे ग्राहक",
+  "en": "Customers with advances",
+  "hi": "एडवांस लेने वाले ग्राहक",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स दिनांक",
+  "en": "Advance date",
+  "hi": "एडवांस तिथि",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स दिला",
+  "en": "Advance given",
+  "hi": "एडवांस दिया",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स पेज",
+  "en": "Advance page",
+  "hi": "एडवांस पेज",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स रक्कम",
+  "en": "Advance amount",
+  "hi": "एडवांस राशि",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स रिपोर्ट",
+  "en": "Advance report",
+  "hi": "एडवांस रिपोर्ट",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स वजा",
+  "en": "Advance deducted",
+  "hi": "एडवांस कटौती",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स वजा करता आला नाही.",
+  "en": "Could not deduct the advance.",
+  "hi": "एडवांस नहीं काटा जा सका।",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स वजा झाला.",
+  "en": "Advance deducted.",
+  "hi": "एडवांस काटा गया।",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स व्यवहार",
+  "en": "Advance transactions",
+  "hi": "एडवांस लेन-देन",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स शिल्लक",
+  "en": "Advance balance",
+  "hi": "एडवांस शेष",
+  "js": false
+ },
+ {
+  "mr": "ॲडव्हान्स सेव्ह करता आला नाही.",
+  "en": "Could not save the advance.",
+  "hi": "एडवांस सेव नहीं हो सका।",
+  "js": true
+ },
+ {
+  "mr": "ॲडव्हान्स सेव्ह झाला.",
+  "en": "Advance saved.",
+  "hi": "एडवांस सेव हुआ।",
+  "js": true
+ },
+ {
+  "mr": "⏳ प्रतीक्षा...",
+  "en": "⏳ Waiting...",
+  "hi": "⏳ प्रतीक्षा...",
+  "js": false
+ },
+ {
+  "mr": "✔ ग्राहक यशस्वीरीत्या जोडला",
+  "en": "✔ Vendor Added Successfully",
+  "hi": "✔ ग्राहक सफलतापूर्वक जोड़ा गया",
+  "js": false
+ },
+ {
+  "mr": "❌ आयडी {vendor_id} वर ग्राहक आधीच आहे",
+  "en": "❌ Vendor already exists at ID {vendor_id}",
+  "hi": "❌ आईडी {vendor_id} पर ग्राहक पहले से है",
+  "js": false
+ },
+ {
+  "mr": "🆕 चार्टची नवीन आवृत्ती",
+  "en": "🆕 New chart version",
+  "hi": "🆕 चार्ट का नया संस्करण",
+  "js": false
+ },
+ {
+  "mr": "🆕 नवीन आवृत्ती",
+  "en": "🆕 New version",
+  "hi": "🆕 नया संस्करण",
+  "js": false
+ },
+ {
+  "mr": "🍼 आजचे दूध",
+  "en": "🍼 Today's milk",
+  "hi": "🍼 आज का दूध",
+  "js": false
+ },
+ {
+  "mr": "🐃 म्हैस",
+  "en": "Buffalo",
+  "hi": "भैंस",
+  "js": false
+ },
+ {
+  "mr": "🐄 गाय",
+  "en": "Cow",
+  "hi": "गाय",
+  "js": true
+ },
+ {
+  "mr": "भाषा",
+  "en": "LANGUAGE",
+  "hi": "भाषा",
+  "js": false
+ },
+ {
+  "mr": "सर्व स्क्रीन, संदेश आणि प्रिंट केलेल्या पावत्यांसाठी वापरली जाते. तुमच्या खात्यावर आणि या डिव्हाइसवर सेव्ह होते.",
+  "en": "Used for all screens, messages and printed receipts. Saved on your account and on this device.",
+  "hi": "सभी स्क्रीन, संदेशों और प्रिंट की गई रसीदों के लिए उपयोग होती है। आपके खाते और इस डिवाइस पर सेव होती है।",
+  "js": false
+ }
+]

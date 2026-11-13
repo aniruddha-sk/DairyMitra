@@ -1,0 +1,3 @@
+pytest==9.1.1
+# browser tests in tests/browser (use the installed Chrome: channel="chrome")
+playwright==1.65.1

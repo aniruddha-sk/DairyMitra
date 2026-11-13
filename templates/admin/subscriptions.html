@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Platform admin') }}{% endblock %}
+{% block content %}
+<h2 class="page-title flex items-center gap-2"><i data-lucide="shield-check"></i> {{ _('Platform admin') }}: {{ _('Subscriptions') }}</h2>
+
+<div class="section mb-4">
+  <h3 class="mb-3">{{ _('Dairies') }}</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>{{ _('ID') }}</th><th>{{ _('Dairy') }}</th><th>{{ _('Email') }}</th><th>{{ _('Trial ends') }}</th><th>{{ _('Paid until') }}</th><th>{{ _('Pending payments') }}</th></tr></thead>
+      <tbody>
+        {% for d in dairies %}
+        <tr>
+          <td>{{ d.id }}<br><small>{{ d.dairy_code or '' }}</small></td>
+          <td>{{ d.dairy_name or '–' }}</td>
+          <td>{{ d.email }}</td>
+          <td>{% if d.trial_ends %}{{ d.trial_ends|dmy }}{% if d.trial_ends < now %} <span class="dp-pill dp-pill--failed">{{ _('Ended') }}</span>{% endif %}{% else %}–{% endif %}</td>
+          <td>{% if d.paid_until %}{{ d.paid_until|dmy }}{% if d.paid_until > now %} <span class="dp-pill dp-pill--paid">{{ _('Active') }}</span>{% endif %}{% else %}–{% endif %}</td>
+          <td>{{ d.pending_orders }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">{{ _('No records.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h3 class="mb-3">{{ _('Latest payment orders') }}</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>#</th><th>{{ _('Date') }}</th><th>{{ _('Email') }}</th><th>{{ _('Plan') }}</th><th>{{ _('Amount') }}</th><th>{{ _('Status') }}</th><th>{{ _('Razorpay') }}</th><th>{{ _('Action') }}</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.created_at|dmy(true) }}</td>
+          <td>{{ o.email or '–' }}</td>
+          <td>{{ o.plan_code }}</td>
+          <td>{{ o.amount_paise|inr_paise }}{% if o.refunded_paise %}<br><small>{{ _('Refunded') }}: {{ o.refunded_paise|inr_paise }}</small>{% endif %}</td>
+          <td><span class="dp-pill dp-pill--{{ o.status }}">{{ _('payment_status_' ~ o.status) }}</span>
+            {% if o.verified_via %}<br><small>{{ o.verified_via }}</small>{% endif %}
+            {% if o.failure_reason %}<br><small class="dp-muted">{{ o.failure_reason }}</small>{% endif %}</td>
+          <td><small>{{ o.razorpay_order_id or '–' }}<br>{{ o.razorpay_payment_id or '' }}</small></td>
+          <td>
+            {% if o.status not in ('paid', 'refunded', 'partially_refunded') and o.razorpay_order_id %}
+            <form method="post" action="{{ url_for('admin_subscription_reconcile', order_id=o.id) }}" data-confirm="{{ _('Ask Razorpay for the current status of this order?') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="dp-action dp-action--view"><i data-lucide="refresh-cw"></i><span class="dp-action__label">{{ _('Reconcile') }}</span></button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">{{ _('No payments yet.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+<div class="dp-header">
+  <div class="dp-header__left">
+    <button id="sidebar-toggle" class="dp-menu-btn" type="button" aria-label="{{ _('Open menu') }}" title="{{ _('Menu') }}">
+      <i data-lucide="menu"></i>
+    </button>
+    <a href="{{ url_for('dashboard') }}" class="dp-header__brand header-logo-link" aria-label="{{ BRAND_NAME }} - {{ _('Dashboard') }}">
+      <img src="{{ url_for('static', filename=BRAND_LOGO) }}" alt="{{ BRAND_NAME }} - {{ BRAND_TAGLINE }}" class="header-logo" width="150" height="38">
+    </a>
+  </div>
+  <div class="dp-header__right">
+    {% if subscription and session.get('role') == 'owner' %}
+      {% set sub = subscription %}
+      {% if sub.status == 'trial' %}
+      <a class="dp-plan-chip {{ 'is-warning' if sub.trial_days_left is not none and sub.trial_days_left <= 5 }}"
+         href="{{ url_for('subscription_page') }}"
+         title="{{ _('Free trial: {n} days left (ends {date}).', n=sub.trial_days_left, date=sub.trial_ends_at_ist|dmy) }}">
+        <i data-lucide="hourglass"></i>
+        <span class="dp-plan-chip__text">{{ _('Trial: {n} days', n=sub.trial_days_left) }}</span>
+      </a>
+      {% elif sub.status == 'active' %}
+      <a class="dp-plan-chip" href="{{ url_for('subscription_page') }}"
+         title="{{ _('Your plan ends on {date}.', date=sub.ends_at_ist|dmy) }}">
+        <i data-lucide="crown"></i>
+        <span class="dp-plan-chip__text">{{ _('Pro') }}</span>
+      </a>
+      {% elif sub.enforced %}
+      <a class="dp-plan-chip is-danger" href="{{ url_for('subscription_page') }}">
+        <i data-lucide="crown"></i>
+        <span class="dp-plan-chip__text">{{ _('Renew now') }}</span>
+      </a>
+      {% endif %}
+    {% endif %}
+
+    <button type="button" id="dp-net-status" class="dp-net" aria-label="{{ _('Offline entries') }}">
+      <span data-net-label>{{ _('Online') }}</span>
+      <span class="dp-net__count" data-net-count hidden>0</span>
+    </button>
+
+    <form method="post" action="{{ url_for('set_language') }}" class="dp-lang" data-no-loader data-offline-ok>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <i data-lucide="languages" class="dp-lang__icon"></i>
+      <select name="lang" aria-label="{{ _('Language') }}" title="{{ _('Language') }}"
+              onchange="if (navigator.onLine === false) { DP.toast(t('This action requires internet.'), 'offline'); this.value = '{{ lang }}'; return; } this.form.submit()">
+        {% for code in SUPPORTED_LANGUAGES %}
+        <option value="{{ code }}" {{ 'selected' if code == lang }}>{{ LANGUAGE_NAMES[code] }}</option>
+        {% endfor %}
+      </select>
+      <i data-lucide="chevron-down" class="dp-lang__chev"></i>
+    </form>
+  </div>
+</div>

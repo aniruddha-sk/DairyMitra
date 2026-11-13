@@ -1,0 +1,174 @@
+{% extends base_template %}
+{% block title %}{{ _('दूध पावती (FAT/SNF)') }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fat_snf.css') }}?v={{ dp_asset_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dp-print.css') }}?v={{ dp_asset_version }}">
+{% endblock %}
+
+{% macro m(v) %}₹{{ "{:,.2f}".format(v) }}{% endmacro %}
+{% macro n(v) %}{% if v is not none %}{{ "%.2f"|format(v) }}{% else %}–{% endif %}{% endmacro %}
+{% macro d(v) %}{{ v|dmy }}{% endmacro %}
+{% macro slot_cells(e) %}
+  {% if e %}
+  <td class="num">{{ n(e.quantity) }}</td><td class="num">{{ n(e.fat) }}</td><td class="num">{{ n(e.snf) }}</td>
+  <td class="num">{{ n(e.rate) }}</td><td class="num">{{ n(e.amount) }}</td>
+  {% else %}
+  <td class="empty">–</td><td class="empty">–</td><td class="empty">–</td><td class="empty">–</td><td class="empty">–</td>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="no-print">
+  <h2 class="page-title flex items-center gap-2"><i data-lucide="receipt"></i> {{ _('दूध पावती (FAT/SNF)') }}</h2>
+  <form method="POST" class="section mb-4 fsn-form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="fsn-field"><label for="from_date">{{ _('पासून तारीख') }}</label>
+      <input type="date" id="from_date" name="from_date" class="form-input" value="{{ from_date }}" required></div>
+    <div class="fsn-field"><label for="to_date">{{ _('पर्यंत तारीख') }}</label>
+      <input type="date" id="to_date" name="to_date" class="form-input" value="{{ to_date }}" required></div>
+    {% if not customer %}
+    <div class="fsn-field" style="grid-column: span 2"><label for="vendor_id">{{ _('ग्राहक') }}</label>
+      <select id="vendor_id" name="vendor_id" class="form-select">
+        <option value="all" {{ 'selected' if vendor_id in ('', 'all') }}>{{ _('सर्व ग्राहक (एकत्र प्रिंट)') }}</option>
+        {% for v in vendors %}
+        <option value="{{ v.vendor_id }}" {{ 'selected' if vendor_id == v.vendor_id|string }}>{{ v.vendor_id }} - {{ v.name }}</option>
+        {% endfor %}
+      </select></div>
+    <div class="fsn-field" style="grid-column: span 2"><label for="customers">{{ _('ग्राहक क्रमांक (ऐच्छिक)') }}</label>
+      <input type="text" id="customers" name="customers" class="form-input" value="{{ customers or '' }}"
+             placeholder="{{ _('उदा. 1-10, 15, 17, 36-56') }}" autocomplete="off"></div>
+    <div class="fsn-field">
+      <label><input type="checkbox" name="detail" value="1" {{ 'checked' if detailed }}> {{ _('खाद्य/ॲडव्हान्स तपशील') }}</label>
+    </div>
+    {% endif %}
+    <div class="fsn-actions">
+      <button type="submit" class="btn btn-primary"><i data-lucide="file-text"></i> {{ _('पावती तयार करा') }}</button>
+    </div>
+  </form>
+  {% if error %}<div class="fsn-notice error" role="alert">{{ error }}</div>{% endif %}
+  {% if generated and not error and not statements %}
+  <div class="fsn-notice">{{ _('निवडलेल्या कालावधीत कोणतीही नोंद नाही.') }}</div>
+  {% endif %}
+
+  {% if statements %}
+  <div class="dp-print-toolbar">
+    {% if not customer and statements|length > 1 %}
+    <div class="dp-print-toolbar__field">
+      <label for="dpPrintFilter">{{ _('प्रिंटसाठी ग्राहक निवडा') }}</label>
+      <input type="text" id="dpPrintFilter" class="form-input" placeholder="{{ _('उदा. 1-10, 15, 17, 36-56 (रिकामे = सर्व)') }}" autocomplete="off">
+    </div>
+    <button type="button" class="btn btn-secondary" id="dpPrintApply"><i data-lucide="filter"></i> {{ _('लागू करा') }}</button>
+    <button type="button" class="btn btn-secondary" id="dpPrintClear"><i data-lucide="x"></i> {{ _('सर्व') }}</button>
+    {% endif %}
+    <button type="button" class="btn btn-primary" id="dpPrintBtn"><i data-lucide="printer"></i> {{ _('प्रिंट / PDF (एका A4 पानावर 2 पावत्या)') }}</button>
+    <div class="dp-print-toolbar__info" id="dpPrintInfo" aria-live="polite"></div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="fsn-print-area dp-print-source" data-print-layout="fsn2">
+{% for st in statements %}
+<div class="fsn-receipt-scroll">
+<article class="fsn-receipt dp-receipt" data-customer="{{ st.vendor.vendor_id }}" aria-label="{{ _('पावती') }} {{ st.vendor.name }}">
+  <h2>{{ dairy_name or _('दूध संकलन केंद्र') }}</h2>
+  <div class="meta">
+    <p><b>{{ _('नाव') }} :</b> {{ st.vendor.name }} <span style="float:right"><b>{{ _('ग्राहक क्र.') }} :</b> {{ st.vendor.vendor_id }}</span></p>
+    <p><b>{{ _('प्रकार') }} :</b> {{ _({'cow': _('गाय'), 'buffalo': _('म्हैस'), 'both': _('गाय व म्हैस')}.get(st.vendor.milk_type, '-')) }}</p>
+    <p><b>{{ _('गाव') }} :</b> {{ st.vendor.address or '-' }}</p>
+    <p><b>{{ _('कालावधी') }} :</b> {{ from_date | dmy }} {{ _('ते') }} {{ to_date | dmy }}</p>
+  </div>
+
+  {% for sec in st.sections %}
+  <table>
+    <colgroup>
+      <col style="width:7%">
+      {% for i in range(10) %}<col style="width:9.3%">{% endfor %}
+    </colgroup>
+    <thead>
+      <tr><th colspan="11" class="type-head">{{ _(sec.label) }}</th></tr>
+      <tr><th>{{ _('दिनांक') }}</th><th colspan="5">{{ _('सकाळ') }}</th><th colspan="5">{{ _('संध्याकाळ') }}</th></tr>
+      <tr>
+        <th></th>
+        <th>{{ _('लिटर') }}</th><th>{{ _('फॅट %') }}</th><th>{{ _('SNF %') }}</th><th>{{ _('दर / लि.') }}</th><th>{{ _('रक्कम') }}</th>
+        <th>{{ _('लिटर') }}</th><th>{{ _('फॅट %') }}</th><th>{{ _('SNF %') }}</th><th>{{ _('दर / लि.') }}</th><th>{{ _('रक्कम') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in sec.rows %}
+      <tr>
+        <td class="day">{{ row.date.strftime('%d') }}</td>
+        {{ slot_cells(row.morning) }}
+        {{ slot_cells(row.evening) }}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="day">{{ _('एकूण') }}</td>
+        <td class="num">{{ n(sec.morning.litres) }}</td>
+        <td colspan="3" class="avg">{{ _('सरासरी फॅट') }} {{ n(sec.morning.avg_fat) }} {{ _('· SNF') }} {{ n(sec.morning.avg_snf) }}</td>
+        <td class="num">{{ n(sec.morning.amount) }}</td>
+        <td class="num">{{ n(sec.evening.litres) }}</td>
+        <td colspan="3" class="avg">{{ _('सरासरी फॅट') }} {{ n(sec.evening.avg_fat) }} {{ _('· SNF') }} {{ n(sec.evening.avg_snf) }}</td>
+        <td class="num">{{ n(sec.evening.amount) }}</td>
+      </tr>
+    </tfoot>
+  </table>
+  {% endfor %}
+
+  <table class="summary">
+    <thead><tr><th style="width:50%">{{ _('तपशील') }}</th><th>{{ _('रक्कम / माहिती') }}</th></tr></thead>
+    <tbody>
+      {% for sec in st.sections %}
+      <tr><td>{{ _('एकूण गायीचे दूध') if sec.type == 'cow' else _('एकूण म्हशीचे दूध') }}</td><td>{{ n(sec.litres) }} {{ _('लि.') }}
+        {% if sec.avg_fat %}<span style="font-size:0.85em">({{ _('सरासरी फॅट') }} {{ n(sec.avg_fat) }}{{ _(', SNF') }} {{ n(sec.avg_snf) }})</span>{% endif %}</td></tr>
+      <tr><td>{{ _('गायीच्या दूधाची रक्कम') if sec.type == 'cow' else _('म्हशीच्या दूधाची रक्कम') }}</td><td>{{ m(sec.amount) }}</td></tr>
+      {% endfor %}
+      {% if st.general_total %}
+      <tr><td>{{ _('लिटर-दर पद्धतीचे दूध (जुन्या नोंदी)') }}</td>
+          <td>{{ _('गाय') }} {{ n(st.general.cow[0]) }} {{ _('लि.') }} / {{ _('म्हैस') }} {{ n(st.general.buffalo[0]) }} {{ _('लि.') }} = {{ m(st.general_total) }}</td></tr>
+      {% endif %}
+      <tr><td>{{ _('खाद्य माहिती') }}</td>
+        <td>
+          {% if st.food['items'] %}
+            {% for f in st.food['items'] %}
+              {{ f.name }} (₹{{ "%.0f"|format(f.rate) if f.rate == f.rate|round else n(f.rate) }}/{{ _('गोणी') }}) × {{ f.qty }} = {{ m(f.total) }}{% if not loop.last %}<br>{% endif %}
+            {% endfor %}
+            {% if st.food['items']|length > 1 %}<br><b>{{ _('एकूण खाद्य') }} = {{ m(st.food.total) }}</b>{% endif %}
+          {% else %}₹0.00{% endif %}
+        </td></tr>
+      <tr><td>{{ _('ॲडव्हान्स वजा') }}</td><td>{{ m(st.period_deduction) }}</td></tr>
+      <tr class="strong"><td>{{ _('अंतिम देय रक्कम') }}</td><td>{{ m(st.final) }}</td></tr>
+      <tr><td>{{ _('बाकी रक्कम (शिल्लक ॲडव्हान्स)') }}</td><td>{{ m(st.remaining_advance) }}</td></tr>
+    </tbody>
+  </table>
+
+  {% if st.advance_items is defined and (st.advance_items or st.food['items']) %}
+  <table class="details">
+    <thead><tr><th colspan="3">{{ _('तपशील (या कालावधीतील व्यवहार)') }}</th></tr>
+      <tr><th>{{ _('दिनांक') }}</th><th>{{ _('प्रकार') }}</th><th>{{ _('रक्कम') }}</th></tr></thead>
+    <tbody>
+      {% for f in st.food['items'] %}
+      <tr><td>{{ d(f.date) }}</td><td>{{ _('खाद्य') }}: {{ f.name }} × {{ f.qty }}</td><td class="num">{{ m(f.total) }}</td></tr>
+      {% endfor %}
+      {% for a in st.advance_items %}
+      <tr><td>{{ d(a.transaction_date) }}</td><td>{{ _('ॲडव्हान्स दिला') if a.transaction_type == 'advance' else _('ॲडव्हान्स वजा') }}</td><td class="num">{{ m(a.amount) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="foot">
+    <span>{{ _('शेतकरी सही') }}</span>
+    <span style="font-size:0.85em">{{ _('पावती दिनांक') }}: {{ printed_at.strftime('%d/%m/%Y %H:%M') }} {{ _('IST') }}</span>
+    <span>{{ _('अधिकृत सही') }}</span>
+  </div>
+</article>
+</div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dp-receipt-print.js') }}?v={{ dp_asset_version }}"></script>
+{% endblock %}

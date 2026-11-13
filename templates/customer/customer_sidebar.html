@@ -1,0 +1,50 @@
+<aside id="sidebar" aria-label="{{ _('Menu') }}">
+  <nav>
+    <div class="sidebar-brand" style="padding:4px 4px 12px;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <img src="{{ url_for('static', filename=BRAND_LOGO) }}" alt="{{ BRAND_NAME }}" style="height:34px;width:auto">
+      <div class="dp-muted" style="font-size:12px;margin-top:4px">{{ session.get('dairy_name') or '' }}</div>
+    </div>
+
+    <a href="{{ url_for('customer_dashboard') }}" class="sidebar-link">
+      <i data-lucide="house"></i>
+      <span>{{ _('HOME') }}</span>
+    </a>
+
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('CUSTOMER') }}</span>
+      <a href="{{ url_for('customer_milk_history') }}" class="sidebar-link">
+        <i data-lucide="milk"></i>
+        <span>{{ _('Milk History') }}</span>
+      </a>
+      <a href="{{ url_for('customer_payment_history') }}" class="sidebar-link">
+        <i data-lucide="wallet"></i>
+        <span>{{ _('Payment History') }}</span>
+      </a>
+      <a href="{{ url_for('customer_receipts') }}" class="sidebar-link">
+        <i data-lucide="receipt"></i>
+        <span>{{ _('Receipts') }}</span>
+      </a>
+      <a href="{{ url_for('customer_food_sack') }}" class="sidebar-link">
+        <i data-lucide="package"></i>
+        <span>{{ _('Food Sack') }}</span>
+      </a>
+      <a href="{{ url_for('customer_advance') }}" class="sidebar-link">
+        <i data-lucide="hand-coins"></i>
+        <span>{{ _('Advance') }}</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('ACCOUNT') }}</span>
+      <a href="{{ url_for('customer_profile') }}" class="sidebar-link">
+        <i data-lucide="user"></i>
+        <span>{{ _('My Profile') }}</span>
+      </a>
+    </div>
+
+    <a href="{{ url_for('customer_logout') }}" class="sidebar-link logout-link">
+      <i data-lucide="log-out"></i>
+      <span>{{ _('Logout') }}</span>
+    </a>
+  </nav>
+</aside>

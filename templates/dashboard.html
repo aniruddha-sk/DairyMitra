@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Dashboard') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title text-center mb-4">
+  {{ session.get("dairy_name","My Dairy") }}
+</h2>
+
+{% if calc_mode == 'fat_snf' %}
+<p class="text-center mb-4">
+  <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:700;font-size:13px">
+    {{ _('FAT/SNF पद्धत चालू') }}
+  </span>
+</p>
+{% endif %}
+
+<!-- TODAY ACTIONS -->
+<section class="section">
+  <h4 class="section-title">{{ _('आजचं काम') }}</h4>
+
+  <div class="grid-cards">
+
+    <!-- दूध जमा -->
+    <a class="card card-action" href="{{ url_for('milk_collection') }}">
+      <span class="iconify icon-blue" data-icon="material-symbols:local-drink-outline"></span>
+      <span>{{ _('दूध जमा') }}</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+    <!-- आजचा हिशोब -->
+    <a class="card card-action" href="{{ url_for('calculation') }}">
+      <span class="iconify icon-teal" data-icon="material-symbols:calculate-outline"></span>
+      <span>{{ _('आजचा हिशोब') }}</span>
+    </a>
+
+    <!-- पावती -->
+    <a class="card card-action" href="{{ url_for('receipt_all_vendors') }}">
+      <span class="iconify icon-purple" data-icon="material-symbols:receipt-long-outline"></span>
+      <span>{{ _('पावती') }}</span>
+    </a>
+
+    <!-- गाडीप्रमाणे दूध -->
+    <a class="card card-action" href="{{ url_for('vehicle_milk_report') }}">
+      <span class="iconify icon-purple" data-icon="mdi:truck-outline"></span>
+      <span>{{ _('गाडीप्रमाणे दूध') }}</span>
+    </a>
+
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- DAILY WORK -->
+<section class="section mt-4">
+  <h4 class="section-title">{{ _('दैनंदिन काम') }}</h4>
+
+  <div class="grid-cards">
+
+    <a class="card card-action" href="{{ url_for('edit_entry') }}">
+      <span class="iconify icon-amber" data-icon="material-symbols:edit-document-outline"></span>
+      <span>{{ _('नोंदी बदला') }}</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('food_sack') }}">
+      <span class="iconify icon-green" data-icon="material-symbols:agriculture-outline"></span>
+      <span>{{ _('पेंड') }}</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+    <a class="card card-action" href="{{ url_for('add_vendor') }}">
+      <span class="iconify icon-sky" data-icon="material-symbols:person-add-outline"></span>
+      <span>{{ _('नवीन ग्राहक') }}</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('advance') }}">
+      <span class="iconify icon-emerald" data-icon="material-symbols:payments-outline"></span>
+      <span>{{ _('ॲडव्हान्स') }}</span>
+    </a>
+
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- REPORTS -->
+
+
+<section class="section mt-4">
+  <h4 class="section-title">{{ _('Reports') }}</h4>
+
+  <div class="grid-cards">
+
+    {% if session.get('role') != 'staff' %}
+
+<a class="card card-action" href="{{ url_for('generate_bank_report') }}">
+
+  <span class="iconify icon-green" data-icon="material-symbols:download-outline">
+  </span>
+
+  <span>{{ _('Generate Report') }}</span>
+
+</a>
+{% endif %}
+
+    <a class="card card-action" href="{{ url_for('vendor_range_summary') }}">
+      <span class="iconify icon-pink" data-icon="material-symbols:grouped-bar-chart-outline"></span>
+      <span>{{ _('Vendor Range Report') }}</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('milk_summary') }}">
+      <span class="iconify icon-indigo" data-icon="material-symbols:bar-chart-outline"></span>
+      <span>{{ _('दूध सारांश') }}</span>
+    </a>
+
+    {% if session.get('role') != 'staff' %}
+
+
+
+    {% if calc_mode == 'fat_snf' %}
+    <a class="card card-action" href="{{ url_for('fat_snf.charts_page') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:table-chart-outline"></span>
+      <span>{{ _('FAT/SNF दर चार्ट') }}</span>
+    </a>
+    {% else %}
+    <a class="card card-action" href="{{ url_for('milk_rate') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
+      <span>{{ _('दूध दर') }}</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('vendor_rate') }}">
+      <span class="iconify icon-violet" data-icon="material-symbols:sell-outline"></span>
+      <span>{{ _('Customer नुसार दूध दर') }}</span>
+    </a>
+    {% endif %}
+
+    <a class="card card-action" href="{{ url_for('food_sack_rate') }}">
+      <span class="iconify icon-green" data-icon="material-symbols:eco-outline"></span>
+      <span>{{ _('खाद्य दर') }}</span>
+    </a>
+
+    <a class="card card-action" href="{{ url_for('milk_summary_report') }}">
+      <span class="iconify icon-indigo" data-icon="material-symbols:bar-chart-outline"></span>
+      <span>{{ _('जमा केलेले दूध') }}</span>
+    </a>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

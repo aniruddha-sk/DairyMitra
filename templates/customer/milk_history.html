@@ -1,0 +1,141 @@
+{% extends "customer/customer_base.html" %}
+
+{% block title %}{{ _('Milk History') }}{% endblock %}
+
+{% block content %}
+
+<div id="app-content">
+
+    <h1 class="page-title"><i data-lucide="milk"></i> {{ _('Milk History') }}</h1>
+
+    <!-- FILTER -->
+
+    <div class="section">
+
+        <form method="GET" class="grid-2">
+<div class="section">
+
+    <form method="GET" class="grid-2">
+
+ <div class="section">
+
+    <form method="GET" class="grid-2">
+
+        <div>
+
+            <label class="form-label">{{ _('पासून:') }}</label>
+
+            <input
+                type="date"
+                name="from_date"
+                value="{{ request.values.get('from_date', today) }}"
+                required
+                class="form-input">
+
+        </div>
+
+        <div>
+
+            <label class="form-label">{{ _('पर्यंत:') }}</label>
+
+            <input
+                type="date"
+                name="to_date"
+                value="{{ request.values.get('to_date', today) }}"
+                required
+                class="form-input">
+
+        </div>
+
+        <div style="display:flex;align-items:end;">
+
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="search"></i>
+                {{ _('शोधा') }}
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+    <!-- TABLE -->
+
+    <div class="section">
+
+        <div class="table-wrap">
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>{{ _('Date') }}</th>
+                        <th>{{ _('Morning Cow') }}</th>
+                        <th>{{ _('Evening Cow') }}</th>
+                        <th>{{ _('Morning Buffalo') }}</th>
+                        
+                        <th>{{ _('Evening Buffalo') }}</th>
+                        <th>{{ _('Total') }}</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for row in records %}
+
+                    <tr>
+
+                        <td>{{ row.date|dmy }}</td>
+
+                        <td>{{ row.cow_morning }}</td>
+                        <td>{{ row.cow_evening }}</td>
+
+                        <td>{{ row.buffalo_morning }}</td>
+
+                        
+
+                        <td>{{ row.buffalo_evening }}</td>
+
+                        <td>
+
+                            <strong>
+
+                            {{ row.total }}
+
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6"
+                            style="text-align:center">
+
+                            {{ _('No Milk Records Found') }}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

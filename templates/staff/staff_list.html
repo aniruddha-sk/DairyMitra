@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Staff List') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title"><i data-lucide="user"></i>‍<i data-lucide="settings"></i> {{ _('Staff List') }}</h2>
+
+<div class="section">
+
+    <div class="action-bar mb-4">
+
+        <a href="{{ url_for('add_staff') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> {{ _('Add Staff') }}
+        </a>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+        <table class="table">
+
+            <thead>
+                <tr>
+                    <th>{{ _('ID') }}</th>
+                    <th>{{ _('Name') }}</th>
+                    <th>{{ _('Email') }}</th>
+                    <th>{{ _('Vehicle') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Action') }}</th>
+                </tr>
+            </thead>
+
+
+            <tbody>
+
+                {% for s in staff %}
+
+                <tr>
+
+                    <td>{{ s.id }}</td>
+
+                    <td>{{ s.name }}</td>
+
+                    <td>{{ s.email }}</td>
+
+                    <td>{{ s.vehicle_number }}</td>
+
+
+                    <td>
+
+                        {% if s.is_active %}
+
+                        <span class="badge bg-success">
+                            {{ _('Active') }}
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge bg-danger">
+                            {{ _('Disabled') }}
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td class="action-buttons">
+
+                        <!-- EDIT -->
+                        <a href="{{ url_for('edit_staff', staff_id=s.id) }}"
+                           class="btn btn-warning btn-sm"
+                           title="{{ _('Edit') }}">
+
+                            <i class="fa fa-edit"></i>
+
+                        </a>
+
+
+                        <!-- RESET PASSWORD -->
+                        <a href="{{ url_for('reset_staff_password', staff_id=s.id) }}"
+                           class="btn btn-info btn-sm"
+                           title="{{ _('Reset Password') }}">
+
+                            <i class="fa fa-key"></i>
+
+                        </a>
+
+
+                        <!-- ENABLE / DISABLE -->
+                        {% if s.is_active %}
+
+                        <form method="POST" action="{{ url_for('disable_staff', staff_id=s.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" title="{{ _('Disable') }}"><i class="fa fa-ban"></i></button>
+                        </form>
+
+                        {% else %}
+
+                        <form method="POST" action="{{ url_for('enable_staff', staff_id=s.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success btn-sm" title="{{ _('Enable') }}"><i class="fa fa-check"></i></button>
+                        </form>
+
+                        {% endif %}
+
+
+                        <!-- DELETE -->
+                        <form method="POST" action="{{ url_for('delete_staff', staff_id=s.id) }}" style="display:inline" data-confirm="{{ _('हा staff कायमचा delete करायचा आहे का? Delete केल्यानंतर या account चा access बंद होईल.') }}" data-confirm-danger data-confirm-ok="Delete">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm" title="{{ _('Delete') }}"><i class="fa fa-trash"></i></button>
+                        </form>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+
+                {% if not staff %}
+
+                <tr>
+
+                    <td colspan="6" style="text-align:center;">
+                        {{ _('No staff found.') }}
+                    </td>
+
+                </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,152 @@
+<aside id="sidebar" aria-label="{{ _('Menu') }}">
+  <nav>
+    <div class="sidebar-brand" style="padding:4px 4px 12px;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <img src="{{ url_for('static', filename=BRAND_LOGO) }}" alt="{{ BRAND_NAME }}" style="height:34px;width:auto">
+    </div>
+
+    <!-- HOME -->
+    <a href="{{ url_for('dashboard') }}" class="sidebar-link">
+      <i data-lucide="house"></i>
+      <span>{{ _('HOME') }}</span>
+    </a>
+
+    <!-- MENU -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('MENU') }}</span>
+
+      <a href="{{ url_for('milk_collection') }}" class="sidebar-link">
+        <i data-lucide="milk"></i>
+        <span>{{ _('दूध जमा') }}</span>
+      </a>
+
+      {% if calc_mode == 'fat_snf' %}
+      <a href="{{ url_for('fat_snf.milk_summary', view='daily') }}" class="sidebar-link">
+        <i data-lucide="chart-column"></i>
+        <span>{{ _('दूध सारांश') }}</span>
+      </a>
+      <a href="{{ url_for('fat_snf.milk_summary', view='customer') }}" class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>{{ _('ग्राहक Report') }}</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('milk_summary') }}" class="sidebar-link">
+        <i data-lucide="chart-column"></i>
+        <span>{{ _('दूध सारांश') }}</span>
+      </a>
+      <a href="{{ url_for('vendor_range_summary') }}" class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>{{ _('ग्राहक Report') }}</span>
+      </a>
+      {% endif %}
+
+      <a href="{{ url_for('food_sack') }}" class="sidebar-link">
+        <i data-lucide="wheat"></i>
+        <span>{{ _('पेंड') }}</span>
+      </a>
+
+      <a href="{{ url_for('edit_entry') }}" class="sidebar-link">
+        <i data-lucide="file-pen-line"></i>
+        <span>{{ _('नोंदी बदला') }}</span>
+      </a>
+    </div>
+
+    {% if session.get("role") != "staff" %}
+    <!-- OPERATIONS -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('OPERATIONS') }}</span>
+      <a href="{{ url_for('advance') }}" class="sidebar-link">
+        <i data-lucide="hand-coins"></i>
+        <span>{{ _('ॲडव्हान्स') }}</span>
+      </a>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('CUSTOMERS') }}</span>
+      <a href="{{ url_for('add_vendor') }}" class="sidebar-link">
+        <i data-lucide="user-plus"></i>
+        <span>{{ _('नवीन ग्राहक') }}</span>
+      </a>
+      <a href="{{ url_for('vendor_list') }}" class="sidebar-link">
+        <i data-lucide="users"></i>
+        <span>{{ _('ग्राहक यादी') }}</span>
+      </a>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('FINANCE') }}</span>
+      <a href="{{ url_for('calculation') }}" class="sidebar-link">
+        <i data-lucide="calculator"></i>
+        <span>{{ _('हिशोब') }}</span>
+      </a>
+      <a href="{{ url_for('payment') }}" class="sidebar-link">
+        <i data-lucide="credit-card"></i>
+        <span>{{ _('पेमेंट') }}</span>
+      </a>
+      <a href="{{ url_for('receipt_all_vendors') }}" class="sidebar-link">
+        <i data-lucide="receipt"></i>
+        <span>{{ _('पावती') }}</span>
+      </a>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('SYSTEM') }}</span>
+      {% if calc_mode == 'fat_snf' %}
+      <a href="{{ url_for('fat_snf.charts_page') }}" class="sidebar-link">
+        <i data-lucide="table"></i>
+        <span>{{ _('FAT/SNF दर चार्ट') }}</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('milk_rate') }}" class="sidebar-link">
+        <i data-lucide="tag"></i>
+        <span>{{ _('दूध दर') }}</span>
+      </a>
+      {% endif %}
+      <a href="{{ url_for('food_sack_rate') }}" class="sidebar-link">
+        <i data-lucide="leaf"></i>
+        <span>{{ _('खाद्य दर') }}</span>
+      </a>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('ANALYSIS') }}</span>
+      <a href="{{ url_for('milk_prediction_page') }}" class="sidebar-link">
+        <i data-lucide="brain"></i>
+        <span>{{ _('Milk Prediction') }}</span>
+      </a>
+      <a href="{{ url_for('vendor_performance') }}" class="sidebar-link">
+        <i data-lucide="trending-up"></i>
+        <span>{{ _('Vendor Performance') }}</span>
+      </a>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="sidebar-section">
+      <span class="section-title">{{ _('ACCOUNT') }}</span>
+      <a href="{{ url_for('subscription_page') }}" class="sidebar-link">
+        <i data-lucide="crown"></i>
+        <span>{{ _('Subscription') }}</span>
+      </a>
+      <a href="{{ url_for('settings') }}" class="sidebar-link">
+        <i data-lucide="settings"></i>
+        <span>{{ _('Setting') }}</span>
+      </a>
+      {% if is_platform_admin is defined and is_platform_admin() %}
+      <a href="{{ url_for('admin_subscriptions') }}" class="sidebar-link">
+        <i data-lucide="shield-check"></i>
+        <span>{{ _('Platform admin') }}</span>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- LOGOUT -->
+    <a href="{{ url_for('logout') }}" class="sidebar-link logout-link" data-dp-logout>
+      <i data-lucide="log-out"></i>
+      <span>{{ _('Logout') }}</span>
+    </a>
+  </nav>
+</aside>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="page-title">{{ _('Vendor Performance') }}</h2>
+
+<div class="section table-wrap">
+
+<table class="table">
+
+<thead>
+<tr>
+<th>{{ _('Vendor ID') }}</th>
+<th>{{ _('Average Milk') }}</th>
+<th>{{ _('Consistency') }}</th>
+<th>{{ _('Rating') }}</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for v in data %}
+
+<tr>
+<td>{{ v.vendor_id }}</td>
+<td>{{ v.average }} {{ _('L') }}</td>
+<td>{{ v.consistency }} %</td>
+<td>{{ v.rating }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,139 @@
+/* =====================================================================
+   DairyPro receipt print layout (A4).
+   #dp-print-root is built by dp-receipt-print.js; on screen it is laid out
+   off-screen (so it can be measured) and in print it is the ONLY content.
+   Everything inside a cell is sized in em, so one --fit value scales the
+   whole receipt uniformly.
+   ===================================================================== */
+
+#dp-print-root {
+  position: absolute;
+  left: -20000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dp-print-page {
+  width: 194mm;
+  height: 280mm;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4mm;
+  overflow: hidden;
+  background: #fff;
+  color: #000;
+  font-family: "Noto Sans Devanagari", Inter, "Segoe UI", Arial, sans-serif;
+}
+.dp-print-page--flow { height: auto; overflow: visible; }
+
+.dp-print-cell {
+  position: relative;
+  overflow: hidden;
+  border: 0.35mm solid #000;
+  padding: 2mm 2.4mm;
+  box-sizing: border-box;
+}
+.dp-print-cell--flow { overflow: visible; }
+
+.dp-print-fit {
+  --fit: 1;
+  font-size: calc(10.5pt * var(--fit));
+  line-height: 1.25;
+}
+
+/* ---------- receipt content inside a cell (both receipt styles) ---------- */
+.dp-print-fit .receipt-box,
+.dp-print-fit .fsn-receipt {
+  border: 0 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+  width: auto !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  font-size: 1em !important;
+  page-break-after: auto !important;
+  break-after: auto !important;
+}
+.dp-print-fit .fsn-receipt-scroll { overflow: visible !important; }
+.dp-print-fit h2,
+.dp-print-fit h3 {
+  font-size: 1.32em !important;
+  font-weight: 800 !important;
+  text-align: center;
+  margin: 0 0 0.25em !important;
+  line-height: 1.2 !important;
+}
+.dp-print-fit p,
+.dp-print-fit .meta p {
+  font-size: 1em !important;
+  font-weight: 700 !important;
+  margin: 0.08em 0 !important;
+  line-height: 1.25 !important;
+}
+.dp-print-fit table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 0.35em 0 0 !important;
+  font-size: 0.92em !important;
+  table-layout: auto;
+}
+.dp-print-fit th,
+.dp-print-fit td {
+  border: 0.25mm solid #000 !important;
+  padding: 0.14em 0.3em !important;
+  font-size: 1em !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #000 !important;
+  background: transparent !important;
+}
+.dp-print-fit thead th { background: #eee !important; }
+.dp-print-fit .summary-table tr:last-child th,
+.dp-print-fit .summary .strong td { background: #ddd !important; font-size: 1.08em !important; }
+.dp-print-fit .foot {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-top: 0.6em !important; font-size: 0.9em !important;
+}
+.dp-print-fit .no-print, .dp-print-fit button { display: none !important; }
+.dp-print-fit .dp-icon { width: 1em; height: 1em; }
+
+/* ---------- screen helpers ---------- */
+.dp-receipt--filtered-out { display: none !important; }
+.dp-print-toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+  max-width: 900px; margin: 0 auto 18px; padding: 14px 16px;
+  background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px;
+}
+.dp-print-toolbar label { font-weight: 700; font-size: 13px; display: block; margin-bottom: 4px; }
+.dp-print-toolbar .dp-print-toolbar__field { flex: 1 1 240px; }
+.dp-print-toolbar input[type="text"] { width: 100%; }
+.dp-print-toolbar__info { flex-basis: 100%; font-size: 13px; color: var(--muted, #64748b); }
+.dp-print-toolbar__info.is-error { color: #b91c1c; font-weight: 700; }
+
+/* ---------- print ---------- */
+@media print {
+  @page { size: A4 portrait; margin: 8mm; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  body > *:not(#dp-print-root) { display: none !important; }
+  body * { visibility: visible !important; }
+  #dp-print-root {
+    position: static !important;
+    left: auto !important;
+    visibility: visible !important;
+  }
+  .dp-print-page {
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+  }
+  .dp-print-page:last-child { break-after: auto; page-break-after: auto; }
+  .dp-print-page--flow { break-inside: auto; }
+  .dp-print-cell--flow { break-inside: auto; }
+  .dp-print-cell--flow tr { break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

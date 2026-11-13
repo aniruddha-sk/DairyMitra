@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ _("Customer Login") }} | {{ BRAND_NAME }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename='vendor/bootstrap-5.3.3.min.css') }}" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dairypro.css') }}?v={{ dp_asset_version }}">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5730bb">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename=BRAND_ICON) }}">
+  <script src="/i18n/{{ lang }}.js?v={{ i18n_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-ui.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-icons.js') }}?v={{ dp_asset_version }}" data-sprite="{{ url_for('static', filename='icons/dp-icons.svg') }}?v={{ dp_asset_version }}"></script>
+</head>
+
+<body class="auth-body">
+<form method="post" action="{{ url_for('set_language') }}" class="dp-lang" style="position:fixed;top:12px;right:12px;z-index:50" data-no-loader>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <i data-lucide="languages" class="dp-lang__icon"></i>
+  <select name="lang" aria-label="{{ _('Language') }}" onchange="this.form.submit()">
+    {% for code in SUPPORTED_LANGUAGES %}<option value="{{ code }}" {{ 'selected' if code == lang }}>{{ LANGUAGE_NAMES[code] }}</option>{% endfor %}
+  </select>
+  <i data-lucide="chevron-down" class="dp-lang__chev"></i>
+</form>
+<script>
+  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("/service-worker.js", { scope: "/", updateViaCache: "none" }).catch(function () {}); }
+</script>
+
+
+<div class="auth-card">
+
+    <img src="{{ url_for('static', filename=BRAND_ICON) }}" class="auth-logo">
+
+    <h4 class="auth-title">{{ _('ग्राहक लॉगिन') }}</h4>
+
+    <p class="auth-subtitle">
+        {{ _('Dairy ID आणि मोबाईल नंबर वापरून लॉगिन करा') }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ _(message) }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Dairy ID -->
+        <div class="form-floating">
+            <input
+                type="text"
+                class="form-control"
+                id="dairy_id"
+                name="dairy_id"
+                placeholder="{{ _('DM000001') }}"
+                required>
+
+            <label for="dairy_id">
+                <i class="fa-solid fa-building"></i>
+                {{ _('Dairy ID') }}
+            </label>
+        </div>
+
+        <!-- Mobile Number -->
+        <div class="form-floating">
+            <input
+                type="tel"
+                class="form-control"
+                id="phone"
+                name="phone"
+                placeholder="9876543210"
+                maxlength="10"
+                pattern="[0-9]{10}"
+                required>
+
+            <label for="phone">
+                <i class="fa-solid fa-phone"></i>
+                {{ _('मोबाईल नंबर') }}
+            </label>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            {{ _('लॉगिन') }}
+        </button>
+
+    </form>
+
+    <div class="auth-links">
+
+        <a href="{{ url_for('login') }}">
+            <i class="fa-solid fa-arrow-left"></i>
+            {{ _('Owner Login') }}
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

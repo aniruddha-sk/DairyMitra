@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "DairyPro - Smart Dairy Management",
+  "short_name": "DairyPro",
+  "description": "SMART DAIRY MANAGEMENT: milk collection, FAT/SNF, payments and receipts that keep working offline.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#5730bb",
+  "lang": "mr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/images/dairypro-icon.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

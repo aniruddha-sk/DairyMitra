@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <title>{{ _("Login") }} | {{ BRAND_NAME }}</title>
+
+
+    <!-- Bootstrap -->
+    <link href="{{ url_for('static', filename='vendor/bootstrap-5.3.3.min.css') }}" rel="stylesheet">
+
+
+    <!-- Font Awesome -->
+
+
+    <!-- Auth CSS -->
+<link
+    href="{{ url_for('static', filename='css/auth.css') }}?v=20260918"
+    rel="stylesheet"
+>
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v=1"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dairypro.css') }}?v={{ dp_asset_version }}">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5730bb">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename=BRAND_ICON) }}">
+  <script src="/i18n/{{ lang }}.js?v={{ i18n_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-ui.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-icons.js') }}?v={{ dp_asset_version }}" data-sprite="{{ url_for('static', filename='icons/dp-icons.svg') }}?v={{ dp_asset_version }}"></script>
+</head>
+
+
+<body class="auth-body">
+<form method="post" action="{{ url_for('set_language') }}" class="dp-lang" style="position:fixed;top:12px;right:12px;z-index:50" data-no-loader>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <i data-lucide="languages" class="dp-lang__icon"></i>
+  <select name="lang" aria-label="{{ _('Language') }}" onchange="this.form.submit()">
+    {% for code in SUPPORTED_LANGUAGES %}<option value="{{ code }}" {{ 'selected' if code == lang }}>{{ LANGUAGE_NAMES[code] }}</option>{% endfor %}
+  </select>
+  <i data-lucide="chevron-down" class="dp-lang__chev"></i>
+</form>
+<script>
+  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("/service-worker.js", { scope: "/", updateViaCache: "none" }).catch(function () {}); }
+</script>
+
+
+
+<div class="auth-page-wrapper">
+
+
+    <div class="auth-animated-container" id="authContainer">
+
+
+        <!-- ==================================================
+             LOGIN PANEL
+        =================================================== -->
+
+        <div class="auth-form-panel auth-login-panel">
+
+            <form
+                method="POST"
+                action="{{ url_for('login') }}"
+                class="auth-card border-0 shadow-none p-0"
+            >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- LOGO -->
+
+                <img
+                    src="{{ url_for('static', filename=BRAND_ICON) }}"
+                    alt="{{ BRAND_NAME }}"
+                    class="auth-logo"
+                >
+
+
+                <!-- TITLE -->
+
+                <h1 class="auth-title">
+                    {{ _('लॉगिन') }}
+                </h1>
+
+
+                <p class="auth-subtitle">
+                    {{ _('DairyPro मध्ये स्वागत आहे') }}
+                </p>
+
+
+                <!-- ==================================================
+                     FLASH MESSAGES
+                =================================================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert alert-{{ category }}">
+
+                                {{ _(message) }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- ==================================================
+                     EMAIL
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="loginEmail"
+                        name="email"
+                        placeholder="{{ _('Email') }}"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <label for="loginEmail">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        {{ _('ई-मेल') }}
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     PASSWORD
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="loginPassword"
+                        name="password"
+                        placeholder="{{ _('Password') }}"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <label for="loginPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        {{ _('पासवर्ड') }}
+
+                    </label>
+
+
+                    <!-- PASSWORD TOGGLE -->
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('loginPassword', this)"
+                        title="{{ _('Show Password') }}"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     FORGOT PASSWORD
+                =================================================== -->
+
+                <div class="auth-links">
+
+                    <a href="{{ url_for('forgot_password') }}">
+
+                        {{ _('पासवर्ड विसरलात?') }}
+
+                    </a>
+
+                </div>
+
+
+                <!-- ==================================================
+                     LOGIN BUTTON
+                =================================================== -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                >
+
+                    <i class="fa-solid fa-right-to-bracket"></i>
+
+                    {{ _('लॉगिन') }}
+
+                </button>
+
+
+                <!-- ==================================================
+                     MOBILE SIGNUP LINK
+                =================================================== -->
+
+                <div class="auth-links mobile-switch">
+
+                    {{ _('नवीन खाते आहे?') }}
+
+                    <a href="{{ url_for('signup') }}">
+
+                        {{ _('खाते तयार करा') }}
+
+                    </a>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+
+
+        <!-- ==================================================
+             SIGNUP PANEL
+        =================================================== -->
+
+        <div class="auth-form-panel auth-signup-panel">
+
+            <form
+                method="POST"
+                action="{{ url_for('signup') }}"
+                class="auth-card border-0 shadow-none p-0"
+            >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                <!-- LOGO -->
+
+                <img
+                    src="{{ url_for('static', filename=BRAND_ICON) }}"
+                    alt="{{ BRAND_NAME }}"
+                    class="auth-logo"
+                >
+
+
+                <!-- TITLE -->
+
+                <h1 class="auth-title">
+
+                    {{ _('नवीन खाते तयार करा') }}
+
+                </h1>
+
+
+                <p class="auth-subtitle">
+
+                    {{ _('DairyPro सोबत तुमची डेअरी व्यवस्थापित करा') }}
+
+                </p>
+
+
+                <!-- ==================================================
+                     FLASH MESSAGES
+                =================================================== -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% if messages %}
+
+                        {% for category, message in messages %}
+
+                            <div class="alert alert-{{ category }}">
+
+                                {{ _(message) }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endwith %}
+
+
+                <!-- ==================================================
+                     DAIRY NAME
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="dairyName"
+                        name="dairy_name"
+                        placeholder="{{ _('Dairy Name') }}"
+                        autocomplete="organization"
+                        required
+                    >
+
+                    <label for="dairyName">
+
+                        <i class="fa-solid fa-cow"></i>
+
+                        {{ _('डेअरीचं नाव') }}
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     EMAIL
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="signupEmail"
+                        name="email"
+                        placeholder="{{ _('Email') }}"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <label for="signupEmail">
+
+                        <i class="fa-solid fa-envelope"></i>
+
+                        {{ _('ई-मेल') }}
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     PHONE
+                =================================================== -->
+
+                <div class="form-floating">
+
+                    <input
+                        type="tel"
+                        class="form-control"
+                        id="signupPhone"
+                        name="phone"
+                        placeholder="{{ _('Phone') }}"
+                        autocomplete="tel"
+                    >
+
+                    <label for="signupPhone">
+
+                        <i class="fa-solid fa-phone"></i>
+
+                        {{ _('मोबाईल') }}
+
+                    </label>
+
+                </div>
+
+
+                <!-- ==================================================
+                     PASSWORD
+                =================================================== -->
+
+                <div class="form-floating position-relative">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="signupPassword"
+                        name="password"
+                        placeholder="{{ _('Password') }}"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <label for="signupPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        {{ _('पासवर्ड') }}
+
+                    </label>
+
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('signupPassword', this)"
+                        title="{{ _('Show Password') }}"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     CONFIRM PASSWORD
+                =================================================== -->
+
+                <div class="form-floating position-relative">
+
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="confirmPassword"
+                        name="confirm_password"
+                        placeholder="{{ _('Confirm Password') }}"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <label for="confirmPassword">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        {{ _('पासवर्ड पुन्हा लिहा') }}
+
+                    </label>
+
+
+                    <i
+                        class="fa-solid fa-eye toggle-password"
+                        onclick="togglePassword('confirmPassword', this)"
+                        title="{{ _('Show Password') }}"
+                    ></i>
+
+                </div>
+
+
+                <!-- ==================================================
+                     SIGNUP BUTTON
+                =================================================== -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                >
+
+                    <i class="fa-solid fa-user-plus"></i>
+
+                    {{ _('खाते तयार करा') }}
+
+                </button>
+
+
+                <!-- MOBILE LOGIN -->
+
+                <div class="auth-links mobile-switch">
+
+                    {{ _('आधीपासून खाते आहे?') }}
+
+                    <a href="{{ url_for('login') }}">
+
+                        {{ _('लॉगिन करा') }}
+
+                    </a>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+
+
+        <!-- ==================================================
+             ANIMATED BLUE OVERLAY
+        =================================================== -->
+
+        <div class="auth-overlay">
+
+
+            <!-- ==================================================
+                 LOGIN SIDE
+            =================================================== -->
+
+            <div class="auth-overlay-panel auth-overlay-login">
+
+
+                <!-- Decorative Shapes -->
+
+                <div class="auth-shape auth-shape-one"></div>
+
+                <div class="auth-shape auth-shape-two"></div>
+
+
+                <!-- Content -->
+
+                <div class="auth-overlay-content">
+
+
+                    <h2>
+
+                        {{ _('Welcome Back!') }}
+
+                    </h2>
+
+
+                    <p>
+
+                        {{ _('तुमच्या DairyPro account मध्ये login करा आणि तुमची डेअरी सहजपणे manage करा.') }}
+
+                    </p>
+
+
+                    <button
+                        type="button"
+                        class="auth-outline-btn"
+                        id="showLogin"
+                    >
+
+                        <i class="fa-solid fa-arrow-left"></i>
+
+                        {{ _('SIGN IN') }}
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 SIGNUP SIDE
+            =================================================== -->
+
+            <div class="auth-overlay-panel auth-overlay-signup">
+
+
+                <!-- Decorative Shapes -->
+
+                <div class="auth-shape auth-shape-three"></div>
+
+                <div class="auth-shape auth-shape-four"></div>
+
+
+                <!-- Content -->
+
+                <div class="auth-overlay-content">
+
+
+                    <h2>
+
+                        {{ _('Hello, Friend!') }}
+
+                    </h2>
+
+
+                    <p>
+
+                        {{ _('तुमची DairyPro journey सुरू करण्यासाठी तुमचे account तयार करा.') }}
+
+                    </p>
+
+
+                    <button
+                        type="button"
+                        class="auth-outline-btn"
+                        id="showSignup"
+                    >
+
+                        {{ _('SIGN UP') }}
+
+                        <i class="fa-solid fa-arrow-right"></i>
+
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<!-- ==================================================
+     JAVASCRIPT
+================================================== -->
+
+<script>
+
+
+/* =====================================================
+   AUTH PANEL SWITCH
+===================================================== */
+
+const authContainer =
+    document.getElementById("authContainer");
+
+const showSignup =
+    document.getElementById("showSignup");
+
+const showLogin =
+    document.getElementById("showLogin");
+
+
+/* SIGNUP */
+
+showSignup.addEventListener("click", function () {
+
+    authContainer.classList.add("signup-mode");
+
+});
+
+
+/* LOGIN */
+
+showLogin.addEventListener("click", function () {
+
+    authContainer.classList.remove("signup-mode");
+
+});
+
+
+
+/* =====================================================
+   PASSWORD SHOW / HIDE
+===================================================== */
+
+function togglePassword(fieldId, icon) {
+
+    const field =
+        document.getElementById(fieldId);
+
+
+    if (field.type === "password") {
+
+        field.type = "text";
+
+        icon.classList.remove("fa-eye");
+
+        icon.classList.add("fa-eye-slash");
+
+        icon.setAttribute(
+            "title",
+            "Hide Password"
+        );
+
+    }
+
+    else {
+
+        field.type = "password";
+
+        icon.classList.remove("fa-eye-slash");
+
+        icon.classList.add("fa-eye");
+
+        icon.setAttribute(
+            "title",
+            "Show Password"
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
+   ESC KEY = LOGIN
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+
+            authContainer.classList.remove(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   ALT + S = SIGNUP
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.altKey &&
+            event.key.toLowerCase() === "s"
+        ) {
+
+            authContainer.classList.add(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   ALT + L = LOGIN
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (
+            event.altKey &&
+            event.key.toLowerCase() === "l"
+        ) {
+
+            authContainer.classList.remove(
+                "signup-mode"
+            );
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   BUTTON LOADING
+===================================================== */
+
+document.querySelectorAll(
+    ".auth-form-panel form"
+).forEach(function (form) {
+
+    form.addEventListener(
+        "submit",
+        function () {
+
+            const button =
+                form.querySelector(
+                    "button[type='submit']"
+                );
+
+            if (button) {
+
+                button.classList.add(
+                    "loading"
+                );
+
+                button.disabled = true;
+
+            }
+
+        }
+    );
+
+});
+
+
+</script>
+
+
+</body>
+
+</html>

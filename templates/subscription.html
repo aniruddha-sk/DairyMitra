@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Subscription') }}{% endblock %}
+{% block content %}
+<div style="max-width:1000px;margin:0 auto">
+  <h2 class="page-title flex items-center gap-2"><i data-lucide="crown"></i> {{ _('Subscription') }}</h2>
+
+  <!-- Current status -->
+  <div class="dp-status-card" id="subStatus">
+    <div class="dp-status-card__icon">
+      <i data-lucide="{{ 'badge-check' if state.status == 'active' else 'hourglass' if state.status in ('trial', 'pending') else 'triangle-alert' }}"></i>
+    </div>
+    <div class="dp-status-card__body">
+      {% if state.status == 'active' %}
+        {% set plan_name = (plans|selectattr('code', 'equalto', state.plan_code)|map(attribute='name')|first) or state.plan_code %}
+        <div class="dp-status-card__title">{{ _('Active plan: {plan}', plan=_(plan_name)) }}</div>
+        <div>{{ _('Valid until {date}', date=state.ends_at_ist|dmy) }} · {{ _('{n} days left', n=state.days_left) }}</div>
+      {% elif state.status == 'trial' %}
+        <div class="dp-status-card__title">{{ _('Free trial') }}</div>
+        <div>{{ _('Free trial: {n} days left (ends {date}).', n=state.trial_days_left, date=state.trial_ends_at_ist|dmy) }}</div>
+      {% elif state.status == 'pending' %}
+        <div class="dp-status-card__title">{{ _('Payment being verified') }}</div>
+        <div>{{ _('Your payment is being verified. Access will open as soon as it is confirmed.') }}</div>
+      {% else %}
+        <div class="dp-status-card__title">{{ _('Subscription expired') }}</div>
+        <div>{{ _('Your subscription is not active. Please renew to continue.') }}</div>
+      {% endif %}
+      {% if not state.enforced %}
+        <div class="dp-muted" style="font-size:13px;margin-top:4px">{{ _('Access is not restricted on this installation.') }}</div>
+      {% endif %}
+    </div>
+    {% if is_owner and state.razorpay %}
+    <button type="button" class="dp-btn dp-btn--ghost" id="checkStatusBtn">
+      <i data-lucide="refresh-cw"></i> {{ _('Check payment status') }}
+    </button>
+    {% endif %}
+  </div>
+
+  {% if not state.razorpay %}
+  <div class="dp-note dp-note--info" style="margin-top:14px">
+    {{ _('Online payment is not configured yet. Please contact support.') }}
+  </div>
+  {% endif %}
+
+  <div class="dp-note dp-note--warning" id="offlinePayNote" hidden style="margin-top:14px">
+    {{ _('Payments require internet. Connect to the internet to choose a plan.') }}
+  </div>
+
+  <!-- Plans -->
+  <div class="dp-plans">
+    {% for plan in plans %}
+    <div class="dp-plan {{ 'dp-plan--best' if plan.code == 'yearly' }}">
+      {% if plan.code == 'yearly' %}<span class="dp-plan__ribbon">{{ _('Best value') }}</span>{% endif %}
+      <div class="dp-plan__name">{{ _(plan.name) }}</div>
+      <div class="dp-plan__price">{{ plan.price_paise|inr_paise }}
+        <small>/ {{ _('1 month') if plan.duration_months == 1 else _('{n} months', n=plan.duration_months) }}</small>
+      </div>
+      <div class="dp-plan__save">
+        {% if plan.savings_pct %}{{ _('Save {n}%', n=plan.savings_pct) }}{% else %}{{ _('No long-term commitment') }}{% endif %}
+      </div>
+      <ul class="dp-muted" style="font-size:13.5px;padding-left:18px;margin:0">
+        <li>{{ _('All DairyPro features') }}</li>
+        <li>{{ _('Works offline with automatic sync') }}</li>
+        <li>{{ _('Marathi, English and Hindi') }}</li>
+      </ul>
+      {% if is_owner %}
+      <button type="button" class="dp-btn dp-btn--primary" data-plan="{{ plan.code }}"
+              {{ 'disabled' if not state.razorpay }}>
+        <i data-lucide="credit-card"></i> {{ _('Pay {amount}', amount=plan.price_paise|inr_paise) }}
+      </button>
+      {% else %}
+      <div class="dp-note dp-note--info" style="margin:0">{{ _('Only the dairy owner can manage the subscription.') }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <p class="dp-muted" style="font-size:13px">
+    <i data-lucide="shield-check"></i>
+    {{ _('Payments are processed securely by Razorpay. DairyPro never sees your card, UPI PIN or bank password. A subscription is activated only after Razorpay confirms the payment.') }}
+  </p>
+
+  <!-- History -->
+  <div class="section" style="margin-top:20px">
+    <h3 class="mb-3">{{ _('Payment history') }}</h3>
+    {% if history %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>{{ _('Date') }}</th><th>{{ _('Plan') }}</th><th>{{ _('Amount') }}</th><th>{{ _('Status') }}</th><th>{{ _('Period') }}</th><th>{{ _('Payment ID') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for h in history %}
+          <tr>
+            <td>{{ h.created_ist|dmy(true) }}</td>
+            <td>{{ _((plans|selectattr('code', 'equalto', h.plan_code)|map(attribute='name')|first) or h.plan_code) }}</td>
+            <td>{{ h.amount_paise|inr_paise }}</td>
+            <td><span class="dp-pill dp-pill--{{ h.status }}">{{ _('payment_status_' ~ h.status) }}</span>
+              {% if h.failure_reason and h.status != 'paid' %}<br><small class="dp-muted">{{ h.failure_reason }}</small>{% endif %}</td>
+            <td>{% if h.starts_ist %}{{ h.starts_ist|dmy }} – {{ h.ends_ist|dmy }}{% else %}–{% endif %}</td>
+            <td><small>{{ h.razorpay_payment_id or '–' }}</small></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="dp-muted">{{ _('No payments yet.') }}</p>
+    {% endif %}
+  </div>
+</div>
+<script type="application/json" id="subConfig">{{ {"key": razorpay_key, "status": state.status, "pending": state.status == 'pending'} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  "use strict";
+  var cfg = JSON.parse(document.getElementById("subConfig").textContent || "{}");
+  var note = document.getElementById("offlinePayNote");
+  function paintOnline() {
+    var off = navigator.onLine === false;
+    note.hidden = !off;
+    document.querySelectorAll("[data-plan]").forEach(function (b) { b.disabled = off || !cfg.key; });
+  }
+  window.addEventListener("online", paintOnline);
+  window.addEventListener("offline", paintOnline);
+  paintOnline();
+
+  var checkout = null;
+  function loadCheckout() {
+    if (window.Razorpay) { return Promise.resolve(); }
+    if (checkout) { return checkout; }
+    checkout = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = resolve;
+      s.onerror = function () { checkout = null; reject(new Error("checkout")); };
+      document.head.appendChild(s);
+    });
+    return checkout;
+  }
+
+  var polling = null;
+  function pollStatus(rounds) {
+    clearTimeout(polling);
+    if (rounds <= 0) { window.location.reload(); return; }
+    polling = setTimeout(function () {
+      DP.api("/api/subscription/reconcile", { method: "POST", body: {} }).then(function (r) {
+        if (r.ok && r.data.status === "active") {
+          DP.alert(t("Payment successful. Your subscription is active."), { type: "success" })
+            .then(function () { window.location.reload(); });
+          return;
+        }
+        pollStatus(rounds - 1);
+      });
+    }, 10000);
+  }
+
+  function verify(resp) {
+    DP.loader(true, t("Verifying payment..."));
+    return DP.api("/api/subscription/verify", { method: "POST", body: resp, timeout: 45000 }).then(function (r) {
+      DP.loader(false);
+      if (r.ok && r.data.status === "paid") {
+        return DP.alert(r.data.message, { type: "success", title: t("Payment successful") })
+          .then(function () { window.location.reload(); });
+      }
+      if (r.status === 202 || (r.data && r.data.status === "pending")) {
+        DP.alert(r.data.message, { type: "warning", title: t("Payment being verified") });
+        pollStatus(12);
+        return;
+      }
+      if (r.network) {
+        DP.alert(t("We could not confirm the payment because the connection dropped. Do NOT pay again. When the internet is back, tap 'Check payment status'."),
+                 { type: "warning", title: t("Payment being verified") });
+        return;
+      }
+      DP.alert(r.data.message || t("Payment could not be verified."), { type: "error" });
+    });
+  }
+
+  function pay(button) {
+    if (navigator.onLine === false) { DP.toast(t("This action requires internet."), "offline"); return; }
+    var plan = button.getAttribute("data-plan");
+    button.disabled = true;
+    DP.api("/api/subscription/order", { method: "POST", body: { plan_code: plan } }).then(function (r) {
+      if (!r.ok) {
+        button.disabled = false;
+        DP.toast(r.data.message || t("Could not start the payment. Please try again."), "error");
+        return;
+      }
+      var order = r.data;
+      return loadCheckout().then(function () {
+        var rzp = new window.Razorpay({
+          key: order.key_id, amount: order.amount, currency: order.currency,
+          name: order.name, description: order.description, order_id: order.order_id,
+          prefill: order.prefill, theme: { color: "#5730bb" },
+          handler: function (resp) { verify(resp); },
+          modal: {
+            confirm_close: true,
+            ondismiss: function () {
+              button.disabled = false;
+              DP.api("/api/subscription/attempt", { method: "POST",
+                body: { event: "dismissed", razorpay_order_id: order.order_id } });
+              DP.toast(t("Payment window closed. If money was deducted, it will be confirmed automatically. Do not pay again; use 'Check payment status'."), "info", { timeout: 9000 });
+            }
+          }
+        });
+        rzp.on("payment.failed", function (resp) {
+          var err = (resp && resp.error) || {};
+          DP.api("/api/subscription/attempt", { method: "POST", body: {
+            event: "failed", razorpay_order_id: order.order_id,
+            razorpay_payment_id: err.metadata && err.metadata.payment_id,
+            code: err.code, description: err.description || err.reason } });
+          DP.toast(t("Payment failed: {reason}. No subscription was activated. You can try again.",
+                     { reason: err.description || t("Unknown reason") }), "error", { timeout: 10000 });
+        });
+        rzp.open();
+      }, function () {
+        button.disabled = false;
+        DP.toast(t("Could not load the payment window. Check the internet connection and try again."), "error");
+      });
+    });
+  }
+
+  document.querySelectorAll("[data-plan]").forEach(function (b) {
+    b.addEventListener("click", function () { pay(b); });
+  });
+  var check = document.getElementById("checkStatusBtn");
+  if (check) {
+    check.addEventListener("click", function () {
+      if (navigator.onLine === false) { DP.toast(t("This action requires internet."), "offline"); return; }
+      check.disabled = true;
+      DP.api("/api/subscription/reconcile", { method: "POST", body: {} }).then(function (r) {
+        check.disabled = false;
+        DP.toast(r.data.message, r.ok ? (r.data.status === "active" ? "success" : "info") : "error");
+        if (r.ok && r.data.status !== cfg.status) { setTimeout(function () { window.location.reload(); }, 1200); }
+      });
+    });
+  }
+  if (cfg.pending) { pollStatus(6); }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}{{ BRAND_NAME }}{% endblock %}{% if self.title() != BRAND_NAME %} | {{ BRAND_NAME }}{% endif %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="{{ BRAND_NAME }} - {{ BRAND_TAGLINE }}">
+  <meta name="application-name" content="{{ BRAND_NAME }}">
+
+  <!-- Theme before first paint (no flash of the wrong theme) -->
+  <script>
+    try { if (localStorage.getItem("theme") === "dark") { document.documentElement.setAttribute("data-theme", "dark"); } } catch (e) {}
+  </script>
+
+  <!-- Fonts load without blocking the page (system fonts until ready / offline) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dairypro.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dp-ai.css') }}?v={{ dp_asset_version }}" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5730bb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="{{ BRAND_NAME }}" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename=BRAND_ICON) }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32.png') }}">
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="/i18n/{{ lang }}.js?v={{ i18n_version }}"></script>
+  <script>
+    window.DP_SESSION = {{ ({
+      "tenant_id": session.get("id") if session.get("loggedin") else None,
+      "role": session.get("role"),
+      "staff_id": session.get("staff_id"),
+      "lang": lang
+    }) | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/dp-ui.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-icons.js') }}?v={{ dp_asset_version }}"
+          data-sprite="{{ url_for('static', filename='icons/dp-icons.svg') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-date.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-offline.js') }}?v={{ dp_asset_version }}"></script>
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {# Flash messages become translated toasts (dp-ui.js). Rendered before the
+     page content, so pages never show the same message twice. #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% set flashes = [] %}
+  {% for category, message in messages %}{% set _ignored = flashes.append([category, _(message)]) %}{% endfor %}
+  <script type="application/json" id="dp-flashes">{{ flashes | tojson }}</script>
+  {% endwith %}
+
+  <header>
+    {% include "header.html" %}
+  </header>
+
+  <div id="overlay"></div>
+
+  {% include "sidebar.html" %}
+
+  <main id="app-content">
+    {% if subscription and session.get('loggedin') %}
+      {% set sub = subscription %}
+      {% if sub.status == 'trial' and sub.trial_days_left is not none and sub.trial_days_left <= 5 %}
+      <div class="dp-banner dp-banner--warning" role="status">
+        <i data-lucide="hourglass"></i>
+        <span>{{ _('Free trial: {n} days left (ends {date}).', n=sub.trial_days_left, date=sub.trial_ends_at_ist|dmy) }}</span>
+        {% if session.get('role') == 'owner' %}<a href="{{ url_for('subscription_page') }}">{{ _('Upgrade now') }}</a>{% endif %}
+      </div>
+      {% elif sub.status == 'pending' %}
+      <div class="dp-banner dp-banner--warning" role="status">
+        <i data-lucide="loader-circle"></i>
+        <span>{{ _('Your payment is being verified. Access will open as soon as it is confirmed.') }}</span>
+        <a href="{{ url_for('subscription_page') }}">{{ _('Check payment status') }}</a>
+      </div>
+      {% elif sub.status == 'expired' and sub.enforced %}
+      <div class="dp-banner dp-banner--danger" role="alert">
+        <i data-lucide="triangle-alert"></i>
+        <span>{{ _('Your subscription is not active. Please renew to continue.') }}</span>
+        {% if session.get('role') == 'owner' %}<a href="{{ url_for('subscription_page') }}">{{ _('Renew now') }}</a>{% endif %}
+      </div>
+      {% elif sub.status == 'active' and sub.days_left is not none and sub.days_left <= 5 %}
+      <div class="dp-banner dp-banner--trial" role="status">
+        <i data-lucide="crown"></i>
+        <span>{{ _('Your plan ends on {date}.', date=sub.ends_at_ist|dmy) }}</span>
+        {% if session.get('role') == 'owner' %}<a href="{{ url_for('subscription_page') }}">{{ _('Renew now') }}</a>{% endif %}
+      </div>
+      {% endif %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="global-loader">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <span data-loader-text>{{ _('Processing...') }}</span>
+    </div>
+  </div>
+
+  {% block scripts %}{% endblock %}
+
+  <!-- Sidebar -->
+  <script>
+    (function () {
+      var btn = document.getElementById("sidebar-toggle");
+      var sidebar = document.getElementById("sidebar");
+      var overlay = document.getElementById("overlay");
+      function close() { sidebar.classList.remove("sidebar-open"); overlay.classList.remove("active"); }
+      if (btn) {
+        btn.addEventListener("click", function () {
+          sidebar.classList.add("sidebar-open");
+          overlay.classList.add("active");
+        });
+      }
+      if (overlay) { overlay.addEventListener("click", close); }
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") { close(); } });
+    })();
+  </script>
+
+  {% if session.get('role') in ('owner', 'staff') %}
+  <!-- DairyPro AI assistant -->
+  <button id="dairyAiButton" type="button" aria-label="{{ _('Open DairyPro AI') }}" title="{{ _('DairyPro AI') }}">
+    <i data-lucide="bot"></i>
+  </button>
+  <div id="dairyAiChat" role="dialog" aria-label="{{ _('DairyPro AI') }}">
+    <div class="dairy-ai-header">
+      <div class="dairy-ai-header-left">
+        <div class="dairy-ai-avatar"><i data-lucide="sparkles"></i></div>
+        <div>
+          <div class="dairy-ai-title">{{ _('DairyPro AI') }}</div>
+          <div class="dairy-ai-status"><span class="dairy-ai-status-dot"></span>{{ _('Online') }}</div>
+        </div>
+      </div>
+      <button class="dairy-ai-close" id="dairyAiClose" type="button" aria-label="{{ _('Close') }}"><i data-lucide="x"></i></button>
+    </div>
+    <div id="dairyAiMessages" class="dairy-ai-messages">
+      <div class="dairy-ai-message ai-message">
+        <div class="dairy-ai-bubble">{{ _('Hello! I am DairyPro AI. Ask me anything about milk collection, customers, payments, advances or food sacks.') }}</div>
+      </div>
+    </div>
+    <div style="padding:0 14px 10px;">
+      <div id="dairyAiTyping" class="dairy-ai-typing"><span></span><span></span><span></span></div>
+    </div>
+    <div class="dairy-ai-input-area">
+      <input type="text" id="dairyAiInput" placeholder="{{ _('Ask something...') }}" autocomplete="off" maxlength="2000" aria-label="{{ _('Ask something...') }}">
+      <button id="dairyAiSend" type="button" aria-label="{{ _('Send') }}"><i data-lucide="send"></i></button>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/dp-ai.js') }}?v={{ dp_asset_version }}"></script>
+  {% endif %}
+
+  <!-- Service worker (site root scope: controls every page) -->
+  <script>
+    (function () {
+      if (!("serviceWorker" in navigator)) { return; }
+      navigator.serviceWorker.register("/service-worker.js", { scope: "/", updateViaCache: "none" })
+        .then(function (registration) {
+          registration.update().catch(function () {});
+          var s = window.DP_SESSION || {};
+          if (!s.tenant_id || navigator.onLine === false) { return; }
+          // Keep the main pages of this account available offline.
+          var urls = ["/", "/milk_collection", "/food_sack", "/settings"];
+          if (s.role === "owner") { urls.push("/advance", "/vendor_list", "/edit_entry", "/calculation"); }
+          else { urls.push("/edit_entry"); }
+          navigator.serviceWorker.ready.then(function (reg) {
+            setTimeout(function () {
+              if (reg.active) { reg.active.postMessage({ type: "dp-warm", urls: urls }); }
+            }, 4000);
+          });
+        })
+        .catch(function (error) { console.error("Service worker registration failed:", error); });
+    })();
+  </script>
+
+  <!-- Offline copy notice -->
+  <script>
+    (function () {
+      var meta = document.querySelector('meta[name="dp-offline-copy"]');
+      if (!meta) { return; }
+      var when = meta.getAttribute("content");
+      var d = when ? new Date(when) : null;
+      var stamp = d && !isNaN(d) ? ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) : "";
+      var box = document.createElement("div");
+      box.className = "dp-offline-copy";
+      box.setAttribute("role", "status");
+      box.appendChild(DPIcons.icon("wifi-off"));
+      box.appendChild(document.createTextNode(t("Offline copy of this page saved on {date}. Figures may be out of date.", { date: stamp })));
+      var main = document.getElementById("app-content");
+      if (main) { main.insertBefore(box, main.firstChild); }
+    })();
+  </script>
+
+  {% if session.get('role') == 'owner' %}
+  <!-- Trial / renewal reminder: each reminder is shown once per account -->
+  <script>
+    (function () {
+      if (navigator.onLine === false) { return; }
+      // Ask the server at most once per browser session (keeps requests low).
+      try { if (sessionStorage.getItem("dpReminderChecked") === "1") { return; } sessionStorage.setItem("dpReminderChecked", "1"); } catch (e) {}
+      var KEY_TEXT = {
+        trial_started: "Your 20-day free trial has started. Enjoy all DairyPro features.",
+        trial_10: "Your free trial ends in 10 days.",
+        trial_5: "Your free trial ends in 5 days.",
+        trial_3: "Your free trial ends in 3 days.",
+        trial_1: "Your free trial ends tomorrow.",
+        trial_expired: "Your free trial has ended. Choose a plan to continue using DairyPro.",
+        subscription_expired: "Your subscription has expired. Renew to continue using DairyPro."
+      };
+      setTimeout(function () {
+        DP.api("/api/subscription/status").then(function (r) {
+          if (!r.ok || !r.data.reminder) { return; }
+          var key = r.data.reminder;
+          var text = KEY_TEXT[key] || (key.indexOf("renewal_") === 0 ? "Your plan ends on {date}." : null);
+          if (!text) { return; }
+          var expired = key.indexOf("expired") !== -1;
+          DP.dialog({
+            title: key === "trial_started" ? t("Welcome to DairyPro") : t("Subscription"),
+            message: t(text, { date: r.data.ends_at || "" }) +
+              (r.data.trial_ends_at && key.indexOf("trial_") === 0 && !expired ? "\n" + t("Trial ends on {date}.", { date: r.data.trial_ends_at }) : ""),
+            type: expired ? "warning" : "info", icon: "crown",
+            okText: key === "trial_started" ? t("OK") : t("View plans"),
+            cancelText: t("Later"), cancel: key !== "trial_started"
+          }).then(function (ok) {
+            DP.api("/api/subscription/reminder-seen", { method: "POST", body: { key: key } });
+            if (ok && key !== "trial_started") { window.location.href = "/subscription"; }
+          });
+        });
+      }, 1500);
+    })();
+  </script>
+  {% endif %}
+
+  <!-- Install prompt -->
+  <script>
+    (function () {
+      var deferred = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        try { if (localStorage.getItem("installDismissed") === "true") { return; } } catch (x) {}
+        e.preventDefault();
+        deferred = e;
+        var card = DP.el("div", { id: "installBanner", "class": "dp-toast is-in", style: "position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:10000;max-width:420px;width:92%;align-items:center" }, [
+          DP.el("img", { src: "{{ url_for('static', filename='icons/icon-192.png') }}", alt: "", width: "44", height: "44", style: "border-radius:10px" }),
+          DP.el("div", { "class": "dp-toast__body" }, [
+            DP.el("strong", { text: "{{ BRAND_NAME }}" }),
+            DP.el("span", { text: t("Install the app for faster access and offline use.") })
+          ]),
+          DP.el("button", { type: "button", "class": "dp-btn dp-btn--primary dp-btn--sm", text: t("Install"), onclick: function () {
+            card.remove(); deferred.prompt(); deferred.userChoice.finally(function () { deferred = null; });
+          } }),
+          DP.el("button", { type: "button", "class": "dp-toast__close", "aria-label": t("Close"), onclick: function () {
+            try { localStorage.setItem("installDismissed", "true"); } catch (x) {}
+            card.remove();
+          } }, [DPIcons.icon("x")])
+        ]);
+        document.body.appendChild(card);
+      });
+    })();
+  </script>
+
+  <!-- Global loader -->
+  <script>
+    function showLoader(text) { DP.loader(true, text); }
+    function hideLoader() { DP.loader(false); }
+    document.querySelectorAll("form").forEach(function (form) {
+      form.addEventListener("submit", function () {
+        if (this.hasAttribute("data-no-loader") || this.id === "bankReportForm") { return; }
+        if (navigator.onLine === false) { return; }
+        showLoader();
+      });
+    });
+    window.addEventListener("load", hideLoader);
+    window.addEventListener("pageshow", hideLoader);
+  </script>
+</body>
+</html>

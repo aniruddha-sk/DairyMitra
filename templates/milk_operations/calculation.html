@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('पैसे मोजणी') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title">
+    {{ _('पैसे मोजणी') }}
+</h2>
+
+
+<!-- ================= FORM ================= -->
+
+<form method="POST"
+      action="{{ url_for('calculation') }}"
+      class="section form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+
+        <label class="form-label">
+
+            <i class="fa-regular fa-user icon"></i>
+
+            {{ _('विक्रेता') }}
+
+        </label>
+
+        <select
+            name="vendor_id"
+            class="form-select"
+        >
+
+            {% for v in vendors %}
+
+            <option value="{{ v.vendor_id }}">
+
+                {{ v.name }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label class="form-label">
+
+            <i class="fa-regular fa-calendar icon"></i>
+
+            {{ _('पासून') }}
+
+        </label>
+
+        <input
+            type="date"
+            name="start_date"
+            required
+            class="form-input"
+        >
+
+    </div>
+
+
+    <div class="form-group">
+
+        <label class="form-label">
+
+            <i class="fa-regular fa-calendar-days icon"></i>
+
+            {{ _('पर्यंत') }}
+
+        </label>
+
+        <input
+            type="date"
+            name="end_date"
+            required
+            class="form-input"
+        >
+
+    </div>
+
+
+    <div class="form-group btn-wrap">
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            {{ _('हिशोब काढा') }}
+        </button>
+
+    </div>
+
+</form>
+
+
+<!-- ================= RESULTS ================= -->
+
+{% if results %}
+
+<div class="results">
+
+    <h3 class="section-title">
+        {{ _('पैशाचा तपशील') }}
+    </h3>
+
+
+    <!-- ================= COW MILK ================= -->
+
+    <h4 class="sub-title">
+        {{ _('गायीचे दूध') }}
+    </h4>
+
+    <div class="table-wrap">
+
+        <table class="table">
+
+            <tr>
+
+                <th>
+                    {{ _('वेळ') }}
+                </th>
+
+                <th>
+                    {{ _('प्रमाण (लिटर)') }}
+                </th>
+
+                <th>
+                    {{ _('रक्कम (₹)') }}
+                </th>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('सकाळ') }}
+                </td>
+
+                <td>
+                    {{ results.morning_cow_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.morning_cow_payment | int }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('संध्याकाळ') }}
+                </td>
+
+                <td>
+                    {{ results.evening_cow_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.evening_cow_payment | int }}
+                </td>
+
+            </tr>
+
+
+            <tr class="total-row">
+
+                <td>
+                    {{ _('एकूण') }}
+                </td>
+
+                <td>
+                    {{ results.total_cow_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.total_cow_payment | int }}
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- ================= BUFFALO MILK ================= -->
+
+    <h4 class="sub-title">
+        {{ _('म्हशीचे दूध') }}
+    </h4>
+
+    <div class="table-wrap">
+
+        <table class="table">
+
+            <tr>
+
+                <th>
+                    {{ _('वेळ') }}
+                </th>
+
+                <th>
+                    {{ _('प्रमाण (लिटर)') }}
+                </th>
+
+                <th>
+                    {{ _('रक्कम (₹)') }}
+                </th>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('सकाळ') }}
+                </td>
+
+                <td>
+                    {{ results.morning_buffalo_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.morning_buffalo_payment | int }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('संध्याकाळ') }}
+                </td>
+
+                <td>
+                    {{ results.evening_buffalo_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.evening_buffalo_payment | int }}
+                </td>
+
+            </tr>
+
+
+            <tr class="total-row">
+
+                <td>
+                    {{ _('एकूण') }}
+                </td>
+
+                <td>
+                    {{ results.total_buffalo_quantity | round(1) }}
+                </td>
+
+                <td>
+                    ₹{{ results.total_buffalo_payment | int }}
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- ================= SUMMARY ================= -->
+
+    <h4 class="sub-title">
+        {{ _('एकूण सारांश') }}
+    </h4>
+
+    <div class="table-wrap">
+
+        <table class="table">
+
+            <tr>
+
+                <td>
+                    {{ _('एकूण दूध प्रमाण') }}
+                </td>
+
+                <td>
+                    {{ results.total_milk_quantity | round(1) }}
+                    {{ _('लिटर') }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('एकूण दूधाची रक्कम') }}
+                </td>
+
+                <td>
+                    ₹{{ results.milk_total | int }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    {{ _('खाद्य पिशवी खर्च') }}
+                </td>
+
+                <td>
+                    ₹{{ results.total_food_sack_cost | int }}
+                </td>
+
+            </tr>
+
+
+            <!-- ================= PERIOD DEDUCTION ================= -->
+
+            <tr>
+
+                <td>
+                    {{ _('ॲडव्हान्स वजा') }}
+                </td>
+
+                <td>
+                    ₹{{ results.total_deduction | int }}
+                </td>
+
+            </tr>
+
+
+            <!-- ================= FINAL PAYABLE ================= -->
+
+            <tr class="total-row">
+
+                <td>
+                    {{ _('शेवटची देय रक्कम') }}
+                </td>
+
+                <td>
+                    ₹{{ results.final_payable_amount | int }}
+                </td>
+
+            </tr>
+
+
+            <!-- ================= REMAINING ADVANCE ================= -->
+
+            <tr>
+
+                <td>
+                    {{ _('बाकी रक्कम') }}
+                </td>
+
+                <td>
+                    ₹{{ results.remaining_advance | int }}
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

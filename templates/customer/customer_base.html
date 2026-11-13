@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}{{ _('Customer Portal') }}{% endblock %} | {{ BRAND_NAME }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script>
+    try { if (localStorage.getItem("theme") === "dark") { document.documentElement.setAttribute("data-theme", "dark"); } } catch (e) {}
+  </script>
+  <!-- Fonts load without blocking the page (system fonts until ready / offline) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}?v={{ dp_asset_version }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dairypro.css') }}?v={{ dp_asset_version }}" />
+
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5730bb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename=BRAND_ICON) }}">
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/csrf.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="/i18n/{{ lang }}.js?v={{ i18n_version }}"></script>
+  <script>
+    window.DP_SESSION = {{ ({"tenant_id": None, "role": "customer", "lang": lang}) | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/dp-ui.js') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-icons.js') }}?v={{ dp_asset_version }}"
+          data-sprite="{{ url_for('static', filename='icons/dp-icons.svg') }}?v={{ dp_asset_version }}"></script>
+  <script src="{{ url_for('static', filename='js/dp-date.js') }}?v={{ dp_asset_version }}"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% set flashes = [] %}
+  {% for category, message in messages %}{% set _ignored = flashes.append([category, _(message)]) %}{% endfor %}
+  <script type="application/json" id="dp-flashes">{{ flashes | tojson }}</script>
+  {% endwith %}
+
+  <header>{% include "customer/customer_header.html" %}</header>
+  <div id="overlay"></div>
+  {% include "customer/customer_sidebar.html" %}
+
+  <main id="app-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="global-loader">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <span data-loader-text>{{ _('Loading...') }}</span>
+    </div>
+  </div>
+
+  {% block scripts %}{% endblock %}
+
+  <script>
+    (function () {
+      var btn = document.getElementById("sidebar-toggle");
+      var sidebar = document.getElementById("sidebar");
+      var overlay = document.getElementById("overlay");
+      if (btn) { btn.addEventListener("click", function () { sidebar.classList.add("sidebar-open"); overlay.classList.add("active"); }); }
+      if (overlay) { overlay.addEventListener("click", function () { sidebar.classList.remove("sidebar-open"); overlay.classList.remove("active"); }); }
+    })();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js", { scope: "/", updateViaCache: "none" })
+        .then(function (reg) {
+          reg.update().catch(function () {});
+          if (navigator.onLine === false) { return; }
+          navigator.serviceWorker.ready.then(function (r) {
+            setTimeout(function () {
+              if (r.active) { r.active.postMessage({ type: "dp-warm", urls: ["/customer/dashboard", "/customer/milk-history", "/customer/receipts", "/customer/notifications"] }); }
+            }, 4000);
+          });
+        })
+        .catch(function (err) { console.error("Service worker registration failed:", err); });
+    }
+
+    (function () {
+      function paint() {
+        var pill = document.getElementById("dp-net-status");
+        if (!pill) { return; }
+        var online = navigator.onLine !== false;
+        pill.classList.toggle("is-offline", !online);
+        pill.querySelector("[data-net-label]").textContent = online ? t("Online") : t("Offline");
+      }
+      window.addEventListener("online", function () { paint(); DP.toast(t("Back online."), "success", { timeout: 2500 }); });
+      window.addEventListener("offline", function () { paint(); DP.toast(t("You are offline. Showing pages saved on this device."), "offline"); });
+      document.addEventListener("DOMContentLoaded", paint);
+      var meta = document.querySelector('meta[name="dp-offline-copy"]');
+      if (meta) {
+        document.addEventListener("DOMContentLoaded", function () {
+          var box = document.createElement("div");
+          box.className = "dp-offline-copy";
+          box.appendChild(DPIcons.icon("wifi-off"));
+          var d = new Date(meta.getAttribute("content"));
+          var stamp = isNaN(d) ? "" : ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+          box.appendChild(document.createTextNode(t("Offline copy of this page saved on {date}. Figures may be out of date.", { date: stamp })));
+          var main = document.getElementById("app-content");
+          main.insertBefore(box, main.firstChild);
+        });
+      }
+    })();
+
+    function showLoader(text) { DP.loader(true, text); }
+    function hideLoader() { DP.loader(false); }
+    window.addEventListener("load", hideLoader);
+    window.addEventListener("pageshow", hideLoader);
+  </script>
+</body>
+</html>

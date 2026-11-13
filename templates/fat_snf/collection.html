@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+{% block title %}{{ _('दूध संकलन (FAT/SNF)') }}{% endblock %}
+{% block content %}
+
+<!-- =============================================
+     PAGE TITLE
+============================================= -->
+<h2 class="page-title flex items-center gap-2">
+  <div class="icon-milk icon-purple" data-lucide="milk"></div>
+  {{ _('दूध संकलन (FAT/SNF)') }}
+</h2>
+
+<!-- =============================================
+     DATE + SLOT FORM
+============================================= -->
+<form id="dm-date-slot-form"
+      method="GET"
+      action="{{ url_for('fat_snf.collection_page') }}"
+      class="section date-slot-form mb-4 flex flex-wrap items-center gap-4">
+  <div class="form-group">
+    <label class="form-label" for="dm-collection-date">{{ _('दिनांक') }}</label>
+    <input type="date"
+           class="form-input"
+           id="dm-collection-date"
+           name="date"
+           value="{{ selected_date or today }}"
+           max="{{ today }}"
+           required>
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="dm-collection-slot">{{ _('वेळ') }}</label>
+    <select class="form-select" id="dm-collection-slot" name="slot" required>
+      <option value="morning" {% if slot == 'morning' %}selected{% endif %}>{{ _('सकाळ') }}</option>
+      <option value="evening" {% if slot == 'evening' %}selected{% endif %}>{{ _('संध्याकाळ') }}</option>
+    </select>
+  </div>
+</form>
+
+<!-- =============================================
+     SEARCH FILTER
+============================================= -->
+<div class="search-wrap mb-4">
+  <input type="text"
+         id="dm-vendor-search"
+         class="form-input w-full"
+         placeholder="{{ _('ग्राहक आयडी किंवा नाव शोधा') }}"
+         aria-label="{{ _('ग्राहक आयडी किंवा नाव शोधा') }}">
+</div>
+
+<div id="dm-offline-counter" class="dp-note dp-note--warning" hidden></div>
+<div id="dm-page-message" class="page-message" aria-live="polite"></div>
+
+<!-- =============================================
+     MILK ENTRY TABLE
+============================================= -->
+<div class="table-wrap section">
+  <table class="table" id="dm-vendor-table">
+    <thead>
+      <tr>
+        <th>{{ _('ग्राहक आयडी') }}</th>
+        <th>{{ _('नाव') }}</th>
+        <th>{{ _('दूध प्रकार') }}</th>
+        <th>{{ _('FAT %') }}</th>
+        <th>{{ _('SNF %') }}</th>
+        <th>{{ _('प्रमाण (लिटर)') }}</th>
+        <th>{{ _('कारवाई') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for v in vendors %}
+      {% set allowed_type = v.milk_type or 'cow' %}
+      {% set first_type = 'buffalo' if allowed_type == 'buffalo' else 'cow' %}
+      <tr id="dm-row-{{ loop.index0 }}"
+          class="vendor-row"
+          data-vendor-id="{{ v.vendor_id }}"
+          data-vendor-name="{{ v.name|e }}"
+          data-vendor-type="{{ allowed_type }}">
+        <td class="vendor-id-cell">
+          {{ v.vendor_id }}
+          <input type="hidden" id="dm-vendor-id-{{ loop.index0 }}" value="{{ v.vendor_id }}">
+        </td>
+        <td class="vendor-name-cell">{{ v.name }}</td>
+        <td class="milk-type-cell">
+          {% if allowed_type == 'cow' %}
+            <span class="milk-type-fixed">{{ _('गाय') }}</span>
+            <input type="hidden" id="dm-milk-type-{{ loop.index0 }}" class="milk-type" value="cow">
+          {% elif allowed_type == 'buffalo' %}
+            <span class="milk-type-fixed">{{ _('म्हैस') }}</span>
+            <input type="hidden" id="dm-milk-type-{{ loop.index0 }}" class="milk-type" value="buffalo">
+          {% else %}
+            <select id="dm-milk-type-{{ loop.index0 }}"
+                    class="form-select milk-type"
+                    aria-label="{{ _('दूध प्रकार') }} - {{ v.name }}">
+              <option value="cow">{{ _('गाय') }}</option>
+              <option value="buffalo">{{ _('म्हैस') }}</option>
+            </select>
+          {% endif %}
+        </td>
+        <td class="fat-cell">
+          <input type="number"
+                 id="dm-fat-{{ loop.index0 }}"
+                 class="form-input fat"
+                 step="0.01"
+                 min="{{ animal_rules[first_type].fat_min }}" max="{{ animal_rules[first_type].fat_max }}"
+                 inputmode="decimal"
+                 placeholder="{{ animal_rules[first_type].std_fat }}"
+                 aria-label="FAT - {{ v.name }}">
+          <div id="dm-warning-{{ loop.index0 }}" class="row-warning"></div>
+        </td>
+        <td class="snf-cell">
+          <input type="number"
+                 id="dm-snf-{{ loop.index0 }}"
+                 class="form-input snf"
+                 step="0.01"
+                 min="{{ animal_rules[first_type].snf_min }}" max="{{ animal_rules[first_type].snf_max }}"
+                 inputmode="decimal"
+                 placeholder="{{ animal_rules[first_type].std_snf }}"
+                 aria-label="SNF - {{ v.name }}">
+        </td>
+        <td class="quantity-cell">
+          <input type="number"
+                 id="dm-quantity-{{ loop.index0 }}"
+                 class="form-input quantity quantity-input"
+                 step="0.01" min="0.01" max="9999.99"
+                 inputmode="decimal"
+                 aria-label="{{ _('लिटर') }} - {{ v.name }}">
+        </td>
+        <td class="action-cell">
+          <button type="button"
+                  class="btn btn-secondary saveRow row-submit-btn"
+                  data-index="{{ loop.index0 }}">{{ _('सबमिट') }}</button>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7">{{ _('ग्राहक उपलब्ध नाहीत.') }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- =============================================
+     FINAL SUBMIT
+============================================= -->
+<div class="mt-4 final-submit-wrap">
+  <button type="button" class="btn btn-primary final-submit-btn" id="dm-final-submit-button">
+    <i data-lucide="cloud-upload"></i> {{ _('अंतिम सबमिट (सर्व नोंद करा)') }}
+  </button>
+</div>
+
+<script type="application/json" id="dm-collection-data">{{ {"today": today, "slot": slot, "selected_date": selected_date or today, "mode": mode, "is_owner": is_owner, "vendors": vendors, "rules": animal_rules} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+'use strict';
+const cfg = JSON.parse(document.getElementById('dm-collection-data').textContent || '{}');
+const RULES = cfg.rules || {};
+const rows = Array.from(document.querySelectorAll('#dm-vendor-table tbody tr[data-vendor-id]'));
+const saved = new Map();
+let busy = false;
+const money = n => '₹' + Number(n || 0).toFixed(2);
+const $ = id => document.getElementById(id);
+const dateEl = $('dm-collection-date');
+const slotEl = $('dm-collection-slot');
+const slotLabel = s => s === 'evening' ? t('संध्याकाळ') : t('सकाळ');
+const typeLabel = m => m === 'buffalo' ? t('म्हैस') : t('गाय');
+
+function showMessage(text, kind) {
+  const el = $('dm-page-message');
+  el.textContent = text || '';
+  el.style.color = kind === 'err' ? '#b91c1c' : kind === 'ok' ? '#15803d' : '';
+}
+
+/* ---------------- per-animal placeholders, limits and validation ---------------- */
+function applyAnimal(i) {
+  const type = $('dm-milk-type-' + i).value;
+  const r = RULES[type] || RULES.cow;
+  const fat = $('dm-fat-' + i), snf = $('dm-snf-' + i);
+  fat.placeholder = r.std_fat; snf.placeholder = r.std_snf;
+  fat.min = r.fat_min; fat.max = r.fat_max;
+  snf.min = r.snf_min; snf.max = r.snf_max;
+  fat.title = t('{animal} FAT {min} - {max}', { animal: typeLabel(type), min: r.fat_min, max: r.fat_max });
+  snf.title = t('{animal} SNF {min} - {max}', { animal: typeLabel(type), min: r.snf_min, max: r.snf_max });
+}
+
+function rowData(i, confirmWarnings) {
+  return {
+    vendor_id: $('dm-vendor-id-' + i).value,
+    milk_type: $('dm-milk-type-' + i).value,
+    fat: $('dm-fat-' + i).value.trim(),
+    snf: $('dm-snf-' + i).value.trim(),
+    litres: $('dm-quantity-' + i).value.trim(),
+    date: dateEl.value,
+    slot: slotEl.value,
+    confirm_warnings: !!confirmWarnings
+  };
+}
+
+function validateRow(d) {
+  const r = RULES[d.milk_type] || RULES.cow;
+  const two = v => /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/.test(String(v).trim());
+  const fat = Number(d.fat), snf = Number(d.snf), litres = Number(d.litres);
+  const animal = d.milk_type === 'buffalo' ? t('म्हैस') : t('गाय');
+  if (!d.fat || !two(d.fat) || !(fat >= Number(r.fat_min) && fat <= Number(r.fat_max))) {
+    return { field: 'fat', msg: t('{animal} दुधासाठी FAT {min} ते {max} दरम्यान असावा.', { animal: animal, min: Number(r.fat_min).toFixed(1), max: Number(r.fat_max).toFixed(1) }) };
+  }
+  if (!d.snf || !two(d.snf) || !(snf >= Number(r.snf_min) && snf <= Number(r.snf_max))) {
+    return { field: 'snf', msg: t('{animal} दुधासाठी SNF {min} ते {max} दरम्यान असावा.', { animal: animal, min: Number(r.snf_min).toFixed(1), max: Number(r.snf_max).toFixed(1) }) };
+  }
+  if (!d.litres || !two(d.litres) || litres < 0.01 || litres > 9999.99) {
+    return { field: 'quantity', msg: t('लिटर 0.01 ते 9999.99 दरम्यान आणि जास्तीत जास्त 2 दशांश असावेत.') };
+  }
+  return null;
+}
+
+/* ---------------- saved state per row ---------------- */
+const entryKey = (vendorId, milkType) => String(vendorId) + '|' + String(milkType);
+
+function setRowState(i) {
+  const row = $('dm-row-' + i);
+  const type = $('dm-milk-type-' + i).value;
+  const entry = saved.get(entryKey(row.dataset.vendorId, type));
+  const btn = row.querySelector('.saveRow');
+  const inputs = [$('dm-fat-' + i), $('dm-snf-' + i), $('dm-quantity-' + i)];
+  const warn = $('dm-warning-' + i);
+  warn.classList.remove('is-error');
+  if (entry) {
+    $('dm-fat-' + i).value = entry.fat ?? '';
+    $('dm-snf-' + i).value = entry.snf ?? '';
+    $('dm-quantity-' + i).value = entry.quantity ?? entry.litres ?? '';
+    btn.disabled = true;
+    btn.textContent = entry.local ? t('Saved on this device') : entry.status === 'final' ? t('अंतिम झाले') : t('सेव्ह झाले');
+    inputs.forEach(el => { el.readOnly = true; });
+    warn.textContent = entry.local ? t('Waiting for synchronization') :
+      (entry.rate ? t('दर {rate} / लिटर · रक्कम {amount}', { rate: money(entry.rate), amount: money(entry.amount) }) : '');
+  } else {
+    btn.disabled = cfg.mode !== 'fat_snf';
+    btn.textContent = t('सबमिट');
+    inputs.forEach(el => { el.readOnly = false; });
+    warn.textContent = '';
+  }
+}
+
+async function loadSaved() {
+  saved.clear();
+  if (navigator.onLine !== false) {
+    const r = await DP.api('/api/fat_snf/entries?date=' + encodeURIComponent(dateEl.value) + '&slot=' + encodeURIComponent(slotEl.value));
+    if (r.ok) {
+      (r.data.entries || []).forEach(e => saved.set(entryKey(e.vendor_id, e.milk_type), e));
+    } else if (!r.network) {
+      showMessage(t('आधीच्या नोंदी लोड करता आल्या नाहीत: {error}', { error: r.data.message }), 'err');
+    }
+  }
+  await mergeLocal();
+  rows.forEach((row, i) => setRowState(i));
+}
+
+async function mergeLocal() {
+  const s = window.DP_SESSION || {};
+  if (!s.tenant_id) { return; }
+  try {
+    const recs = await DPOffline.forTenant(s.tenant_id);
+    const open = recs.filter(r => r.type === 'fsn_milk' && ['pending', 'syncing', 'failed', 'needs_review', 'blocked'].includes(r.status));
+    const box = $('dm-offline-counter');
+    box.hidden = open.length === 0;
+    box.textContent = t('{n} entries waiting for synchronization', { n: open.length });
+    open.forEach(r => {
+      if (r.payload.date !== dateEl.value || r.payload.slot !== slotEl.value) { return; }
+      const key = entryKey(r.payload.vendor_id, r.payload.milk_type);
+      if (!saved.has(key)) { saved.set(key, Object.assign({ local: true }, r.payload)); }
+    });
+  } catch (e) { /* storage unavailable: shown by dp-offline */ }
+}
+
+/* ---------------- save one row ---------------- */
+async function submitRow(i, opts) {
+  opts = opts || {};
+  const row = $('dm-row-' + i);
+  if (!row || (busy && !opts.bulk)) { return 'skipped'; }
+  const btn = row.querySelector('.saveRow');
+  if (btn.disabled && !opts.force) { return saved.has(entryKey(row.dataset.vendorId, $('dm-milk-type-' + i).value)) ? 'saved' : 'skipped'; }
+  const d = rowData(i, opts.force);
+  const warn = $('dm-warning-' + i);
+  const bad = validateRow(d);
+  if (bad) {
+    warn.textContent = bad.msg; warn.classList.add('is-error');
+    if (!opts.bulk) { showMessage((row.dataset.vendorName || d.vendor_id) + ': ' + bad.msg, 'err'); $(bad.field === 'quantity' ? 'dm-quantity-' + i : 'dm-' + bad.field + '-' + i).focus(); }
+    return 'error';
+  }
+  if (saved.has(entryKey(d.vendor_id, d.milk_type))) {
+    setRowState(i);
+    if (!opts.bulk) { showMessage(t('या ग्राहकाची या प्रकाराची नोंद आधीच सेव्ह आहे.'), 'err'); }
+    return 'saved';
+  }
+  if (!row.dataset.requestId) { row.dataset.requestId = DPOffline.uuid(); }
+  const label = t('FAT/SNF') + ' #' + d.vendor_id + ' ' + (row.dataset.vendorName || '') + ' · ' +
+    d.date.split('-').reverse().join('/') + ' ' + slotLabel(d.slot) + ' · ' + typeLabel(d.milk_type) +
+    ' · FAT ' + d.fat + ' / SNF ' + d.snf + ' · ' + d.litres + ' L';
+  btn.disabled = true;
+  btn.textContent = t('सेव्ह होत आहे...');
+  const spec = {
+    type: 'fsn_milk', endpoint: '/api/fat_snf/entries', payload: d, label: label,
+    idempotency_key: row.dataset.requestId, idempotency_field: 'request_id',
+    dedupe_key: 'fsn|' + d.vendor_id + '|' + d.date + '|' + d.slot + '|' + d.milk_type
+  };
+  const keepLocal = async (reason) => {
+    await DPOffline.enqueue(Object.assign({}, spec, {
+      tenant_id: window.DP_SESSION.tenant_id, role: window.DP_SESSION.role,
+      staff_id: window.DP_SESSION.staff_id, last_error: reason || null }));
+    saved.set(entryKey(d.vendor_id, d.milk_type), Object.assign({ local: true }, d));
+    setRowState(i);
+    return 'queued';
+  };
+  try {
+    const out = await DPOffline.submit(spec);
+    if (out.mode === 'queued') {
+      saved.set(entryKey(d.vendor_id, d.milk_type), Object.assign({ local: true }, d));
+      setRowState(i);
+      if (!opts.bulk) { DP.toast(t('Saved on this device. Waiting for synchronization.') + ' ' + t('The rate will be calculated by the server when it synchronizes.'), 'offline'); }
+      return 'queued';
+    }
+    const res = out.res, data = res.data || {}, c = out.outcome;
+    if (c.action === 'synced') {
+      const entry = data.entry || {};
+      saved.set(entryKey(d.vendor_id, d.milk_type), entry);
+      row.dataset.requestId = '';
+      setRowState(i);
+      if (!opts.bulk) { showMessage((row.dataset.vendorName || '') + ': ' + t('नोंद सेव्ह झाली. दर {rate} / लिटर · रक्कम {amount}', { rate: money(entry.rate), amount: money(entry.amount) }), 'ok'); }
+      return 'saved';
+    }
+    if (c.action === 'review' && c.kind === 'confirm' && !opts.force) {
+      const list = Array.isArray(data.warnings) ? data.warnings.join('\n') : (data.message || '');
+      warn.textContent = '⚠ ' + list;
+      btn.disabled = false; btn.textContent = t('सबमिट');
+      const ok = await DP.confirm(list + '\n\n' + t('तरीही ही नोंद सेव्ह करायची का?'), { type: 'warning', okText: t('Save anyway') });
+      if (ok) { return submitRow(i, Object.assign({}, opts, { force: true })); }
+      if (!opts.bulk) { showMessage(t('इशारा स्वीकारला नाही; नोंद सेव्ह केलेली नाही.'), 'err'); }
+      return 'error';
+    }
+    if (c.action === 'keep' || c.action === 'retry') {
+      const r = await keepLocal(c.error);
+      if (!opts.bulk) { DP.toast(c.error + ' ' + t('Saved on this device. Waiting for synchronization.'), 'warning'); }
+      return r;
+    }
+    warn.textContent = data.message || c.error;
+    warn.classList.add('is-error');
+    if (!opts.bulk) { showMessage((row.dataset.vendorName || d.vendor_id) + ': ' + (data.message || c.error), 'err'); }
+    btn.disabled = cfg.mode !== 'fat_snf'; btn.textContent = t('सबमिट');
+    if (data.code === 'duplicate') { await loadSaved(); }
+    return 'error';
+  } catch (err) {
+    btn.disabled = cfg.mode !== 'fat_snf'; btn.textContent = t('सबमिट');
+    const msg = (err && err.message) || t('Could not save on this device.');
+    warn.textContent = msg; warn.classList.add('is-error');
+    if (!opts.bulk) { DP.toast(msg, err && err.code === 'duplicate_local' ? 'warning' : 'error'); }
+    return err && err.code === 'duplicate_local' ? 'queued' : 'error';
+  }
+}
+
+rows.forEach((row, i) => {
+  applyAnimal(i);
+  row.querySelector('.saveRow').addEventListener('click', () => submitRow(i));
+  const typeEl = $('dm-milk-type-' + i);
+  if (typeEl.tagName === 'SELECT') {
+    typeEl.addEventListener('change', () => { applyAnimal(i); row.dataset.requestId = ''; setRowState(i); });
+  }
+  // Enter moves FAT -> SNF -> litres -> save
+  ['dm-fat-', 'dm-snf-', 'dm-quantity-'].forEach((prefix, k, arr) => {
+    $(prefix + i).addEventListener('keydown', e => {
+      if (e.key !== 'Enter') { return; }
+      e.preventDefault();
+      if (k < arr.length - 1) { $(arr[k + 1] + i).focus(); } else { submitRow(i); }
+    });
+    $(prefix + i).addEventListener('input', () => { row.dataset.requestId = ''; });
+  });
+});
+
+/* ---------------- search ---------------- */
+$('dm-vendor-search').addEventListener('input', function () {
+  const q = this.value.trim().toLocaleLowerCase();
+  rows.forEach(row => {
+    const ok = row.dataset.vendorId.toLocaleLowerCase().includes(q) || row.dataset.vendorName.toLocaleLowerCase().includes(q);
+    row.style.display = ok ? '' : 'none';
+  });
+});
+
+/* ---------------- final submit ---------------- */
+$('dm-final-submit-button').addEventListener('click', async () => {
+  const btn = $('dm-final-submit-button');
+  if (busy || btn.disabled) { return; }
+  const ok = await DP.confirm(t('{date} ({slot}) या वेळेच्या नोंदी सेव्ह करून अंतिम करायच्या?',
+    { date: dateEl.value.split('-').reverse().join('/'), slot: slotLabel(slotEl.value) }));
+  if (!ok) { return; }
+  busy = true; btn.disabled = true;
+  const counts = { saved: 0, queued: 0, error: 0, skipped: 0 };
+  try {
+    const todo = rows.map((r, i) => i).filter(i => rows[i].style.display !== 'none' && $('dm-quantity-' + i).value.trim());
+    let done = 0;
+    for (const i of todo) {
+      DP.loader(true, t('Saving {done}/{total}...', { done: done, total: todo.length }));
+      const r = await submitRow(i, { bulk: true });
+      counts[r] = (counts[r] || 0) + 1;
+      done += 1;
+    }
+    DP.loader(false);
+    if (counts.error) {
+      showMessage(t('{n} entries could not be saved. Check the rows marked in red.', { n: counts.error }), 'err');
+      return;
+    }
+    if (counts.queued || navigator.onLine === false) {
+      DP.toast(t('{n} entries saved on this device. Finalizing needs internet; it can be done after synchronization.', { n: counts.queued }), 'offline', { timeout: 9000 });
+      return;
+    }
+    const r = await DP.api('/api/fat_snf/finalize', { method: 'POST', body: { date: dateEl.value, slot: slotEl.value } });
+    if (r.ok) { showMessage(r.data.message || t('नोंदी अंतिम केल्या.'), 'ok'); DP.toast(r.data.message || t('नोंदी अंतिम केल्या.'), 'success'); }
+    else { showMessage(r.data.message, 'err'); DP.toast(r.data.message, r.network ? 'offline' : 'error'); }
+    await loadSaved();
+  } finally {
+    DP.loader(false);
+    busy = false;
+    btn.disabled = cfg.mode !== 'fat_snf';
+  }
+});
+
+/* ---------------- date / slot change ---------------- */
+function reloadPage() {
+  const date = dateEl.value;
+  if (!date) { showMessage(t('कृपया तारीख निवडा.'), 'err'); return; }
+  if (date > cfg.today) { dateEl.value = cfg.today; showMessage(t('भविष्यातील तारीख निवडता येणार नाही.'), 'err'); return; }
+  if (navigator.onLine === false) { loadSaved(); return; }
+  const url = new URL(window.location.href);
+  url.searchParams.set('date', date);
+  url.searchParams.set('slot', slotEl.value);
+  url.searchParams.delete('backdated');
+  window.location.href = url.toString();
+}
+dateEl.addEventListener('change', reloadPage);
+slotEl.addEventListener('change', reloadPage);
+window.addEventListener('dp:sync', e => { if (e.detail && e.detail.type === 'done') { loadSaved(); } });
+
+if (cfg.mode !== 'fat_snf') {
+  $('dm-final-submit-button').disabled = true;
+  showMessage(t('FAT/SNF पद्धत बंद आहे. Settings मध्ये ती चालू करा.'), 'err');
+}
+loadSaved();
+})();
+</script>
+{% endblock %}

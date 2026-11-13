@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Edit Staff') }}{% endblock %}
+
+{% block content %}
+
+<h2 class="page-title"><i data-lucide="square-pen"></i> {{ _('Staff Edit करा') }}</h2>
+
+<div class="section">
+
+<form method="POST" class="max-w-lg">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<div class="mb-4">
+<label class="form-label">{{ _('Staff Name') }}</label>
+<input type="text" name="name" value="{{ staff.name }}" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">{{ _('Email') }}</label>
+<input type="email" name="email" value="{{ staff.email }}" required class="form-input">
+</div>
+
+<div class="mb-4">
+<label class="form-label">{{ _('Vehicle Number') }}</label>
+<input type="text" name="vehicle" value="{{ staff.vehicle_number }}" class="form-input">
+</div>
+
+<div class="action-bar">
+
+<button type="submit" class="btn btn-primary">
+<i class="fa fa-save"></i> {{ _('Update') }}
+</button>
+
+<a href="{{ url_for('staff_list') }}" class="btn btn-secondary">
+<i class="fa fa-arrow-left"></i> {{ _('Back') }}
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}
