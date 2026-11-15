@@ -3,6 +3,7 @@
 {% block title %}{{ _('पावती मिळवा') }}{% endblock %}
 
 {% block head %}
+{{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dp-print.css') }}?v={{ dp_asset_version }}">
 {% endblock %}
 

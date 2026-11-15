@@ -137,3 +137,121 @@
   .dp-print-cell--flow tr { break-inside: avoid; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* =========================================
+   DAIRYPRO RECEIPT PAGE - SCREEN CSS FIX
+========================================= */
+
+/* Page title */
+.receipt-page-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-family: inherit;
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 24px 0 32px;
+}
+
+/* Main form */
+.receipt-form {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 28px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: end;
+
+    background: #fff;
+    border: 1px solid #e6e1f2;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(53,20,127,.06);
+}
+
+/* Labels */
+.receipt-form label {
+    display: block;
+    margin-bottom: 7px;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    color: #251b43;
+}
+
+/* All inputs */
+.receipt-form input[type="date"],
+.receipt-form input[type="text"] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 10px 14px;
+
+    border: 1px solid #d8ccef;
+    border-radius: 12px;
+    background: #fff;
+
+    color: #29213e;
+    font-family: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+
+    transition: .2s ease;
+}
+
+.receipt-form input:focus {
+    border-color: #7655d6;
+    box-shadow: 0 0 0 3px rgba(118,85,214,.13);
+}
+
+/* Customer input */
+.receipt-form input[type="text"]::placeholder {
+    color: #a5b4cc;
+}
+
+/* Submit button */
+.receipt-form button[type="submit"] {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 52px;
+    border: none;
+    border-radius: 14px;
+
+    background: linear-gradient(135deg,#7655d6,#35147f);
+    color: #fff;
+
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+
+    box-shadow: 0 8px 18px rgba(87,48,187,.22);
+    transition: .2s ease;
+}
+
+.receipt-form button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(87,48,187,.28);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .receipt-page-title {
+        font-size: 22px;
+        margin: 18px 0 22px;
+    }
+
+    .receipt-form {
+        grid-template-columns: 1fr;
+        padding: 18px;
+        gap: 14px;
+    }
+
+    .receipt-form button[type="submit"] {
+        grid-column: 1;
+    }
+}
